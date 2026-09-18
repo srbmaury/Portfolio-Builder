@@ -78,6 +78,7 @@ export function PortfolioBuilder({
   const [jsonEditorOpen, setJsonEditorOpen] = useState(false);
   const createVariantOpenedRef = useRef(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
+  const previewFrameRef = useRef<HTMLIFrameElement>(null);
 
 
 
@@ -190,6 +191,31 @@ export function PortfolioBuilder({
       section.visible &&
       sectionHasContent(section, snapshot.data, snapshot.meta?.resume)
   ).length;
+
+  function sendPreviewPayload() {
+    previewFrameRef.current?.contentWindow?.postMessage(
+      {
+        type: "folioblocks:preview",
+        snapshot,
+        publicResumeUrl: builderResumeUrl,
+      },
+      window.location.origin
+    );
+  }
+
+  useEffect(() => {
+    function handlePreviewReady(event: MessageEvent<{ type?: string }>) {
+      if (event.origin !== window.location.origin) return;
+      if (event.source !== previewFrameRef.current?.contentWindow) return;
+      if (event.data?.type !== "folioblocks:preview-ready") return;
+      sendPreviewPayload();
+    }
+
+    window.addEventListener("message", handlePreviewReady);
+    sendPreviewPayload();
+
+    return () => window.removeEventListener("message", handlePreviewReady);
+  }, [snapshot, builderResumeUrl]);
 
   function applyResumeImport(
     draft: Parameters<typeof mergeResumeImport>[1]
@@ -1261,15 +1287,22 @@ export function PortfolioBuilder({
             </div>
 
             <span>
-              {snapshot.config.theme} theme · {visibleSections} sections
+              {snapshot.config.theme} theme · {visibleSections} sections ·{" "}
+              {previewMode === "desktop"
+                ? "responsive"
+                : previewMode === "tablet"
+                  ? "768 × 1024"
+                  : "390 × 844"}
             </span>
           </div>
 
           <div className={`preview-window preview-${previewMode}`}>
-            <PortfolioRenderer
-              snapshot={snapshot}
-              compact
-              publicResumeUrl={builderResumeUrl}
+            <iframe
+              ref={previewFrameRef}
+              className="preview-device-frame"
+              src="/builder/preview"
+              title={`${previewMode} portfolio preview`}
+              onLoad={sendPreviewPayload}
             />
           </div>
         </section>
