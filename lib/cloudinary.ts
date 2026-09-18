@@ -1,6 +1,8 @@
 export type CloudinaryUploadResult = {
   secure_url: string;
   public_id: string;
+  asset_id?: string;
+  resource_type?: string;
 };
 
 type SignatureResponse = {
@@ -9,9 +11,15 @@ type SignatureResponse = {
   cloudName: string;
   apiKey: string;
   folder: string;
+  tags: string;
 };
 
+export type CloudinaryUploadScope =
+  | { scope: "shared" }
+  | { scope: "portfolio"; variantKey: string };
+
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+const MAX_RESUME_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -20,7 +28,10 @@ const ALLOWED_TYPES = new Set([
   "image/avif",
 ]);
 
-export async function uploadImageToCloudinary(file: File) {
+export async function uploadImageToCloudinary(
+  file: File,
+  uploadScope: CloudinaryUploadScope = { scope: "shared" }
+) {
   if (!ALLOWED_TYPES.has(file.type)) {
     throw new Error("Choose a JPG, PNG, WebP, GIF, or AVIF image.");
   }
@@ -29,16 +40,43 @@ export async function uploadImageToCloudinary(file: File) {
     throw new Error("Image must be 10 MB or smaller.");
   }
 
+  return uploadToCloudinary(file, uploadScope);
+}
+
+export async function uploadResumeToCloudinary(
+  file: File,
+  variantKey: string
+) {
+  if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+    throw new Error("Choose a PDF resume.");
+  }
+
+  if (file.size > MAX_RESUME_SIZE) {
+    throw new Error("Resume must be 5 MB or smaller.");
+  }
+
+  return uploadToCloudinary(file, {
+    scope: "portfolio",
+    variantKey,
+  });
+}
+
+async function uploadToCloudinary(
+  file: File,
+  uploadScope: CloudinaryUploadScope
+) {
   const signatureResponse = await fetch("/api/uploads/cloudinary-signature", {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(uploadScope),
   });
 
   if (signatureResponse.status === 401) {
-    throw new Error("Sign in to upload images.");
+    throw new Error("Sign in to upload files.");
   }
 
   if (!signatureResponse.ok) {
-    throw new Error("Image uploads are temporarily unavailable.");
+    throw new Error("Uploads are temporarily unavailable.");
   }
 
   const signed = (await signatureResponse.json()) as SignatureResponse;
@@ -49,6 +87,7 @@ export async function uploadImageToCloudinary(file: File) {
   formData.append("timestamp", String(signed.timestamp));
   formData.append("signature", signed.signature);
   formData.append("folder", signed.folder);
+  formData.append("tags", signed.tags);
 
   const response = await fetch(
     `https://api.cloudinary.com/v1_1/${signed.cloudName}/image/upload`,
@@ -59,7 +98,7 @@ export async function uploadImageToCloudinary(file: File) {
   );
 
   if (!response.ok) {
-    throw new Error("Image upload failed. Please try again.");
+    throw new Error("Upload failed. Please try again.");
   }
 
   return (await response.json()) as CloudinaryUploadResult;
