@@ -199,22 +199,9 @@ export async function saveBuilderState(
     .eq("user_id", user.id);
   if (existingPortfolioError) throw existingPortfolioError;
 
-  const activeKeys = new Set(state.variants.map((variant) => variant.id));
   const existingByKey = new Map(
     (existingPortfolios || []).map((row) => [row.variant_key, row])
   );
-  const staleKeys = (existingPortfolios || [])
-    .map((row) => row.variant_key)
-    .filter((key) => !activeKeys.has(key));
-
-  for (const staleKey of staleKeys) {
-    const { error } = await supabase
-      .from("portfolios")
-      .delete()
-      .eq("user_id", user.id)
-      .eq("variant_key", staleKey);
-    if (error) throw error;
-  }
 
   const { error: portfolioUpsert } = await supabase.from("portfolios").upsert(
     state.variants.map((variant) => ({
