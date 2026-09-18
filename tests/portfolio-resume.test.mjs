@@ -30,6 +30,14 @@ const publicRouteSource = await readFile(
   new URL("../app/api/public-resume/[portfolioId]/route.ts", import.meta.url),
   "utf8"
 ).catch(() => "");
+const ownerRouteSource = await readFile(
+  new URL("../app/api/resume/[variantKey]/route.ts", import.meta.url),
+  "utf8"
+).catch(() => "");
+const builderSource = await readFile(
+  new URL("../components/PortfolioBuilder.tsx", import.meta.url),
+  "utf8"
+);
 
 test("portfolio variants have independent resume files with safe legacy defaults", () => {
   const legacy = structuredClone(emptyBuilderState);
@@ -111,4 +119,17 @@ test("hero resume modal is opt-in and keyboard accessible", () => {
   assert.match(launcherSource, /aria-modal="true"/);
   assert.match(launcherSource, /Escape/);
   assert.match(launcherSource, /Open in new tab/);
+});
+
+
+test("builder preview proxies legacy saved resumes for the authenticated owner", () => {
+  assert.match(ownerRouteSource, /auth\.getUser\(\)/);
+  assert.match(ownerRouteSource, /resume_config/);
+  assert.match(ownerRouteSource, /variant_key/);
+  assert.match(builderSource, /builderResumeUrl/);
+  assert.match(builderSource, /\/api\/resume\//);
+});
+
+test("resume delivery rejects non-PDF upstream payloads", () => {
+  assert.match(publicRouteSource, /loadResumePdf/);
 });
