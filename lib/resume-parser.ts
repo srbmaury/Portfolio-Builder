@@ -1,4 +1,4 @@
-import { slugify, type Experience, type Project } from "@/lib/portfolio";
+import { slugify, type Experience, type Project } from "./portfolio.ts";
 
 export type ResumeImportDraft = {
   profile: {
