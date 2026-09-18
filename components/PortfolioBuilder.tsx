@@ -298,7 +298,7 @@ export function PortfolioBuilder() {
   }
 
   function shuffleDesign() {
-    const themes: ThemeName[] = ["ink", "sand", "moss"];
+    const themes: ThemeName[] = ["ink", "sand", "moss", "aurora", "cobalt", "rose", "mono"];
     updateActiveConfig((config) => ({
       ...config,
       theme: themes[Math.floor(Math.random() * themes.length)],
@@ -805,7 +805,8 @@ export function PortfolioBuilder() {
             </button>
           </div>
 
-          <div className="variant-switcher">
+          <div className="builder-panel-scroll">
+            <div className="variant-switcher">
             <div className="variant-switcher-head">
               <div>
                 <span>Portfolio variants</span>
@@ -1146,7 +1147,7 @@ export function PortfolioBuilder() {
               <div className="theme-picker">
                 <label>Theme</label>
                 <div className="theme-options">
-                  {(["ink", "sand", "moss"] as ThemeName[]).map((theme) => (
+                  {(["ink", "sand", "moss", "aurora", "cobalt", "rose", "mono"] as ThemeName[]).map((theme) => (
                     <button
                       key={theme}
                       className={`theme-swatch swatch-${theme} ${
@@ -1234,6 +1235,7 @@ export function PortfolioBuilder() {
               </a>
             </div>
           )}
+          </div>
         </aside>
 
         <button
