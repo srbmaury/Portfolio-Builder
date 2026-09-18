@@ -615,45 +615,9 @@ export const emptyBuilderState: BuilderState = {
   activeVariantId: "portfolio",
 };
 
-export const sampleSnapshot: PortfolioSnapshot = {
-  data: {
-    ...sampleData,
-    profile: {
-      ...sampleData.profile,
-      role: "Backend & Platform Engineer",
-    },
-    experience: sampleData.experience,
-    projects: sampleData.projects.filter((project) =>
-      [
-        "project-traceflow",
-        "project-vector-gateway",
-        "project-queuescope",
-      ].includes(project.id)
-    ),
-    skills: sampleBackendConfig.sections.length
-      ? [
-          "Java",
-          "Go",
-          "Distributed Systems",
-          "PostgreSQL",
-          "Redis",
-          "Kafka",
-          "Kubernetes",
-          "AWS",
-          "Observability",
-          "System Design",
-        ]
-      : [],
-    customSections: sampleData.customSections,
-  },
-  config: cloneConfig(sampleBackendConfig),
-  meta: {
-    name: "Backend & Platform",
-    targetRole: "Backend & Platform Engineer",
-    branding: cloneBranding(sampleBuilderState.variants[0].branding),
-    resume: cloneResume(),
-  },
-};
+export const sampleSnapshot: PortfolioSnapshot =
+  snapshotForVariant(sampleBuilderState);
+
 export function snapshotForVariant(state: BuilderState): PortfolioSnapshot {
   const normalized = normalizeBuilderState(state);
   const active =
