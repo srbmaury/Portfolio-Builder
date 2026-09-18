@@ -153,7 +153,7 @@ export function PortfolioManager({
         <a className="brand" href="/">folio<span>blocks</span></a>
         <nav>
           <a className="ghost-button" href="/builder">Back to builder</a>
-          <a className="primary-button" href="/builder?fresh=1">New portfolio</a>
+          <a className="primary-button" href="/builder">New portfolio</a>
         </nav>
       </header>
 
@@ -246,7 +246,7 @@ export function PortfolioManager({
           <div className="portfolio-manager-empty">
             <h2>No saved portfolios yet.</h2>
             <p>Create one from scratch, save it to the cloud, and it will appear here.</p>
-            <a className="primary-button" href="/builder?fresh=1">Create portfolio</a>
+            <a className="primary-button" href="/builder">Create portfolio</a>
           </div>
         )}
       </section>
