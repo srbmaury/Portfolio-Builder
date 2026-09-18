@@ -294,25 +294,6 @@ export function snapshotForVariant(state: BuilderState): PortfolioSnapshot {
   };
 }
 
-export function builderStateFromSnapshot(
-  snapshot: PortfolioSnapshot
-): BuilderState {
-  const data = normalizeData(snapshot.data);
-  const variant: PortfolioVariant = {
-    id: "general",
-    name: snapshot.meta?.name || "General",
-    targetRole: snapshot.meta?.targetRole || data.profile.role,
-    config: cloneConfig(snapshot.config),
-    content: fullContentConfig(data),
-  };
-
-  return {
-    data,
-    variants: [variant],
-    activeVariantId: variant.id,
-  };
-}
-
 export function normalizeBuilderState(input: BuilderState): BuilderState {
   const data = normalizeData(input.data);
   const fallbackContent = fullContentConfig(data);
@@ -414,29 +395,4 @@ export function slugify(value: string) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "") || "portfolio"
   );
-}
-
-export function encodeSnapshot(snapshot: PortfolioSnapshot) {
-  const json = JSON.stringify(snapshot);
-  const bytes = new TextEncoder().encode(json);
-  let binary = "";
-  bytes.forEach((byte) => {
-    binary += String.fromCharCode(byte);
-  });
-  return encodeURIComponent(btoa(binary));
-}
-
-export function decodeSnapshot(value: string): PortfolioSnapshot {
-  const encoded = decodeURIComponent(value);
-  let json: string;
-
-  if (typeof window === "undefined") {
-    json = Buffer.from(encoded, "base64").toString("utf8");
-  } else {
-    const binary = atob(encoded);
-    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
-    json = new TextDecoder().decode(bytes);
-  }
-
-  return JSON.parse(json) as PortfolioSnapshot;
 }
