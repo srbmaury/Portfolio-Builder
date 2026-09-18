@@ -1,23 +1,29 @@
 # FolioBlocks — Modular Portfolio Builder
 
-A portfolio builder where the user's professional content is stored separately from its presentation.
+A portfolio builder where professional content is stored separately from presentation.
 
-Instead of choosing one monolithic theme, users independently select a hero, about section, experience layout, projects layout, skills section, and contact section. They can change those pieces later without re-entering content.
+Users maintain one structured profile, create multiple portfolio variants for different roles or audiences, and independently choose the hero, about, experience, project, skills, and contact layouts for each variant.
 
-## MVP included
+## MVP v2 included
 
-- Structured professional profile
-- Live portfolio preview
+- One shared structured professional profile
+- Multiple named portfolio variants from the same profile
+- Independent theme and section configuration per variant
+- Duplicate/delete portfolio variants
+- Editable profile, experience, projects, skills, and social links
+- Project stack and URL editing
+- Add/remove experience, projects, and links
+- Live desktop, tablet, and mobile preview modes
 - Three visual themes
 - Swappable section variants
 - Show/hide and reorder sections
-- Editable profile and project content
-- Local autosave
+- One-click design shuffle
+- Local autosave with migration from the v1 builder state
 - Shareable published portfolio links
+- Portfolio-specific page title and description metadata
 - Responsive landing, builder, and public portfolio pages
-- GitHub Actions production-build validation
 
-The current MVP intentionally uses URL-encoded portfolio snapshots for publishing. That means a shared portfolio works without a database or account system and makes the first product loop testable immediately.
+The current MVP intentionally uses URL-encoded portfolio snapshots for publishing. This keeps the full create → customize → variant → publish → share loop testable without requiring authentication or a database.
 
 ## Run locally
 
@@ -26,34 +32,38 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open `http://localhost:3000` and use `http://localhost:3000/builder` for the editor.
 
 ## Product architecture
 
 ```
-Structured profile
+Shared professional profile
   ├── Profile
   ├── Experience
   ├── Projects
-  └── Skills
-        +
-Portfolio configuration
-  ├── Theme
-  ├── Section order
-  ├── Visibility
-  └── Variant per section
-        ↓
-PortfolioRenderer
-        ↓
-Live preview / shareable portfolio
+  ├── Skills
+  └── Social links
+        │
+        ├──────────────┬──────────────┐
+        ▼              ▼              ▼
+  Backend variant   AI variant    General variant
+  ├── Theme         ├── Theme      ├── Theme
+  ├── Sections      ├── Sections   ├── Sections
+  └── Order         └── Order      └── Order
+        │              │              │
+        └──────────────┴──────────────┘
+                       ▼
+                PortfolioRenderer
+                       ▼
+             Live preview / share URL
 ```
 
 ## Next production milestones
 
 1. Authentication and persistent user profiles.
-2. PostgreSQL/Supabase storage for portfolio snapshots.
+2. PostgreSQL/Supabase storage for profiles and variants.
 3. Stable short publishing URLs instead of encoded query strings.
-4. Resume + GitHub import.
-5. Per-role portfolio variants from one profile.
-6. Custom domains and analytics.
+4. Resume import and GitHub project import.
+5. Per-variant project/experience visibility and ordering.
+6. Custom domains and portfolio analytics.
 7. More section packs and a template marketplace.
