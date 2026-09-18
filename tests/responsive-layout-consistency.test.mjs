@@ -7,17 +7,33 @@ const css = await readFile(
   "utf8"
 );
 
-test("tablet photo heroes keep copy before image like mobile", () => {
+test("photo hero variants keep the same hierarchy on tablet and mobile", () => {
   const tabletStart = css.indexOf("@media (max-width: 900px)");
   const tabletEnd = css.indexOf("@media (max-width: 600px)", tabletStart);
+  const mobileStart = css.indexOf(
+    "/* Harden every public layout for narrow screens and the in-builder mobile preview. */"
+  );
+  const mobileEnd = css.indexOf("@media (max-width: 1100px)", mobileStart);
+
   assert.ok(tabletStart >= 0 && tabletEnd > tabletStart);
+  assert.ok(mobileStart >= 0 && mobileEnd > mobileStart);
 
   const tabletCss = css.slice(tabletStart, tabletEnd);
+  const mobileCss = css.slice(mobileStart, mobileEnd);
+
+  assert.match(tabletCss, /\.hero-photo-frame\s*\{[\s\S]*?order:\s*0/);
   assert.match(
     tabletCss,
-    /\.hero-photo-frame,[\s\S]*\.hero-portrait \.hero-photo-frame[\s\S]*order:\s*0/
+    /\.hero-portrait \.hero-photo-frame\s*\{[\s\S]*?order:\s*-1/
   );
-  assert.doesNotMatch(tabletCss, /hero-photo-frame[^}]*order:\s*-1/);
+  assert.match(
+    mobileCss,
+    /\.hero-photo-frame,[\s\S]*?order:\s*0/
+  );
+  assert.match(
+    mobileCss,
+    /\.hero-portrait \.hero-photo-frame\s*\{[\s\S]*?order:\s*-1/
+  );
 });
 
 test("tablet breakpoint resets desktop-only experience placement without flattening all grids", () => {
