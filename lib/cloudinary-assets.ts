@@ -7,7 +7,11 @@ export function cloudinaryUserTag(userId: string) {
   return `fb-user-${userId.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
 }
 
-export function cloudinaryPortfolioTag(variantKey: string) {
+export function cloudinaryPortfolioTag(
+  userId: string,
+  variantKey: string
+) {
+  const owner = userId.toLowerCase().replace(/[^a-z0-9]/g, "");
   const slug = variantKey
     .toLowerCase()
     .trim()
@@ -15,7 +19,7 @@ export function cloudinaryPortfolioTag(variantKey: string) {
     .replace(/(^-|-$)/g, "")
     .slice(0, 80);
 
-  return `fb-portfolio-${slug || "portfolio"}`;
+  return `fb-portfolio-${owner}-${slug || "portfolio"}`;
 }
 
 export function parseCloudinaryAssetUrl(
