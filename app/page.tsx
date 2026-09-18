@@ -28,7 +28,7 @@ export default function Home() {
         </div>
 
         <div className="landing-proof">
-          <span>No code</span><span>Live preview</span><span>Swap sections anytime</span><span>Share instantly</span>
+          <span>No code</span><span>One shared profile</span><span>Multiple portfolio variants</span><span>Share instantly</span>
         </div>
 
         <div className="landing-product-shot">
@@ -51,7 +51,7 @@ export default function Home() {
         <div className="steps-grid">
           <article><span>01</span><h3>Add your story</h3><p>Enter your experience, projects, skills, links, and the kind of work you want.</p></article>
           <article><span>02</span><h3>Pick each section</h3><p>Choose a hero, experience layout, projects grid, skills view, and contact block independently.</p></article>
-          <article><span>03</span><h3>Change your mind</h3><p>Swap any section later without re-entering content or rebuilding the rest of the site.</p></article>
+          <article><span>03</span><h3>Create variants</h3><p>Reuse the same experience and projects across Backend, AI, freelance, or any role-specific portfolio.</p></article>
           <article><span>04</span><h3>Publish</h3><p>Generate a shareable portfolio URL and send it directly to recruiters, clients, or collaborators.</p></article>
         </div>
       </section>
@@ -62,7 +62,7 @@ export default function Home() {
           <h2>Your content is not your template.</h2>
           <p>
             Traditional builders lock your information into a page. FolioBlocks stores your professional profile separately,
-            then lets any compatible section render it. One profile can power many portfolio styles.
+            then lets any compatible section render it. One shared profile can power several role-specific portfolios, each with its own design.
           </p>
           <Link className="landing-primary" href="/builder">Try the builder →</Link>
         </div>
@@ -75,7 +75,7 @@ export default function Home() {
             <div className="arch-node"><strong>Skills #2</strong><span>Columns</span></div>
           </div>
           <div className="arch-arrow">↓</div>
-          <div className="arch-node arch-live"><strong>Your live portfolio</strong><span>Change any piece, anytime</span></div>
+          <div className="arch-node arch-live"><strong>Share the right version</strong><span>Same profile · Different presentation</span></div>
         </div>
       </section>
 
