@@ -21,7 +21,8 @@ export function PortfolioRenderer({ snapshot, compact = false }: Props) {
         {config.sections
           .filter(
             (section) =>
-              section.visible && sectionHasContent(section, snapshot.data)
+              section.visible &&
+              sectionHasContent(section, snapshot.data, snapshot.meta?.resume)
           )
           .map((section) => (
             <PortfolioSection key={section.id} section={section} snapshot={snapshot} />
