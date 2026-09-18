@@ -8,6 +8,17 @@ import {
   type PortfolioVariant,
 } from "@/lib/portfolio";
 
+export type PortfolioSummary = {
+  variantKey: string;
+  name: string;
+  targetRole: string;
+  theme: string;
+  isPublished: boolean;
+  publishedAt: string | null;
+  publicPath: string | null;
+  createdAt: string;
+};
+
 type ProfileRow = {
   username: string;
   full_name: string;
@@ -184,30 +195,22 @@ export async function saveBuilderState(
 
   const { data: existingPortfolios, error: existingPortfolioError } = await supabase
     .from("portfolios")
-    .select("variant_key")
+    .select("variant_key, slug")
     .eq("user_id", user.id);
   if (existingPortfolioError) throw existingPortfolioError;
 
-  const activeKeys = new Set(state.variants.map((variant) => variant.id));
-  const staleKeys = (existingPortfolios || [])
-    .map((row) => row.variant_key)
-    .filter((key) => !activeKeys.has(key));
-
-  for (const staleKey of staleKeys) {
-    const { error } = await supabase
-      .from("portfolios")
-      .delete()
-      .eq("user_id", user.id)
-      .eq("variant_key", staleKey);
-    if (error) throw error;
-  }
+  const existingByKey = new Map(
+    (existingPortfolios || []).map((row) => [row.variant_key, row])
+  );
 
   const { error: portfolioUpsert } = await supabase.from("portfolios").upsert(
     state.variants.map((variant) => ({
       user_id: user.id,
       variant_key: variant.id,
       name: variant.name,
-      slug: slugForVariant(state.variants, variant),
+      slug:
+        existingByKey.get(variant.id)?.slug ||
+        slugForVariant(state.variants, variant),
       target_role: variant.targetRole,
       theme: variant.config.theme,
       section_config: variant.config.sections,
@@ -234,8 +237,16 @@ export async function publishVariant(
   if (!active) throw new Error("No portfolio variant selected.");
 
   const username = await ensureProfile(supabase, user, normalized);
-  const slug = slugForVariant(normalized.variants, active);
-  const publicPath = `${username}/${slug}`;
+  const { data: existing, error: existingError } = await supabase
+    .from("portfolios")
+    .select("slug, public_path")
+    .eq("user_id", user.id)
+    .eq("variant_key", active.id)
+    .maybeSingle();
+  if (existingError) throw existingError;
+
+  const slug = existing?.slug || slugForVariant(normalized.variants, active);
+  const publicPath = existing?.public_path || `${username}/${slug}`;
   const snapshot = snapshotForVariant(normalized);
 
   const { error } = await supabase.from("portfolios").upsert(
@@ -258,6 +269,154 @@ export async function publishVariant(
 
   if (error) throw error;
   return publicPath;
+}
+
+
+export async function listPortfolios(
+  supabase: SupabaseClient,
+  user: User
+): Promise<PortfolioSummary[]> {
+  const { data, error } = await supabase
+    .from("portfolios")
+    .select(
+      "variant_key, name, target_role, theme, is_published, published_at, public_path, created_at"
+    )
+    .eq("user_id", user.id)
+    .order("created_at");
+
+  if (error) throw error;
+
+  return (data || []).map((row) => ({
+    variantKey: row.variant_key,
+    name: row.name,
+    targetRole: row.target_role,
+    theme: row.theme,
+    isPublished: row.is_published,
+    publishedAt: row.published_at,
+    publicPath: row.public_path,
+    createdAt: row.created_at,
+  }));
+}
+
+export async function renamePortfolio(
+  supabase: SupabaseClient,
+  user: User,
+  variantKey: string,
+  name: string
+) {
+  const nextName = name.trim();
+  if (!nextName) throw new Error("Portfolio name cannot be empty.");
+
+  const { error } = await supabase
+    .from("portfolios")
+    .update({ name: nextName })
+    .eq("user_id", user.id)
+    .eq("variant_key", variantKey);
+
+  if (error) throw error;
+}
+
+export async function deletePortfolio(
+  supabase: SupabaseClient,
+  user: User,
+  variantKey: string
+) {
+  const { error } = await supabase
+    .from("portfolios")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("variant_key", variantKey);
+
+  if (error) throw error;
+}
+
+export async function unpublishPortfolio(
+  supabase: SupabaseClient,
+  user: User,
+  variantKey: string
+) {
+  const { error } = await supabase
+    .from("portfolios")
+    .update({
+      is_published: false,
+      published_at: null,
+      published_snapshot: null,
+    })
+    .eq("user_id", user.id)
+    .eq("variant_key", variantKey);
+
+  if (error) throw error;
+}
+
+export async function publishPortfolioByKey(
+  supabase: SupabaseClient,
+  user: User,
+  variantKey: string
+) {
+  const state = await loadBuilderState(supabase, user);
+  if (!state) throw new Error("No saved portfolio workspace found.");
+
+  if (!state.variants.some((variant) => variant.id === variantKey)) {
+    throw new Error("Portfolio not found.");
+  }
+
+  return publishVariant(supabase, user, {
+    ...state,
+    activeVariantId: variantKey,
+  });
+}
+
+export async function duplicatePortfolio(
+  supabase: SupabaseClient,
+  user: User,
+  variantKey: string
+) {
+  const [{ data: source, error: sourceError }, { data: existing, error: existingError }] =
+    await Promise.all([
+      supabase
+        .from("portfolios")
+        .select("name, target_role, theme, section_config, content_config")
+        .eq("user_id", user.id)
+        .eq("variant_key", variantKey)
+        .single(),
+      supabase
+        .from("portfolios")
+        .select("slug")
+        .eq("user_id", user.id),
+    ]);
+
+  if (sourceError) throw sourceError;
+  if (existingError) throw existingError;
+
+  const name = `${source.name} Copy`;
+  const usedSlugs = new Set((existing || []).map((row) => row.slug));
+  const rawBase = slugify(name).slice(0, 40) || "portfolio-copy";
+  let slug = rawBase;
+  let suffix = 2;
+
+  while (usedSlugs.has(slug)) {
+    const suffixText = `-${suffix++}`;
+    slug = `${rawBase.slice(0, 40 - suffixText.length)}${suffixText}`;
+  }
+
+  const newVariantKey = `portfolio-${Date.now().toString(36)}-${Math.random()
+    .toString(36)
+    .slice(2, 8)}`;
+
+  const { error } = await supabase.from("portfolios").insert({
+    user_id: user.id,
+    variant_key: newVariantKey,
+    name,
+    slug,
+    target_role: source.target_role,
+    theme: source.theme,
+    section_config: source.section_config,
+    content_config: source.content_config,
+    is_published: false,
+  });
+
+  if (error) throw error;
+  return newVariantKey;
 }
 
 async function ensureProfile(

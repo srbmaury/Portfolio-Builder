@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PortfolioRenderer } from "@/components/PortfolioRenderer";
 import { uploadImageToCloudinary } from "@/lib/cloudinary";
 import { createClient } from "@/lib/supabase/client";
 import {
+  deletePortfolio,
   loadBuilderState,
   publishVariant,
   saveBuilderState,
@@ -37,7 +38,15 @@ const EDITOR_WIDTH_KEY = "folioblocks:editor-width";
 type PreviewMode = "desktop" | "tablet" | "mobile";
 type CreateDialogKind = "experience" | "project" | "link" | "variant" | null;
 
-export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean }) {
+export function PortfolioBuilder({
+  startFresh = false,
+  initialVariantId,
+  openCreateVariant = false,
+}: {
+  startFresh?: boolean;
+  initialVariantId?: string;
+  openCreateVariant?: boolean;
+}) {
   const [state, setState] = useState<BuilderState>(
     startFresh ? emptyBuilderState : sampleBuilderState
   );
@@ -48,8 +57,10 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
   const [cloudUserId, setCloudUserId] = useState<string | null>(null);
   const [cloudStatus, setCloudStatus] = useState<"local" | "loading" | "saved" | "error">("local");
   const [cloudMessage, setCloudMessage] = useState("");
+  const [cloudResolved, setCloudResolved] = useState(false);
   const [editorWidth, setEditorWidth] = useState(420);
   const [createDialog, setCreateDialog] = useState<CreateDialogKind>(null);
+  const createVariantOpenedRef = useRef(false);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(STORAGE_KEY);
@@ -57,7 +68,13 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
 
     if (!startFresh && saved) {
       try {
-        setState(normalizeBuilderState(JSON.parse(saved) as BuilderState));
+        const localState = normalizeBuilderState(JSON.parse(saved) as BuilderState);
+        setState(
+          initialVariantId &&
+            localState.variants.some((variant) => variant.id === initialVariantId)
+            ? { ...localState, activeVariantId: initialVariantId }
+            : localState
+        );
       } catch {
         window.localStorage.removeItem(STORAGE_KEY);
       }
@@ -72,7 +89,7 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
     }
 
     setHydrated(true);
-  }, [startFresh]);
+  }, [initialVariantId, startFresh]);
 
   useEffect(() => {
     if (hydrated) {
@@ -111,6 +128,7 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
       if (error || !data.user) {
         setCloudUserId(null);
         setCloudStatus("local");
+        setCloudResolved(true);
         return;
       }
 
@@ -119,6 +137,7 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
       if (startFresh) {
         setCloudStatus("local");
         setCloudMessage("Fresh workspace · not saved yet");
+        setCloudResolved(true);
         return;
       }
 
@@ -129,7 +148,12 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
         if (cancelled) return;
 
         if (remote) {
-          setState(remote);
+          setState(
+            initialVariantId &&
+              remote.variants.some((variant) => variant.id === initialVariantId)
+              ? { ...remote, activeVariantId: initialVariantId }
+              : remote
+          );
           setCloudMessage("Loaded from cloud");
           setCloudStatus("saved");
         } else {
@@ -142,6 +166,8 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
           loadError instanceof Error ? loadError.message : "Could not load cloud workspace"
         );
         setCloudStatus("error");
+      } finally {
+        if (!cancelled) setCloudResolved(true);
       }
     }
 
@@ -150,7 +176,21 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
     return () => {
       cancelled = true;
     };
-  }, [hydrated, startFresh]);
+  }, [hydrated, initialVariantId, startFresh]);
+
+  useEffect(() => {
+    if (
+      !hydrated ||
+      !cloudResolved ||
+      !openCreateVariant ||
+      createVariantOpenedRef.current
+    ) {
+      return;
+    }
+
+    createVariantOpenedRef.current = true;
+    setCreateDialog("variant");
+  }, [cloudResolved, hydrated, openCreateVariant]);
 
   const activeVariant =
     state.variants.find((variant) => variant.id === state.activeVariantId) ??
@@ -606,8 +646,37 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
     setShareUrl("");
   }
 
-  function removeActiveVariant() {
-    if (state.variants.length <= 1) return;
+  async function removeActiveVariant() {
+    if (state.variants.length <= 1 || !activeVariant) return;
+
+    if (
+      !window.confirm(
+        `Delete “${activeVariant.name || "Untitled"}”? This removes the saved portfolio and its published page.`
+      )
+    ) {
+      return;
+    }
+
+    if (cloudUserId) {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.auth.getUser();
+
+        if (error || !data.user) {
+          throw new Error("Sign in again to delete this portfolio.");
+        }
+
+        await deletePortfolio(supabase, data.user, activeVariant.id);
+        setCloudMessage("Portfolio deleted from cloud");
+        setCloudStatus("saved");
+      } catch (deleteError) {
+        setCloudMessage(
+          deleteError instanceof Error ? deleteError.message : "Could not delete portfolio"
+        );
+        setCloudStatus("error");
+        return;
+      }
+    }
 
     setState((current) => {
       const remaining = current.variants.filter(
@@ -812,6 +881,9 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
         <div className="topbar-actions">
           {cloudUserId ? (
             <>
+              <a className="ghost-button portfolio-manager-link" href="/portfolios">
+                My portfolios
+              </a>
               <button
                 className="ghost-button"
                 onClick={saveToCloud}
@@ -1293,7 +1365,7 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
                             label="Heading"
                             value={section.title || ""}
                             onChange={(value) => setSectionTitle(section.id, value)}
-                            hint="Leave blank to hide this heading"
+                            hint="Shown as the section heading"
                           />
                         </div>
                         <div className="variant-grid">

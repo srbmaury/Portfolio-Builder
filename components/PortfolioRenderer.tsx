@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { skillIconUrl, skillInitials } from "@/lib/skill-icons";
-import { sectionHasContent } from "@/lib/portfolio";
+import { sectionDisplayTitle, sectionHasContent } from "@/lib/portfolio";
 import type { PortfolioSnapshot, Project, SectionConfig } from "@/lib/portfolio";
 
 type Props = {
@@ -127,6 +127,11 @@ function Hero({
           <span>{display(profile.availability, "Open to opportunities")}</span>
         </div>
         <h1>{display(profile.name, "Your name")}</h1>
+        {hasImage && (
+          <div className="poster-media">
+            <HeroImage url={profile.heroImageUrl} priority />
+          </div>
+        )}
         <div className="poster-bottom">
           <p>{display(profile.tagline, "A concise statement about your work.")}</p>
           <div>
@@ -243,7 +248,7 @@ function About({
 
   return (
     <section className={`p-section about-layout about-v-${variant}`}>
-      <SectionHeading index="01" title={title} />
+      <SectionHeading index="01" title={sectionDisplayTitle("about", title)} />
       <div className="about-layout-grid">
         <div className="about-story">
           {variant === "quote" && <span className="about-quote-mark">“</span>}
@@ -283,7 +288,7 @@ function Experience({
 
   return (
     <section className={`p-section experience-layout experience-v-${variant}`}>
-      <SectionHeading index="02" title={title} />
+      <SectionHeading index="02" title={sectionDisplayTitle("experience", title)} />
       {items.length ? (
         <div className="experience-layout-list">
           {items.map((item, index) => (
@@ -319,7 +324,7 @@ function Projects({
   if (!projects.length) {
     return (
       <section className="p-section">
-        <SectionHeading index="03" title={title} />
+        <SectionHeading index="03" title={sectionDisplayTitle("projects", title)} />
         <EmptySection message="Add projects to showcase your strongest work." />
       </section>
     );
@@ -328,7 +333,7 @@ function Projects({
   if (variant === "list") {
     return (
       <section className="p-section projects-list-layout">
-        <SectionHeading index="03" title={title} />
+        <SectionHeading index="03" title={sectionDisplayTitle("projects", title)} />
         <div className="project-list">
           {projects.map((project, index) => (
             <article key={project.id} className="project-list-row">
@@ -348,7 +353,7 @@ function Projects({
   if (variant === "github") {
     return (
       <section className="p-section projects-github-layout">
-        <SectionHeading index="03" title={title} />
+        <SectionHeading index="03" title={sectionDisplayTitle("projects", title)} />
         <div className="github-project-grid">
           {projects.map((project) => (
             <article key={project.id} className="github-project-card">
@@ -370,7 +375,7 @@ function Projects({
   if (variant === "browser") {
     return (
       <section className="p-section projects-browser-layout">
-        <SectionHeading index="03" title={title} />
+        <SectionHeading index="03" title={sectionDisplayTitle("projects", title)} />
         <div className="browser-project-list">
           {projects.map((project) => (
             <article key={project.id} className="browser-project-card">
@@ -393,7 +398,7 @@ function Projects({
   if (variant === "gallery") {
     return (
       <section className="p-section projects-gallery-layout">
-        <SectionHeading index="03" title={title} />
+        <SectionHeading index="03" title={sectionDisplayTitle("projects", title)} />
         <div className="project-gallery">
           {projects.map((project, index) => (
             <article key={project.id} className="project-gallery-item">
@@ -413,7 +418,7 @@ function Projects({
   if (variant === "showcase") {
     return (
       <section className="p-section">
-        <SectionHeading index="03" title={title} />
+        <SectionHeading index="03" title={sectionDisplayTitle("projects", title)} />
         <div className="project-showcase">
           {projects.map((project, index) => (
             <article key={project.id} className="project-showcase-card">
@@ -445,7 +450,7 @@ function Projects({
 
   return (
     <section className={`p-section projects-layout projects-${variant}`}>
-      <SectionHeading index="03" title={title} />
+      <SectionHeading index="03" title={sectionDisplayTitle("projects", title)} />
       <div className={gridClass}>
         {projects.map((project, index) => (
           <article key={project.id} className={`project-card project-${index + 1}`}>
@@ -516,7 +521,7 @@ function Skills({
 
   return (
     <section className={`p-section skills-layout skills-v-${variant}`}>
-      <SectionHeading index="04" title={title} />
+      <SectionHeading index="04" title={sectionDisplayTitle("skills", title)} />
       {skills.length ? (
         <div className={`skills-layout-list ${logoVariant ? "with-logos" : ""}`}>
           {skills.map((skill, index) => (
@@ -564,7 +569,7 @@ function Contact({
     return (
       <footer className="p-section contact-terminal">
         <div className="terminal-window">
-          <p><span className="terminal-prompt">$</span> {title?.trim() || "contact"} --next</p>
+          <p><span className="terminal-prompt">$</span> {sectionDisplayTitle("contact", title).toLowerCase()} --next</p>
           <h2>{email}</h2>
           <p>{display(profile.availability, "Open to opportunities")}</p>
         </div>
@@ -575,7 +580,7 @@ function Contact({
   return (
     <footer className={`p-section contact-layout contact-v-${variant}`}>
       <div className="contact-copy">
-        {title?.trim() ? <p className="eyebrow">{title.trim()}</p> : null}
+        <p className="eyebrow">{sectionDisplayTitle("contact", title)}</p>
         <h2>{variant === "minimal" || variant === "compact" ? "Get in touch." : "Open to the next hard problem."}</h2>
         <p>{display(profile.availability, "Open to opportunities")}</p>
       </div>
@@ -596,21 +601,19 @@ function EmptySection({ message }: { message: string }) {
   );
 }
 
-function SectionHeading({ index, title }: { index: string; title?: string }) {
-  if (!title?.trim()) return null;
-
+function SectionHeading({ index, title }: { index: string; title: string }) {
   return (
     <div className="section-heading">
       <span>{index}</span>
-      <h2>{title.trim()}</h2>
+      <h2>{title}</h2>
     </div>
   );
 }
 
 function heroLabel(title: string | undefined, role: string) {
-  const cleanTitle = title?.trim();
+  const cleanTitle = sectionDisplayTitle("hero", title);
   const cleanRole = display(role, "Your role");
-  return cleanTitle ? `${cleanTitle} / ${cleanRole}` : cleanRole;
+  return `${cleanTitle} / ${cleanRole}`;
 }
 
 function safeCloudinaryUrl(value?: string) {
