@@ -4,8 +4,8 @@ import {
   type BuilderState,
   type Experience,
   type Project,
-} from "@/lib/portfolio";
-import type { ResumeImportDraft } from "@/lib/resume-parser";
+} from "./portfolio.ts";
+import type { ResumeImportDraft } from "./resume-parser.ts";
 
 export function mergeResumeImport(
   input: BuilderState,
