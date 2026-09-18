@@ -9,6 +9,11 @@ export function useDialogFocusTrap<T extends HTMLElement>(
   onClose?: () => void
 ) {
   const ref = useRef<T>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     const dialog = ref.current;
@@ -24,13 +29,14 @@ export function useDialogFocusTrap<T extends HTMLElement>(
     first?.focus();
 
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && onClose) {
+      if (event.key === "Escape" && onCloseRef.current) {
         event.preventDefault();
-        onClose();
+        onCloseRef.current();
         return;
       }
 
       if (event.key !== "Tab") return;
+
       const items = focusables();
       if (!items.length) {
         event.preventDefault();
@@ -55,7 +61,7 @@ export function useDialogFocusTrap<T extends HTMLElement>(
       document.removeEventListener("keydown", onKeyDown);
       previous?.focus();
     };
-  }, [onClose]);
+  }, []);
 
   return ref;
 }
