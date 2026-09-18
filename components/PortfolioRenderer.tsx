@@ -66,6 +66,43 @@ function Hero({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: str
     );
   }
 
+  if (variant === "poster") {
+    return (
+      <section className="p-section hero-poster">
+        <div className="poster-topline">
+          <span>{profile.role}</span>
+          <span>{profile.availability}</span>
+        </div>
+        <h1>{profile.name}</h1>
+        <div className="poster-bottom">
+          <p>{profile.tagline}</p>
+          <div>
+            <span>{profile.location}</span>
+            <Socials snapshot={snapshot} />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (variant === "spotlight") {
+    return (
+      <section className="p-section hero-spotlight">
+        <div className="spotlight-orb" aria-hidden="true" />
+        <div className="spotlight-content">
+          <p className="eyebrow">{profile.role}</p>
+          <h1>{profile.name}</h1>
+          <p className="hero-copy">{profile.tagline}</p>
+          <Socials snapshot={snapshot} />
+          <div className="spotlight-meta">
+            <span>{profile.location}</span>
+            <span>{profile.availability}</span>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   if (variant === "minimal") {
     return (
       <section className="p-section hero-minimal">
@@ -133,6 +170,22 @@ function About({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: st
     );
   }
 
+  if (variant === "manifesto") {
+    return (
+      <section className="p-section about-manifesto">
+        <SectionHeading index="01" title="About" />
+        <div className="manifesto-grid">
+          <p className="manifesto-copy">{profile.about}</p>
+          <div className="manifesto-notes">
+            <div><span>Based in</span><strong>{profile.location}</strong></div>
+            <div><span>Focus</span><strong>{profile.role}</strong></div>
+            <div><span>Now</span><strong>{profile.availability}</strong></div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="p-section">
       <SectionHeading index="01" title="About" />
@@ -145,13 +198,35 @@ function About({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: st
 
 function Experience({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: string }) {
   const items = snapshot.data.experience;
+
+  if (variant === "stacked") {
+    return (
+      <section className="p-section">
+        <SectionHeading index="02" title="Experience" />
+        <div className="experience-stacked">
+          {items.map((item, index) => (
+            <article key={item.id}>
+              <div className="stacked-index">0{index + 1}</div>
+              <div className="stacked-period">{item.period}</div>
+              <div className="stacked-role">
+                <h3>{item.role}</h3>
+                <h4>{item.company}</h4>
+              </div>
+              <p>{item.summary}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="p-section">
       <SectionHeading index="02" title="Experience" />
       {variant === "cards" ? (
         <div className="experience-cards">
           {items.map((item) => (
-            <article key={`${item.company}-${item.period}`} className="experience-card">
+            <article key={item.id} className="experience-card">
               <p className="muted">{item.period}</p>
               <h3>{item.role}</h3>
               <h4>{item.company}</h4>
@@ -162,7 +237,7 @@ function Experience({ snapshot, variant }: { snapshot: PortfolioSnapshot; varian
       ) : (
         <div className="timeline">
           {items.map((item) => (
-            <article key={`${item.company}-${item.period}`} className="timeline-item">
+            <article key={item.id} className="timeline-item">
               <div className="timeline-marker" />
               <div>
                 <p className="muted">{item.period}</p>
@@ -197,7 +272,7 @@ function Projects({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant:
 
             return href ? (
               <a
-                key={`${project.title}-${index}`}
+                key={project.id}
                 className="project-list-row"
                 href={href}
                 target="_blank"
@@ -206,7 +281,7 @@ function Projects({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant:
                 {content}
               </a>
             ) : (
-              <div key={`${project.title}-${index}`} className="project-list-row project-list-row-static">
+              <div key={project.id} className="project-list-row project-list-row-static">
                 {content}
               </div>
             );
@@ -216,12 +291,45 @@ function Projects({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant:
     );
   }
 
+  if (variant === "showcase") {
+    return (
+      <section className="p-section">
+        <SectionHeading index="03" title="Selected work" />
+        <div className="project-showcase">
+          {projects.map((project, index) => {
+            const href = safeExternalUrl(project.url);
+            return (
+              <article key={project.id} className="project-showcase-card">
+                <div className="showcase-number">0{index + 1}</div>
+                <div className="showcase-copy">
+                  <h3>{project.title}</h3>
+                  <p>{project.description}</p>
+                  <div className="tag-row">
+                    {project.stack.map((item) => <span key={item}>{item}</span>)}
+                  </div>
+                </div>
+                {href ? <a href={href} target="_blank" rel="noreferrer">Explore ↗</a> : <span />}
+              </article>
+            );
+          })}
+        </div>
+      </section>
+    );
+  }
+
+  const gridClass =
+    variant === "bento"
+      ? "project-grid project-bento"
+      : variant === "mosaic"
+        ? "project-grid project-mosaic"
+        : "project-grid";
+
   return (
     <section className="p-section">
       <SectionHeading index="03" title="Selected work" />
-      <div className={variant === "bento" ? "project-grid project-bento" : "project-grid"}>
+      <div className={gridClass}>
         {projects.map((project, index) => (
-          <article key={project.title} className={`project-card project-${index + 1}`}>
+          <article key={project.id} className={`project-card project-${index + 1}`}>
             <div>
               <p className="muted">Project / 0{index + 1}</p>
               <h3>{project.title}</h3>
@@ -256,6 +364,15 @@ function Skills({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: s
             <div key={skill}><span>0{index + 1}</span><strong>{skill}</strong></div>
           ))}
         </div>
+      ) : variant === "matrix" ? (
+        <div className="skill-matrix">
+          {skills.map((skill, index) => (
+            <div key={skill}>
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <strong>{skill}</strong>
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="skill-cloud">
           {skills.map((skill) => <span key={skill}>{skill}</span>)}
@@ -273,6 +390,21 @@ function Contact({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: 
       <footer className="p-section contact-minimal">
         <p>Have something interesting in mind?</p>
         <a href={`mailto:${profile.email}`}>{profile.email} ↗</a>
+      </footer>
+    );
+  }
+
+  if (variant === "banner") {
+    return (
+      <footer className="p-section contact-banner">
+        <p className="eyebrow">Available for the right challenge</p>
+        <a className="contact-banner-link" href={`mailto:${profile.email}`}>
+          Let's make<br />something matter. <span>↗</span>
+        </a>
+        <div className="contact-banner-meta">
+          <span>{profile.location}</span>
+          <span>{profile.email}</span>
+        </div>
       </footer>
     );
   }
