@@ -594,8 +594,16 @@ export function PortfolioBuilder() {
     }));
   }
 
+  function getMaxEditorWidth() {
+    return Math.max(320, Math.min(720, window.innerWidth - 460));
+  }
+
+  function resetEditorWidth() {
+    setEditorWidth(Math.min(420, getMaxEditorWidth()));
+  }
+
   function nudgeEditorWidth(delta: number) {
-    const maxWidth = Math.max(320, Math.min(720, window.innerWidth - 460));
+    const maxWidth = getMaxEditorWidth();
     setEditorWidth((current) => Math.max(320, Math.min(maxWidth, current + delta)));
   }
 
@@ -617,8 +625,7 @@ export function PortfolioBuilder() {
 
     if (event.key === "End") {
       event.preventDefault();
-      const maxWidth = Math.max(320, Math.min(720, window.innerWidth - 460));
-      setEditorWidth(maxWidth);
+      setEditorWidth(getMaxEditorWidth());
     }
   }
 
@@ -749,7 +756,11 @@ export function PortfolioBuilder() {
         <div className="topbar-actions">
           {cloudUserId ? (
             <>
-              <button className="ghost-button" onClick={saveToCloud}>
+              <button
+                className="ghost-button"
+                onClick={saveToCloud}
+                disabled={cloudStatus === "loading"}
+              >
                 Save cloud
               </button>
               <button className="ghost-button" onClick={signOut}>
@@ -764,8 +775,12 @@ export function PortfolioBuilder() {
           <button className="ghost-button reset-button" onClick={reset}>
             Reset demo
           </button>
-          <button className="primary-button" onClick={publish}>
-            Publish & copy link
+          <button
+            className="primary-button"
+            onClick={publish}
+            disabled={cloudStatus === "loading"}
+          >
+            {cloudUserId ? "Publish & copy link" : "Sign in to publish"}
           </button>
         </div>
       </header>
@@ -1232,7 +1247,7 @@ export function PortfolioBuilder() {
           className="builder-resizer"
           onPointerDown={startResize}
           onKeyDown={handleResizerKeyDown}
-          onDoubleClick={() => setEditorWidth(420)}
+          onDoubleClick={resetEditorWidth}
           aria-label="Resize editor and preview panels"
           title="Drag to resize · arrows to adjust · double-click to reset"
         >
