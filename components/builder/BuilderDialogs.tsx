@@ -392,7 +392,13 @@ export function ResumeUploadField({
   openUrl,
   onChange,
 }: {
-  value: { url: string; publicId: string; fileName: string; showInHero: boolean };
+  value: {
+    url: string;
+    publicId: string;
+    fileName: string;
+    showInHero: boolean;
+    hideSectionWhenHeroLink: boolean;
+  };
   variantKey: string;
   openUrl?: string;
   onChange: (value: {
@@ -400,6 +406,7 @@ export function ResumeUploadField({
     publicId: string;
     fileName: string;
     showInHero: boolean;
+    hideSectionWhenHeroLink: boolean;
   }) => void;
 }) {
   const [status, setStatus] = useState("");

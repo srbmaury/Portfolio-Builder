@@ -107,6 +107,7 @@ export type PortfolioResume = {
   publicId: string;
   fileName: string;
   showInHero: boolean;
+  hideSectionWhenHeroLink: boolean;
 };
 
 export type PortfolioVariant = {
@@ -203,6 +204,11 @@ export const templateCatalog: Record<
   resume: [
     { id: "embed", label: "Embedded", description: "Show the PDF directly in the portfolio" },
     { id: "card", label: "Card", description: "Compact resume card with an open action" },
+    { id: "compact", label: "Compact", description: "Dense one-line résumé action" },
+    { id: "split", label: "Split", description: "Editorial statement with document action" },
+    { id: "spotlight", label: "Spotlight", description: "Large accent-led résumé callout" },
+    { id: "minimal", label: "Minimal", description: "Quiet text-first résumé link" },
+    { id: "terminal", label: "Terminal", description: "Developer command-style résumé block" },
   ],
   contact: [
     { id: "panel", label: "Panel", description: "Strong final call to action" },
@@ -240,6 +246,7 @@ export const defaultResume: PortfolioResume = {
   publicId: "",
   fileName: "",
   showInHero: false,
+  hideSectionWhenHeroLink: false,
 };
 
 export function cloneResume(
@@ -591,6 +598,10 @@ export function normalizeBuilderState(input: BuilderState): BuilderState {
           typeof variant.resume?.showInHero === "boolean"
             ? variant.resume.showInHero
             : false,
+        hideSectionWhenHeroLink:
+          typeof variant.resume?.hideSectionWhenHeroLink === "boolean"
+            ? variant.resume.hideSectionWhenHeroLink
+            : false,
       },
       content: {
         experienceIds:
@@ -896,7 +907,10 @@ export function sectionHasContent(
     case "skills":
       return data.skills.length > 0;
     case "resume":
-      return Boolean(resume.url.trim());
+      return Boolean(
+        resume.url.trim() &&
+          !(resume.showInHero && resume.hideSectionWhenHeroLink)
+      );
     case "contact":
       return Boolean(
         profile.email.trim() ||

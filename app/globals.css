@@ -3678,6 +3678,242 @@ body.dialog-open {
   letter-spacing: .08em;
 }
 
+.resume-inline-action,
+.resume-document-action,
+.resume-spotlight-action,
+.resume-minimal-action,
+.resume-terminal-action {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--p-accent);
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+}
+.resume-inline-action:hover,
+.resume-inline-action:focus-visible,
+.resume-document-action:hover,
+.resume-document-action:focus-visible,
+.resume-spotlight-action:hover,
+.resume-spotlight-action:focus-visible,
+.resume-minimal-action:hover,
+.resume-minimal-action:focus-visible,
+.resume-terminal-action:hover,
+.resume-terminal-action:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.resume-compact-row {
+  min-height: 74px;
+  padding: 15px 0;
+  border-top: 1px solid var(--stroke);
+  border-bottom: 1px solid var(--stroke);
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(160px, .7fr) auto;
+  align-items: center;
+  gap: 18px;
+}
+.resume-compact-row > div {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.resume-compact-row strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.resume-compact-row > span {
+  color: var(--soft);
+  font-size: 11px;
+}
+
+.resume-split-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr);
+  gap: 18px;
+  align-items: stretch;
+}
+.resume-split-copy {
+  min-height: 300px;
+  padding: clamp(24px, 5vw, 52px);
+  border: 1px solid var(--stroke);
+  border-radius: 18px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.resume-split-copy h3 {
+  max-width: 760px;
+  margin: 10px 0 14px;
+  font-size: clamp(34px, 6vw, 70px);
+  line-height: .96;
+  letter-spacing: -.055em;
+}
+.resume-split-copy > p:last-child {
+  max-width: 680px;
+  margin: 0;
+  color: var(--soft);
+  line-height: 1.65;
+}
+.resume-document-card {
+  min-height: 300px;
+  padding: 24px;
+  border: 1px solid var(--stroke);
+  border-radius: 18px;
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--p-accent) 9%, var(--surface)),
+      var(--surface)
+    );
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 24px;
+}
+.resume-document-icon {
+  width: 54px;
+  height: 68px;
+  border: 1px solid var(--stroke);
+  border-radius: 8px;
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  font-weight: 900;
+}
+.resume-document-card > div {
+  align-self: end;
+  display: grid;
+  gap: 6px;
+}
+.resume-document-card strong {
+  overflow-wrap: anywhere;
+  font-size: 18px;
+}
+.resume-document-card small {
+  color: var(--soft);
+  line-height: 1.5;
+}
+
+.resume-spotlight-panel {
+  min-height: 360px;
+  padding: clamp(28px, 6vw, 64px);
+  border: 1px solid color-mix(in srgb, var(--p-accent) 35%, var(--stroke));
+  border-radius: 24px;
+  background:
+    radial-gradient(
+      circle at 80% 20%,
+      color-mix(in srgb, var(--p-accent) 20%, transparent),
+      transparent 42%
+    ),
+    var(--surface);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.resume-spotlight-index {
+  margin-bottom: auto;
+  color: var(--p-accent);
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.resume-spotlight-panel h2 {
+  margin: 34px 0 4px;
+  font-size: clamp(44px, 9vw, 106px);
+  line-height: .88;
+  letter-spacing: -.065em;
+}
+.resume-spotlight-panel p {
+  margin: 12px 0 4px;
+  color: var(--soft);
+}
+.resume-spotlight-panel > strong {
+  margin-bottom: 22px;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.resume-spotlight-action {
+  width: fit-content;
+  padding: 11px 15px;
+  border: 1px solid var(--stroke);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.resume-minimal-row {
+  min-height: 118px;
+  padding: 22px 0;
+  border-top: 1px solid var(--stroke);
+  border-bottom: 1px solid var(--stroke);
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(160px, .8fr) auto;
+  align-items: center;
+  gap: 24px;
+}
+.resume-minimal-row > div {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+.resume-minimal-row > div > span {
+  color: var(--soft);
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+}
+.resume-minimal-row h2,
+.resume-minimal-row p {
+  margin: 0;
+}
+.resume-minimal-row h2 {
+  font-size: clamp(24px, 4vw, 44px);
+  letter-spacing: -.04em;
+}
+.resume-minimal-row p {
+  color: var(--soft);
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+.resume-minimal-action {
+  border-bottom: 1px solid currentColor;
+  padding: 0 0 4px;
+}
+
+.resume-terminal-window {
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.resume-terminal-window p {
+  margin: 6px 0;
+}
+.resume-terminal-file {
+  font-size: clamp(24px, 5vw, 52px);
+  font-weight: 800;
+  letter-spacing: -.04em;
+  overflow-wrap: anywhere;
+}
+.resume-terminal-action {
+  width: fit-content;
+  margin-top: 18px;
+  color: inherit;
+  border-bottom: 1px solid currentColor;
+  padding: 0 0 4px;
+}
+
 .portfolio-manager-danger-zone {
   width: min(1180px, calc(100% - 40px));
   margin: 28px auto 64px;
@@ -3735,6 +3971,26 @@ body.dialog-open {
     min-height: 0;
     align-items: start;
     flex-direction: column;
+  }
+  .resume-compact-row,
+  .resume-minimal-row {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 10px;
+  }
+  .resume-split-panel {
+    grid-template-columns: 1fr;
+  }
+  .resume-split-copy,
+  .resume-document-card {
+    min-height: 240px;
+  }
+  .resume-spotlight-panel {
+    min-height: 300px;
+    border-radius: 16px;
+  }
+  .resume-minimal-row > div {
+    justify-content: space-between;
   }
   .portfolio-manager-danger-zone {
     width: min(100% - 24px, 1180px);

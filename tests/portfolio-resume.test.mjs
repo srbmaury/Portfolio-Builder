@@ -7,6 +7,7 @@ import {
   normalizeBuilderState,
   sectionHasContent,
   snapshotForVariant,
+  templateCatalog,
 } from "../lib/portfolio.ts";
 import { cloudinaryUploadEndpoint } from "../lib/cloudinary.ts";
 
@@ -54,6 +55,7 @@ test("portfolio variants have independent resume files with safe legacy defaults
     publicId: "",
     fileName: "",
     showInHero: false,
+    hideSectionWhenHeroLink: false,
   });
 });
 
@@ -64,6 +66,7 @@ test("published snapshots include only the active portfolio resume settings", ()
     publicId: "folioblocks/uploads/backend-resume",
     fileName: "Saurabh_Backend_Resume.pdf",
     showInHero: true,
+    hideSectionWhenHeroLink: true,
   };
 
   const snapshot = snapshotForVariant(state);
@@ -91,6 +94,7 @@ test("resume section renders only when the active portfolio has a resume URL", (
     publicId: "folioblocks/uploads/resume",
     fileName: "Resume.pdf",
     showInHero: false,
+    hideSectionWhenHeroLink: false,
   };
 
   assert.equal(
@@ -141,4 +145,50 @@ test("resume delivery rejects non-PDF upstream payloads", () => {
   assert.match(deliverySource, /%PDF-/);
   assert.match(deliverySource, /Resume source did not return a PDF/);
   assert.match(deliverySource, /Cache-Control": "no-store"/);
+});
+
+
+test("resume section offers seven presentation styles", () => {
+  assert.deepEqual(
+    templateCatalog.resume.map((item) => item.id),
+    ["embed", "card", "compact", "split", "spotlight", "minimal", "terminal"]
+  );
+
+  for (const variant of ["compact", "split", "spotlight", "minimal", "terminal"]) {
+    assert.match(
+      rendererSource,
+      new RegExp(`variant === ["']${variant}["']`)
+    );
+  }
+});
+
+test("resume section can hide itself when the hero resume link is enabled", () => {
+  const state = structuredClone(emptyBuilderState);
+  const resumeSection = state.variants[0].config.sections.find(
+    (section) => section.id === "resume"
+  );
+
+  state.variants[0].resume = {
+    url: "https://res.cloudinary.com/demo/raw/upload/v1/folioblocks/uploads/resume.pdf",
+    publicId: "folioblocks/uploads/resume.pdf",
+    fileName: "Resume.pdf",
+    showInHero: true,
+    hideSectionWhenHeroLink: true,
+  };
+
+  assert.equal(
+    sectionHasContent(resumeSection, state.data, state.variants[0].resume),
+    false
+  );
+
+  state.variants[0].resume.hideSectionWhenHeroLink = false;
+  assert.equal(
+    sectionHasContent(resumeSection, state.data, state.variants[0].resume),
+    true
+  );
+});
+
+test("builder exposes the hero-link-only resume presentation option", () => {
+  assert.match(builderSource, /hideSectionWhenHeroLink/);
+  assert.match(builderSource, /Hide standalone Resume section when hero link is shown/);
 });
