@@ -865,54 +865,62 @@ export function PortfolioBuilder({
           folio<span>blocks</span>
         </a>
 
-        <div className="builder-status" title={cloudMessage || undefined}>
-          <span className={`save-dot cloud-${cloudStatus}`} />
-          {cloudUserId
-            ? cloudStatus === "loading"
-              ? "Syncing cloud…"
-              : cloudStatus === "error"
-                ? "Cloud error"
-                : cloudStatus === "saved"
-                  ? "Saved to cloud"
-                  : "Cloud ready"
-            : "Saved locally"}
-        </div>
+        <div className="builder-topbar-controls">
+          <div className="builder-status" title={cloudMessage || undefined}>
+            <span className={`save-dot cloud-${cloudStatus}`} />
+            <span>
+              {cloudUserId
+                ? cloudStatus === "loading"
+                  ? "Syncing…"
+                  : cloudStatus === "error"
+                    ? "Cloud error"
+                    : cloudStatus === "saved"
+                      ? "Saved"
+                      : "Cloud ready"
+                : "Local"}
+            </span>
+          </div>
 
-        <div className="topbar-actions">
-          {cloudUserId ? (
-            <>
-              <a className="ghost-button portfolio-manager-link" href="/portfolios">
-                My portfolios
+          <div className="topbar-actions">
+            {cloudUserId ? (
+              <>
+                <a className="topbar-link portfolio-manager-link" href="/portfolios">
+                  Portfolios
+                </a>
+                <button
+                  className="topbar-link"
+                  onClick={saveToCloud}
+                  disabled={cloudStatus === "loading"}
+                >
+                  Save
+                </button>
+              </>
+            ) : (
+              <a className="topbar-link cloud-login-link" href="/login">
+                Sign in
               </a>
-              <button
-                className="ghost-button"
-                onClick={saveToCloud}
-                disabled={cloudStatus === "loading"}
-              >
-                Save cloud
-              </button>
-              <button className="ghost-button" onClick={signOut}>
-                Sign out
-              </button>
-            </>
-          ) : (
-            <a className="ghost-button cloud-login-link" href="/login">
-              Sign in
-            </a>
-          )}
-          <button className="ghost-button reset-button" onClick={startFreshWorkspace}>
-            Start fresh
-          </button>
-          <button className="ghost-button reset-button" onClick={loadDemo}>
-            Load demo
-          </button>
-          <button
-            className="primary-button"
-            onClick={publish}
-            disabled={cloudStatus === "loading"}
-          >
-            {cloudUserId ? "Publish & copy link" : "Sign in to publish"}
-          </button>
+            )}
+
+            <details className="topbar-more">
+              <summary aria-label="More builder actions" title="More actions">
+                •••
+              </summary>
+              <div className="topbar-menu">
+                <button onClick={startFreshWorkspace}>Start fresh</button>
+                <button onClick={loadDemo}>Load demo</button>
+                {cloudUserId ? <button onClick={signOut}>Sign out</button> : null}
+              </div>
+            </details>
+
+            <button
+              className="primary-button topbar-publish"
+              onClick={publish}
+              disabled={cloudStatus === "loading"}
+              title={cloudUserId ? "Publish and copy public link" : undefined}
+            >
+              {cloudUserId ? "Publish" : "Sign in to publish"}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -1332,9 +1340,19 @@ export function PortfolioBuilder({
                 {snapshot.config.sections.map((section, index) => (
                   <div className="section-config" key={section.id}>
                     <div className="section-config-head">
-                      <div>
-                        <strong>{section.id}</strong>
-                        <small>{section.visible ? section.variant : "hidden"}</small>
+                      <div className="section-name-editor">
+                        <label htmlFor={`section-name-${section.id}`}>Section name</label>
+                        <input
+                          id={`section-name-${section.id}`}
+                          value={section.title || ""}
+                          onChange={(event) =>
+                            setSectionTitle(section.id, event.target.value)
+                          }
+                          aria-label={`Edit ${section.id} section name`}
+                        />
+                        <small>
+                          {section.id} · {section.visible ? section.variant : "hidden"}
+                        </small>
                       </div>
 
                       <div className="section-actions">
@@ -1360,14 +1378,6 @@ export function PortfolioBuilder({
 
                     {section.visible && (
                       <>
-                        <div className="section-title-editor">
-                          <Field
-                            label="Heading"
-                            value={section.title || ""}
-                            onChange={(value) => setSectionTitle(section.id, value)}
-                            hint="Shown as the section heading"
-                          />
-                        </div>
                         <div className="variant-grid">
                         {templateCatalog[section.id].map((variant) => (
                           <button
