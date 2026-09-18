@@ -655,6 +655,12 @@ a { color: inherit; text-decoration: none; }
   align-items: center;
   gap: 12px;
 }
+/* Grid items default to min-width: auto, which stops these side columns from
+   shrinking and pushes them past the viewport at narrow widths. */
+.preview-toolbar > div:first-child,
+.preview-toolbar > span:last-child {
+  min-width: 0;
+}
 .preview-toolbar > div:first-child {
   display: flex;
   align-items: baseline;
@@ -663,8 +669,19 @@ a { color: inherit; text-decoration: none; }
 .preview-toolbar > div:first-child strong {
   color: #353c47;
   font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.preview-toolbar > span:last-child { justify-self: end; }
+/* justify-self: end would size this to max-content and let it spill back over
+   the device controls, so it fills its column and truncates inside it. */
+.preview-toolbar > span:last-child {
+  justify-self: stretch;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .preview-controls {
   display: flex;
   padding: 3px;
@@ -3562,14 +3579,22 @@ body.dialog-open {
   border-radius: 18px;
   background: var(--surface);
   display: flex;
+  flex-wrap: wrap;
   align-items: end;
   justify-content: space-between;
   gap: 28px;
+}
+/* Without min-width: 0 the text column refuses to shrink below the file name's
+   min-content width, pushing the card past the viewport on narrow screens. */
+.resume-card > div {
+  min-width: 0;
 }
 .resume-card h3 {
   margin: 12px 0 8px;
   font-size: clamp(24px, 4vw, 42px);
   letter-spacing: -.04em;
+  /* File names have no spaces to wrap at. */
+  overflow-wrap: anywhere;
 }
 .resume-card p {
   margin: 0;
