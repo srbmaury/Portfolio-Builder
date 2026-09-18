@@ -2566,8 +2566,8 @@ body.dialog-open {
   .experience-v-resume .experience-layout-item > *,
   .experience-v-steps .experience-layout-item > *,
   .experience-v-stacked article > * {
-    grid-column: 1;
-    grid-row: auto;
+    grid-column: 1 !important;
+    grid-row: auto !important;
   }
   .experience-v-timeline .experience-layout-list {
     margin-left: 0;
