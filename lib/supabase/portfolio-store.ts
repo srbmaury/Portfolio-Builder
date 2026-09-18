@@ -343,17 +343,25 @@ export async function renamePortfolio(
 }
 
 export async function deletePortfolio(
-  supabase: SupabaseClient,
-  user: User,
+  _supabase: SupabaseClient,
+  _user: User,
   variantKey: string
 ) {
-  const { error } = await supabase
-    .from("portfolios")
-    .delete()
-    .eq("user_id", user.id)
-    .eq("variant_key", variantKey);
+  const response = await fetch(
+    `/api/portfolios/${encodeURIComponent(variantKey)}`,
+    { method: "DELETE" }
+  );
 
-  if (error) throw error;
+  const payload = (await response.json().catch(() => ({}))) as {
+    error?: string;
+    deletedSharedWorkspace?: boolean;
+  };
+
+  if (!response.ok) {
+    throw new Error(payload.error || "Portfolio deletion failed.");
+  }
+
+  return payload;
 }
 
 export async function unpublishPortfolio(
