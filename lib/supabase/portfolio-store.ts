@@ -152,99 +152,53 @@ export async function saveBuilderState(
   input: BuilderState
 ) {
   const state = normalizeBuilderState(input);
-  const username = await ensureProfile(supabase, user, state);
 
-  const { error: expDelete } = await supabase
-    .from("experiences")
-    .delete()
-    .eq("user_id", user.id);
-  if (expDelete) throw expDelete;
+  const { data: existing, error: existingError } = await supabase
+    .from("profiles")
+    .select("username")
+    .eq("user_id", user.id)
+    .maybeSingle();
 
-  if (state.data.experience.length) {
-    const { error } = await supabase.from("experiences").insert(
-      state.data.experience.map((item, index) => ({
-        id: item.id,
-        user_id: user.id,
-        company: item.company,
-        role: item.role,
-        period: item.period,
-        summary: item.summary,
-        sort_order: index,
-      }))
-    );
-    if (error) throw error;
-  }
+  if (existingError) throw existingError;
 
-  const { error: projectDelete } = await supabase
-    .from("projects")
-    .delete()
-    .eq("user_id", user.id);
-  if (projectDelete) throw projectDelete;
-
-  if (state.data.projects.length) {
-    const { error } = await supabase.from("projects").insert(
-      state.data.projects.map((project, index) => ({
-        id: project.id,
-        user_id: user.id,
-        title: project.title,
-        description: project.description,
-        stack: project.stack,
-        image_url: project.imageUrl || null,
-        github_url: project.githubUrl || null,
-        live_url: project.liveUrl || null,
-        sort_order: index,
-      }))
-    );
-    if (error) throw error;
-  }
-
-  const { error: skillDelete } = await supabase
-    .from("skills")
-    .delete()
-    .eq("user_id", user.id);
-  if (skillDelete) throw skillDelete;
-
-  if (state.data.skills.length) {
-    const { error } = await supabase.from("skills").insert(
-      state.data.skills.map((name, index) => ({
-        user_id: user.id,
-        name,
-        sort_order: index,
-      }))
-    );
-    if (error) throw error;
-  }
-
-  const { data: existingPortfolios, error: existingPortfolioError } = await supabase
-    .from("portfolios")
-    .select("variant_key, slug")
-    .eq("user_id", user.id);
-  if (existingPortfolioError) throw existingPortfolioError;
-
-  const existingByKey = new Map(
-    (existingPortfolios || []).map((row) => [row.variant_key, row])
+  const username = publicUsernameForProfile(
+    existing?.username,
+    state.data.profile.name,
+    user.id
   );
 
-  const { error: portfolioUpsert } = await supabase.from("portfolios").upsert(
-    state.variants.map((variant) => ({
-      user_id: user.id,
-      variant_key: variant.id,
+  const payload = {
+    username,
+    profile: {
+      ...state.data.profile,
+      email: state.data.profile.email || user.email || "",
+    },
+    customSections: state.data.customSections,
+    experience: state.data.experience,
+    projects: state.data.projects,
+    skills: state.data.skills,
+    variants: state.variants.map((variant) => ({
+      id: variant.id,
       name: variant.name,
-      slug:
-        existingByKey.get(variant.id)?.slug ||
-        slugForVariant(state.variants, variant),
-      target_role: variant.targetRole,
+      slug: slugForVariant(state.variants, variant),
+      targetRole: variant.targetRole,
       theme: variant.config.theme,
-      section_config: variant.config.sections,
-      content_config: variant.content,
-      branding_config: variant.branding,
-      resume_config: variant.resume,
+      sections: cloneConfig(variant.config).sections,
+      content: variant.content,
+      branding: variant.branding,
+      resume: variant.resume,
     })),
-    { onConflict: "user_id,variant_key" }
-  );
-  if (portfolioUpsert) throw portfolioUpsert;
+  };
 
-  return { username };
+  const { data, error } = await supabase.rpc("save_portfolio_workspace", {
+    payload,
+  });
+
+  if (error) throw error;
+
+  return {
+    username: typeof data === "string" && data ? data : username,
+  };
 }
 
 export async function publishVariant(
