@@ -47,9 +47,7 @@ export function PortfolioBuilder({
   initialVariantId?: string;
   openCreateVariant?: boolean;
 }) {
-  const [state, setState] = useState<BuilderState>(
-    startFresh ? emptyBuilderState : sampleBuilderState
-  );
+  const [state, setState] = useState<BuilderState>(emptyBuilderState);
   const [tab, setTab] = useState<"content" | "targeting" | "design">("content");
   const [previewMode, setPreviewMode] = useState<PreviewMode>("desktop");
   const [hydrated, setHydrated] = useState(false);
