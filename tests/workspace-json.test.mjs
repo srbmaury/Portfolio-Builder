@@ -47,3 +47,18 @@ test("workspace JSON formatter returns stable two-space JSON", () => {
   if (!result.ok) return;
   assert.equal(result.text, '{\n  "b": 2,\n  "a": 1\n}');
 });
+
+
+test("workspace JSON normalizes unsupported theme and layout values", () => {
+  const raw = structuredClone(emptyBuilderState);
+  raw.variants[0].config.theme = "not-a-theme";
+  raw.variants[0].config.sections[0].variant = "not-a-layout";
+
+  const result = parseWorkspaceJson(JSON.stringify(raw));
+
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+
+  assert.equal(result.state.variants[0].config.theme, "ink");
+  assert.equal(result.state.variants[0].config.sections[0].variant, "split");
+});
