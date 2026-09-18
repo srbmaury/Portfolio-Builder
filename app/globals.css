@@ -2527,11 +2527,69 @@ body.dialog-open {
   .contact-layout {
     grid-template-columns: 1fr;
   }
-  .hero-photo-frame { min-height: 480px; order: -1; }
-  .experience-layout-item { grid-template-columns: 44px 110px 1fr; }
-  .experience-layout-item > p { grid-column: 3; }
+
+  /* Keep narrow-screen hero reading order aligned with the DOM:
+     name/copy first, supporting image second on both tablet and mobile. */
+  .hero-photo-frame,
+  .hero-portrait .hero-photo-frame {
+    min-height: 480px;
+    order: 0;
+  }
+  .hero-editorial-photo .hero-photo-copy {
+    padding-top: 0;
+  }
+
+  /* Avoid an 8px breakpoint cliff at the 768px tablet preview. */
+  .about-v-split .about-layout-grid,
+  .about-v-facts .about-layout-grid,
+  .about-v-compact .about-layout-grid,
+  .contact-v-split {
+    grid-template-columns: 1fr;
+  }
+
+  .experience-layout-item,
+  .experience-v-timeline .experience-layout-item,
+  .experience-v-ledger .experience-layout-item,
+  .experience-v-spotlight .experience-layout-item,
+  .experience-v-compact .experience-layout-item,
+  .experience-v-alternating .experience-layout-item,
+  .experience-v-resume .experience-layout-item,
+  .experience-v-steps .experience-layout-item,
+  .experience-v-stacked article {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .experience-layout-item > *,
+  .experience-v-timeline .experience-layout-item > *,
+  .experience-v-spotlight .experience-layout-item > *,
+  .experience-v-alternating .experience-layout-item > *,
+  .experience-v-resume .experience-layout-item > *,
+  .experience-v-steps .experience-layout-item > *,
+  .experience-v-stacked article > * {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .experience-v-timeline .experience-layout-list {
+    margin-left: 0;
+    border-left: 0;
+  }
+  .experience-v-timeline .experience-layout-item {
+    padding-left: 0;
+  }
+  .experience-v-timeline .experience-layout-item::before {
+    display: none;
+  }
+
+  .project-showcase-card {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    gap: 18px;
+  }
+
   .skills-v-logos .skills-layout-list,
-  .skills-v-logo-grid .skills-layout-list { grid-template-columns: repeat(2,1fr); }
+  .skills-v-logo-grid .skills-layout-list {
+    grid-template-columns: repeat(2,1fr);
+  }
 }
 @media (max-width: 600px) {
   .hero-photo { gap: 28px; }
