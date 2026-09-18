@@ -208,14 +208,6 @@ export function summarizeAnalytics(
   };
 }
 
-export function analyticsTargetKey(value: string) {
-  return value
-    .trim()
-    .replace(/[^a-zA-Z0-9:._-]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 120);
-}
-
 export function analyticsSocialTarget(label: string, url: string) {
   const value = `${label} ${url}`.toLowerCase();
   if (value.includes("github")) return "github";
