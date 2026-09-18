@@ -83,8 +83,10 @@ export default function Home() {
       <footer className="landing-footer">
         <a className="brand brand-light" href="/">folio<span>blocks</span></a>
         <p>Modular portfolios for different roles.</p>
-        <Link href="/docs">Docs</Link>
-        <Link href="/builder">Open builder →</Link>
+        <div className="landing-footer-actions">
+          <Link href="/docs">Docs</Link>
+          <Link href="/builder">Open builder →</Link>
+        </div>
       </footer>
     </main>
   );
