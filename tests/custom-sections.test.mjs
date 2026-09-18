@@ -7,6 +7,7 @@ import {
   sectionHasContent,
   sectionType,
   snapshotForVariant,
+  templateCatalog,
 } from "../lib/portfolio.ts";
 import {
   addCustomSection,
@@ -101,4 +102,20 @@ test("removing a custom section removes its shared content and every variant con
       false
     );
   }
+});
+
+test("custom sections offer eight distinct presentation templates", () => {
+  assert.deepEqual(
+    templateCatalog.custom.map((item) => item.id),
+    [
+      "list",
+      "cards",
+      "timeline",
+      "grid",
+      "compact",
+      "split",
+      "spotlight",
+      "badges",
+    ]
+  );
 });
