@@ -909,3 +909,10 @@ body.builder-resizing * {
     margin: 0 auto 10px;
   }
 }
+
+.primary-button:disabled,
+.ghost-button:disabled {
+  opacity: .55;
+  cursor: wait;
+  transform: none;
+}
