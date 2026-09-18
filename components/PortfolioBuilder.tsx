@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { PortfolioRenderer } from "@/components/PortfolioRenderer";
+import { uploadImageToCloudinary } from "@/lib/cloudinary";
 import { createClient } from "@/lib/supabase/client";
 import {
   loadBuilderState,
@@ -13,6 +14,7 @@ import {
   cloneContentConfig,
   createEntityId,
   defaultConfig,
+  emptyBuilderState,
   fullContentConfig,
   normalizeBuilderState,
   sampleBuilderState,
@@ -256,7 +258,15 @@ export function PortfolioBuilder() {
   }
 
   function updateProfile(
-    field: "name" | "role" | "tagline" | "about" | "email" | "location" | "availability",
+    field:
+      | "name"
+      | "role"
+      | "tagline"
+      | "about"
+      | "email"
+      | "location"
+      | "availability"
+      | "heroImageUrl",
     value: string
   ) {
     updateData((data) => ({
@@ -298,7 +308,18 @@ export function PortfolioBuilder() {
   }
 
   function shuffleDesign() {
-    const themes: ThemeName[] = ["ink", "sand", "moss", "aurora", "cobalt", "rose", "mono"];
+    const themes: ThemeName[] = [
+      "ink",
+      "sand",
+      "moss",
+      "aurora",
+      "cobalt",
+      "rose",
+      "mono",
+      "sunset",
+      "ice",
+      "noir",
+    ];
     updateActiveConfig((config) => ({
       ...config,
       theme: themes[Math.floor(Math.random() * themes.length)],
@@ -375,7 +396,7 @@ export function PortfolioBuilder() {
 
   function updateProject(
     index: number,
-    field: "title" | "description" | "url",
+    field: "title" | "description" | "imageUrl" | "githubUrl" | "liveUrl",
     value: string
   ) {
     updateData((data) => ({
@@ -404,7 +425,9 @@ export function PortfolioBuilder() {
     title: string;
     description: string;
     stack: string[];
-    url?: string;
+    imageUrl?: string;
+    githubUrl?: string;
+    liveUrl?: string;
   }) {
     const id = createEntityId("project");
     setState((current) => ({
@@ -721,10 +744,15 @@ export function PortfolioBuilder() {
     }
   }
 
-  function reset() {
-    setState(sampleBuilderState);
+  function startFresh() {
+    setState(emptyBuilderState);
     setShareUrl("");
     window.localStorage.removeItem(STORAGE_KEY);
+  }
+
+  function loadDemo() {
+    setState(sampleBuilderState);
+    setShareUrl("");
   }
 
   return (
@@ -766,8 +794,11 @@ export function PortfolioBuilder() {
               Sign in
             </a>
           )}
-          <button className="ghost-button reset-button" onClick={reset}>
-            Reset demo
+          <button className="ghost-button reset-button" onClick={startFresh}>
+            Start fresh
+          </button>
+          <button className="ghost-button reset-button" onClick={loadDemo}>
+            Load demo
           </button>
           <button
             className="primary-button"
@@ -909,6 +940,12 @@ export function PortfolioBuilder() {
                   value={state.data.profile.availability}
                   onChange={(value) => updateProfile("availability", value)}
                 />
+                <ImageUploadField
+                  label="Hero image"
+                  value={state.data.profile.heroImageUrl || ""}
+                  onChange={(value) => updateProfile("heroImageUrl", value)}
+                  help="Used by image-based hero layouts."
+                />
               </EditorSection>
 
               <EditorSection
@@ -977,10 +1014,21 @@ export function PortfolioBuilder() {
                       onChange={(value) => updateProjectStack(index, value)}
                       hint="Comma separated"
                     />
+                    <ImageUploadField
+                      label="Project image"
+                      value={project.imageUrl || ""}
+                      onChange={(value) => updateProject(index, "imageUrl", value)}
+                      help="Used by image grid, gallery, browser, and image-bento designs."
+                    />
                     <Field
-                      label="Project URL"
-                      value={project.url || ""}
-                      onChange={(value) => updateProject(index, "url", value)}
+                      label="GitHub URL"
+                      value={project.githubUrl || ""}
+                      onChange={(value) => updateProject(index, "githubUrl", value)}
+                    />
+                    <Field
+                      label="Live URL"
+                      value={project.liveUrl || ""}
+                      onChange={(value) => updateProject(index, "liveUrl", value)}
                     />
                   </EditorCard>
                 ))}
@@ -1147,7 +1195,18 @@ export function PortfolioBuilder() {
               <div className="theme-picker">
                 <label>Theme</label>
                 <div className="theme-options">
-                  {(["ink", "sand", "moss", "aurora", "cobalt", "rose", "mono"] as ThemeName[]).map((theme) => (
+                  {([
+                    "ink",
+                    "sand",
+                    "moss",
+                    "aurora",
+                    "cobalt",
+                    "rose",
+                    "mono",
+                    "sunset",
+                    "ice",
+                    "noir",
+                  ] as ThemeName[]).map((theme) => (
                     <button
                       key={theme}
                       className={`theme-swatch swatch-${theme} ${
@@ -1329,7 +1388,9 @@ function CreateItemDialog({
     title: string;
     description: string;
     stack: string[];
-    url?: string;
+    imageUrl?: string;
+    githubUrl?: string;
+    liveUrl?: string;
   }) => void;
   onCreateLink: (input: { label: string; url: string }) => void;
   onCreateVariant: (input: { name: string; targetRole: string }) => void;
@@ -1340,7 +1401,14 @@ function CreateItemDialog({
       return { company: "", role: "", period: "", summary: "" };
     }
     if (kind === "project") {
-      return { title: "", description: "", stack: "", url: "" };
+      return {
+        title: "",
+        description: "",
+        stack: "",
+        imageUrl: "",
+        githubUrl: "",
+        liveUrl: "",
+      };
     }
     if (kind === "link") {
       return { label: "", url: "" };
@@ -1402,7 +1470,9 @@ function CreateItemDialog({
         title,
         description,
         stack,
-        url: values.url.trim() || undefined,
+        imageUrl: values.imageUrl.trim() || undefined,
+        githubUrl: values.githubUrl.trim() || undefined,
+        liveUrl: values.liveUrl.trim() || undefined,
       });
       return;
     }
@@ -1489,7 +1559,14 @@ function CreateItemDialog({
               <DialogField label="Project title" value={values.title} onChange={(value) => update("title", value)} autoFocus required />
               <DialogField label="Description" multiline value={values.description} onChange={(value) => update("description", value)} required />
               <DialogField label="Tech stack" placeholder="Java, Redis, PostgreSQL" value={values.stack} onChange={(value) => update("stack", value)} required />
-              <DialogField label="Project URL" placeholder="https://..." value={values.url} onChange={(value) => update("url", value)} type="url" />
+              <ImageUploadField
+                label="Project image"
+                value={values.imageUrl}
+                onChange={(value) => update("imageUrl", value)}
+                help="Optional. Upload a screenshot or visual for image-based project layouts."
+              />
+              <DialogField label="GitHub URL" placeholder="https://github.com/..." value={values.githubUrl} onChange={(value) => update("githubUrl", value)} type="url" />
+              <DialogField label="Live URL" placeholder="https://..." value={values.liveUrl} onChange={(value) => update("liveUrl", value)} type="url" />
             </>
           )}
 
@@ -1572,6 +1649,68 @@ function DialogField({
         />
       )}
     </label>
+  );
+}
+
+function ImageUploadField({
+  label,
+  value,
+  onChange,
+  help,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  help?: string;
+}) {
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function upload(file?: File) {
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setStatus("Choose an image file.");
+      return;
+    }
+
+    setBusy(true);
+    setStatus("Uploading…");
+
+    try {
+      const result = await uploadImageToCloudinary(file);
+      onChange(result.secure_url);
+      setStatus("Uploaded");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Upload failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="field image-upload-field">
+      <span>{label}</span>
+      {value ? (
+        <div className="image-upload-preview">
+          <img src={value} alt="" />
+          <button type="button" className="danger-link" onClick={() => onChange("")}>
+            Remove
+          </button>
+        </div>
+      ) : null}
+      <label className={`image-upload-button ${busy ? "disabled" : ""}`}>
+        <input
+          type="file"
+          accept="image/*"
+          disabled={busy}
+          onChange={(event) => upload(event.target.files?.[0])}
+        />
+        {busy ? "Uploading…" : value ? "Replace image" : "Upload image"}
+      </label>
+      {help && <small className="field-help">{help}</small>}
+      {status && <small className="upload-status">{status}</small>}
+    </div>
   );
 }
 
