@@ -186,6 +186,17 @@ export const defaultConfig: PortfolioConfig = {
   ],
 };
 
+export function sectionDisplayTitle(
+  id: SectionType,
+  value?: string
+) {
+  const fallback =
+    defaultConfig.sections.find((section) => section.id === id)?.title ||
+    id.charAt(0).toUpperCase() + id.slice(1);
+
+  return value?.trim() || fallback;
+}
+
 export const sampleData: PortfolioData = {
   profile: {
     name: "Alex Morgan",
@@ -327,13 +338,7 @@ export const emptyBuilderState: BuilderState = {
       id: "portfolio",
       name: "",
       targetRole: "",
-      config: {
-        theme: defaultConfig.theme,
-        sections: defaultConfig.sections.map((section) => ({
-          ...section,
-          title: "",
-        })),
-      },
+      config: cloneConfig(defaultConfig),
       content: fullContentConfig(emptyData),
     },
   ],
@@ -440,7 +445,7 @@ export function normalizeBuilderState(input: BuilderState): BuilderState {
                     ...fallbackSection,
                     ...saved,
                     title:
-                      typeof saved.title === "string"
+                      typeof saved.title === "string" && saved.title.trim()
                         ? saved.title
                         : fallbackSection.title,
                   }
