@@ -1,8 +1,5 @@
 import Image from "next/image";
-import {
-  analyticsSocialTarget,
-  analyticsTargetKey,
-} from "@/lib/analytics";
+import { analyticsSocialTarget } from "@/lib/analytics";
 import { skillIconUrl, skillInitials } from "@/lib/skill-icons";
 import {
   sectionDisplayTitle,
@@ -537,7 +534,7 @@ function ProjectActions({ project, compact = false }: { project: Project; compac
           target="_blank"
           rel="noreferrer"
           data-analytics-event="project_clicked"
-          data-analytics-target={`${analyticsTargetKey(project.id)}:github`}
+          data-analytics-target="project:github"
         >
           GitHub ↗
         </a>
@@ -548,7 +545,7 @@ function ProjectActions({ project, compact = false }: { project: Project; compac
           target="_blank"
           rel="noreferrer"
           data-analytics-event="project_clicked"
-          data-analytics-target={`${analyticsTargetKey(project.id)}:live`}
+          data-analytics-target="project:live"
         >
           Live ↗
         </a>
@@ -820,7 +817,7 @@ function CustomItemLink({
       target="_blank"
       rel="noreferrer"
       data-analytics-event="custom_link_clicked"
-      data-analytics-target={`custom:${analyticsTargetKey(item.id)}`}
+      data-analytics-target="custom:link"
     >
       {item.linkLabel.trim() || "Open"} ↗
     </a>
