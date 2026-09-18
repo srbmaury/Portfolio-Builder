@@ -707,7 +707,7 @@ export function PortfolioBuilder() {
     try {
       await saveBuilderState(supabase, data.user, state);
       const publicPath = await publishVariant(supabase, data.user, state);
-      const url = `${window.location.origin}/u/${publicPath}`;
+      const url = `${window.location.origin}/${publicPath}`;
 
       setShareUrl(url);
       setCloudUserId(data.user.id);
