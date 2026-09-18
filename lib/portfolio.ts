@@ -659,9 +659,11 @@ function normalizePortfolioConfig(
         id: raw.id || `custom-${custom.id}`,
         type: "custom",
         customSectionId: custom.id,
-        variant: ["list", "cards", "timeline"].includes(raw.variant)
-          ? raw.variant
-          : "list",
+        variant:
+          typeof raw.variant === "string" &&
+          templateCatalog.custom.some((option) => option.id === raw.variant)
+            ? raw.variant
+            : "list",
         visible: Boolean(raw.visible),
         title:
           typeof raw.title === "string" && raw.title.trim()
