@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { emptyBuilderState } from "../lib/portfolio.ts";
 import { parseResumeText } from "../lib/resume-parser.ts";
 import { mergeResumeImport } from "../lib/resume-import.ts";
+import { validateResumeFileMetadata } from "../lib/resume-upload.ts";
 
 test("resume parser extracts profile, experience, projects, links, and skills", () => {
   const draft = parseResumeText(`
@@ -132,4 +133,41 @@ test("resume merge de-duplicates shared content and targets only new imports in 
 
 test("resume parser rejects empty text", () => {
   assert.throws(() => parseResumeText("   \n\t"), /readable resume text/i);
+});
+
+
+test("resume upload accepts PDF/DOCX and rejects unsupported or oversized files", () => {
+  assert.deepEqual(
+    validateResumeFileMetadata({
+      name: "resume.pdf",
+      type: "application/pdf",
+      size: 1024,
+    }),
+    { ok: true }
+  );
+
+  assert.deepEqual(
+    validateResumeFileMetadata({
+      name: "resume.docx",
+      type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      size: 1024,
+    }),
+    { ok: true }
+  );
+
+  const unsupported = validateResumeFileMetadata({
+    name: "resume.txt",
+    type: "text/plain",
+    size: 1024,
+  });
+  assert.equal(unsupported.ok, false);
+  assert.match(unsupported.error, /PDF or DOCX/i);
+
+  const oversized = validateResumeFileMetadata({
+    name: "resume.pdf",
+    type: "application/pdf",
+    size: 5 * 1024 * 1024 + 1,
+  });
+  assert.equal(oversized.ok, false);
+  assert.match(oversized.error, /5 MB/i);
 });
