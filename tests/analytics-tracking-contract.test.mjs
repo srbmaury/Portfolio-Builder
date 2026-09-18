@@ -40,6 +40,7 @@ test("tracker delegates click tracking and stores anonymous ids locally", () => 
   assert.match(tracker, /sessionStorage/);
   assert.match(tracker, /closest\(/);
   assert.match(tracker, /portfolio_view/);
+  assert.match(tracker, /doNotTrack/);
 });
 
 test("analytics endpoint validates input and inserts fixed fields only", () => {
