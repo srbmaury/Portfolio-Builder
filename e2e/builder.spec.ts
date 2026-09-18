@@ -109,6 +109,7 @@ test("section ordering and hero resume modal work from saved builder state", asy
       publicId: "folioblocks/uploads/resume.pdf",
       fileName: "Resume.pdf",
       showInHero: false,
+      hideSectionWhenHeroLink: false,
     };
 
     window.localStorage.setItem(key, JSON.stringify(state));
@@ -124,6 +125,16 @@ test("section ordering and hero resume modal work from saved builder state", asy
   const preview = page.locator(".preview-window");
   const resumeAction = preview.getByRole("button", { name: "View résumé" });
   await expect(resumeAction).toBeVisible();
+  await expect(preview.locator(".resume-section")).toBeVisible();
+
+  const hideStandalone = page.getByRole("checkbox", {
+    name: /hide standalone resume section when hero link is shown/i,
+  });
+  await expect(hideStandalone).toBeEnabled();
+  await hideStandalone.check();
+
+  await expect(resumeAction).toBeVisible();
+  await expect(preview.locator(".resume-section")).toHaveCount(0);
   await resumeAction.click();
 
   const dialog = page.getByRole("dialog", { name: /resume\.pdf preview/i });
