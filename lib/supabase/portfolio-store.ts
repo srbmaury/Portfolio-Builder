@@ -31,6 +31,7 @@ type ProfileRow = {
   availability: string;
   hero_image_url: string;
   social_links: Array<{ label: string; url: string }>;
+  custom_sections: BuilderState["data"]["customSections"];
 };
 
 export async function loadBuilderState(
@@ -100,6 +101,9 @@ export async function loadBuilderState(
       liveUrl: row.live_url || undefined,
     })),
     skills: (skillResult.data || []).map((row) => row.name),
+    customSections: Array.isArray(profile.custom_sections)
+      ? profile.custom_sections
+      : [],
   };
 
   const variants: PortfolioVariant[] = (portfolioResult.data || []).map((row) => ({
@@ -466,6 +470,7 @@ async function ensureProfile(
     availability: state.data.profile.availability,
     hero_image_url: state.data.profile.heroImageUrl || "",
     social_links: state.data.profile.socials,
+    custom_sections: state.data.customSections,
   });
 
   if (error) throw error;
