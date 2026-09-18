@@ -15,6 +15,8 @@ export function PortfolioAnalyticsTracker({
   portfolioId: string;
 }) {
   useEffect(() => {
+    if (navigator.doNotTrack === "1") return;
+
     const visitorId = getOrCreateId(window.localStorage, VISITOR_KEY);
     const sessionId = getOrCreateId(window.sessionStorage, SESSION_KEY);
     const deviceType = detectDeviceType();
