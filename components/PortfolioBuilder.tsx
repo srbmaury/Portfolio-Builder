@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import type { CreateDialogKind, PreviewMode } from "@/components/builder/types";
 import { useEditorResize } from "@/components/builder/useEditorResize";
 import { usePortfolioEditorActions } from "@/components/builder/usePortfolioEditorActions";
@@ -188,114 +188,6 @@ export function PortfolioBuilder({
   function applyWorkspaceJson(next: BuilderState) {
     setState(normalizeBuilderState(next));
     setJsonEditorOpen(false);
-    setShareUrl("");
-  }
-
-  function createCustomSection(title: string) {
-    setState((current) => addCustomSectionToState(current, title));
-    setShareUrl("");
-  }
-
-  function renameCustomSection(customSectionId: string, title: string) {
-    setState((current) =>
-      updateCustomSectionTitleInState(current, customSectionId, title)
-    );
-  }
-
-  function addCustomItem(customSectionId: string) {
-    setState((current) =>
-      addCustomSectionItemToState(current, customSectionId)
-    );
-  }
-
-  function updateCustomItem(
-    customSectionId: string,
-    itemId: string,
-    field:
-      | "heading"
-      | "subheading"
-      | "meta"
-      | "description"
-      | "linkLabel"
-      | "linkUrl",
-    value: string
-  ) {
-    setState((current) =>
-      updateCustomSectionItemInState(
-        current,
-        customSectionId,
-        itemId,
-        field,
-        value
-      )
-    );
-  }
-
-  function removeCustomItem(customSectionId: string, itemId: string) {
-    setState((current) =>
-      removeCustomSectionItemFromState(current, customSectionId, itemId)
-    );
-  }
-
-  function removeCustomSection(customSectionId: string) {
-    if (!window.confirm("Delete this custom section from every portfolio variant?")) {
-      return;
-    }
-    setState((current) =>
-      removeCustomSectionFromState(current, customSectionId)
-    );
-    setShareUrl("");
-  }
-
-  function createVariant(input: { name: string; targetRole: string }) {
-    const currentConfig = activeVariant?.config ?? defaultConfig;
-    const number = state.variants.length + 1;
-    const id = `portfolio-${number}-${Date.now().toString(36)}`;
-
-    setState((current) => ({
-      ...current,
-      activeVariantId: id,
-      variants: [
-        ...current.variants,
-        {
-          id,
-          name: input.name,
-          targetRole: input.targetRole,
-          config: cloneConfig(currentConfig),
-          content: cloneContentConfig(
-            activeVariant?.content ?? fullContentConfig(current.data)
-          ),
-          branding: cloneBranding(activeVariant?.branding),
-          resume: cloneResume(activeVariant?.resume),
-        },
-      ],
-    }));
-
-    trackProductEvent("portfolio_created", id);
-    setShareUrl("");
-  }
-
-  function duplicateVariant() {
-    if (!activeVariant) return;
-    const id = `${slugify(activeVariant.name)}-copy-${Date.now().toString(36)}`;
-
-    setState((current) => ({
-      ...current,
-      activeVariantId: id,
-      variants: [
-        ...current.variants,
-        {
-          id,
-          name: `${activeVariant.name} Copy`,
-          targetRole: activeVariant.targetRole,
-          config: cloneConfig(activeVariant.config),
-          content: cloneContentConfig(activeVariant.content),
-          branding: cloneBranding(activeVariant.branding),
-          resume: cloneResume(activeVariant.resume),
-        },
-      ],
-    }));
-
     setShareUrl("");
   }
 
@@ -503,7 +395,7 @@ export function PortfolioBuilder({
 
       <div
         className="builder-grid"
-        style={{ "--editor-width": `${editorWidth}px` } as React.CSSProperties}
+        style={{ "--editor-width": `${editorWidth}px` } as CSSProperties}
       >
         <aside className="builder-panel">
           <div className="panel-tabs panel-tabs-three">
