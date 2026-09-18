@@ -67,7 +67,10 @@ function Hero({
       <section className="p-section hero-terminal">
         <div className="terminal-window">
           <div className="terminal-dots"><span /><span /><span /></div>
-          <p><span className="terminal-prompt">$</span> whoami</p>
+          <p>
+            <span className="terminal-prompt">$</span>{" "}
+            {title?.trim() ? `${title.trim().toLowerCase()} --whoami` : "whoami"}
+          </p>
           <h1>{display(profile.name, "Your name")}</h1>
           <p className="terminal-role">{display(profile.role, "Your role")}</p>
           <p><span className="terminal-prompt">$</span> cat mission.txt</p>
