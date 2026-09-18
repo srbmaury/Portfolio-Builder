@@ -174,14 +174,6 @@ export async function DELETE(
 
     await destroyCloudinaryUrls(deletable);
 
-    const { error: deleteError } = await supabase
-      .from("portfolios")
-      .delete()
-      .eq("user_id", user.id)
-      .eq("variant_key", variantKey);
-
-    if (deleteError) throw deleteError;
-
     if (isLastPortfolio) {
       const cleanupResults = await Promise.all([
         supabase.from("experiences").delete().eq("user_id", user.id),
@@ -227,6 +219,14 @@ export async function DELETE(
       const cleanupError = cleanupResults.find((result) => result.error)?.error;
       if (cleanupError) throw cleanupError;
     }
+
+    const { error: deleteError } = await supabase
+      .from("portfolios")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("variant_key", variantKey);
+
+    if (deleteError) throw deleteError;
 
     return NextResponse.json({
       deleted: true,
