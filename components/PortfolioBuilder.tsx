@@ -815,7 +815,7 @@ export function PortfolioBuilder({
 
     if (
       !window.confirm(
-        `Delete “${activeVariant.name || "Untitled"}”? This removes the saved portfolio and its published page.`
+        `Delete “${activeVariant.name || "Untitled"}”? This removes its saved/published data and uploaded assets no longer used by another portfolio.`
       )
     ) {
       return;
