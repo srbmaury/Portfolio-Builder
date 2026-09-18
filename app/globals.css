@@ -1026,3 +1026,16 @@ body.builder-resizing * {
     border-bottom: 0;
   }
 }
+
+body.dialog-open {
+  overflow: hidden;
+}
+.create-dialog-error {
+  margin: 0 24px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff0f0;
+  color: #a94141;
+  font-size: 12px;
+  line-height: 1.45;
+}
