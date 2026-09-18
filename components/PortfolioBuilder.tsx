@@ -11,6 +11,7 @@ import {
   saveBuilderState,
 } from "@/lib/supabase/portfolio-store";
 import {
+  cloneBranding,
   cloneConfig,
   cloneContentConfig,
   createEntityId,
@@ -361,6 +362,26 @@ export function PortfolioBuilder({
     updateActiveConfig((config) => ({ ...config, theme }));
   }
 
+  function updateBranding(
+    field: "faviconUrl" | "shareTitle" | "shareDescription" | "shareImageUrl",
+    value: string
+  ) {
+    setState((current) => ({
+      ...current,
+      variants: current.variants.map((variant) =>
+        variant.id === current.activeVariantId
+          ? {
+              ...variant,
+              branding: {
+                ...variant.branding,
+                [field]: value,
+              },
+            }
+          : variant
+      ),
+    }));
+  }
+
   function setVariant(id: SectionType, variantName: string) {
     updateActiveConfig((config) => ({
       ...config,
@@ -644,6 +665,7 @@ export function PortfolioBuilder({
           content: cloneContentConfig(
             activeVariant?.content ?? fullContentConfig(current.data)
           ),
+          branding: cloneBranding(activeVariant?.branding),
         },
       ],
     }));
@@ -666,6 +688,7 @@ export function PortfolioBuilder({
           targetRole: activeVariant.targetRole,
           config: cloneConfig(activeVariant.config),
           content: cloneContentConfig(activeVariant.content),
+          branding: cloneBranding(activeVariant.branding),
         },
       ],
     }));
@@ -1400,6 +1423,44 @@ export function PortfolioBuilder({
                   Shuffle design
                 </button>
               </div>
+
+              <EditorSection
+                title="Brand & sharing"
+                subtitle="Favicon and link preview"
+                defaultOpen
+              >
+                <ImageUploadField
+                  label="Favicon"
+                  value={activeVariant?.branding.faviconUrl || ""}
+                  onChange={(value) => updateBranding("faviconUrl", value)}
+                  help="Optional. Use a square PNG or WebP; this icon appears in the browser tab for this portfolio."
+                />
+                <Field
+                  label="Share title"
+                  value={activeVariant?.branding.shareTitle || ""}
+                  onChange={(value) => updateBranding("shareTitle", value)}
+                  hint="Optional. Defaults to your name and target role."
+                />
+                <Field
+                  label="Share description"
+                  multiline
+                  value={activeVariant?.branding.shareDescription || ""}
+                  onChange={(value) => updateBranding("shareDescription", value)}
+                  hint="Optional. Defaults to your portfolio tagline."
+                />
+                <ImageUploadField
+                  label="Social share card"
+                  value={activeVariant?.branding.shareImageUrl || ""}
+                  onChange={(value) => updateBranding("shareImageUrl", value)}
+                  help="Optional. Recommended 1200 × 630. Leave blank to use an automatically generated card personalized to this portfolio."
+                />
+                <div className="sharing-preview-note">
+                  <strong>Link preview</strong>
+                  <span>
+                    LinkedIn, X, Slack, WhatsApp and other apps will use these settings when this portfolio link is pasted.
+                  </span>
+                </div>
+              </EditorSection>
 
               <div className="theme-picker">
                 <label>Theme</label>
