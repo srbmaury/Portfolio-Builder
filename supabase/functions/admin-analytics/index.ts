@@ -12,6 +12,7 @@ type EventRow = {
 
 type PortfolioRow = {
   id: string;
+  user_id: string;
   name: string;
   variant_key: string;
   public_path: string | null;
@@ -85,11 +86,17 @@ Deno.serve(async (request: Request) => {
   const start = new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000);
   start.setUTCHours(0, 0, 0, 0);
 
-  const [usersResult, portfoliosResult, eventsResult, productEventsResult] = await Promise.all([
+  const [
+    usersResult,
+    portfoliosResult,
+    eventsResult,
+    productEventsResult,
+    publishHistoryResult,
+  ] = await Promise.all([
     listAllUsers(admin),
     admin
       .from("portfolios")
-      .select("id, name, variant_key, public_path, is_published, created_at"),
+      .select("id, user_id, name, variant_key, public_path, is_published, created_at"),
     admin
       .from("analytics_events")
       .select(
@@ -100,10 +107,21 @@ Deno.serve(async (request: Request) => {
     admin
       .from("product_events")
       .select("user_id, event_type, variant_key, created_at")
+      .gte("created_at", start.toISOString())
+      .order("created_at", { ascending: true }),
+    admin
+      .from("product_events")
+      .select("user_id, event_type, variant_key, created_at")
+      .eq("event_type", "portfolio_published")
       .order("created_at", { ascending: true }),
   ]);
 
-  if (portfoliosResult.error || eventsResult.error || productEventsResult.error) {
+  if (
+    portfoliosResult.error ||
+    eventsResult.error ||
+    productEventsResult.error ||
+    publishHistoryResult.error
+  ) {
     return Response.json(
       { error: "Admin analytics query failed." },
       { status: 500 }
@@ -113,10 +131,8 @@ Deno.serve(async (request: Request) => {
   const users = usersResult;
   const portfolios = (portfoliosResult.data || []) as PortfolioRow[];
   const events = (eventsResult.data || []) as EventRow[];
-  const productEvents = (productEventsResult.data || []) as ProductEventRow[];
-  const productEventsInWindow = productEvents.filter(
-    (event) => event.created_at >= start.toISOString()
-  );
+  const productEventsInWindow = (productEventsResult.data || []) as ProductEventRow[];
+  const publishHistory = (publishHistoryResult.data || []) as ProductEventRow[];
   const viewEvents = events.filter((event) => event.event_type === "portfolio_view");
   const engagementEvents = events.filter(
     (event) => event.event_type !== "portfolio_view"
@@ -148,13 +164,14 @@ Deno.serve(async (request: Request) => {
     productEventsInWindow,
     "portfolio_published"
   );
-  const publishedUsers = uniqueProductUsers(
-    productEvents,
-    "portfolio_published"
+  const publishedUsers = new Set(
+    portfolios
+      .filter((portfolio) => portfolio.is_published)
+      .map((portfolio) => portfolio.user_id)
   );
 
   const firstPublishByUser = new Map<string, string>();
-  for (const event of productEvents) {
+  for (const event of publishHistory) {
     if (
       event.event_type === "portfolio_published" &&
       !firstPublishByUser.has(event.user_id)
