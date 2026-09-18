@@ -625,7 +625,8 @@ function normalizePortfolioConfig(
       id: builtIn,
       type: builtIn,
       variant:
-        typeof raw.variant === "string" && raw.variant
+        typeof raw.variant === "string" &&
+        templateCatalog[builtIn].some((option) => option.id === raw.variant)
           ? raw.variant
           : fallback.variant,
       visible:
@@ -657,8 +658,24 @@ function normalizePortfolioConfig(
     }
   }
 
+  const themes: ThemeName[] = [
+    "ink",
+    "sand",
+    "moss",
+    "aurora",
+    "cobalt",
+    "rose",
+    "mono",
+    "sunset",
+    "ice",
+    "noir",
+  ];
+
   return {
-    theme: input?.theme || defaultConfig.theme,
+    theme:
+      input?.theme && themes.includes(input.theme)
+        ? input.theme
+        : defaultConfig.theme,
     sections,
   };
 }
