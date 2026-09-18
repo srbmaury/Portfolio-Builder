@@ -18,6 +18,7 @@ import {
   fullContentConfig,
   normalizeBuilderState,
   sampleBuilderState,
+  sectionHasContent,
   slugify,
   snapshotForVariant,
   templateCatalog,
@@ -156,7 +157,9 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
     state.variants[0];
 
   const snapshot = useMemo(() => snapshotForVariant(state), [state]);
-  const visibleSections = snapshot.config.sections.filter((section) => section.visible).length;
+  const visibleSections = snapshot.config.sections.filter(
+    (section) => section.visible && sectionHasContent(section.id, snapshot.data)
+  ).length;
 
   const targetedExperience = useMemo(() => {
     if (!activeVariant) return state.data.experience;
@@ -296,6 +299,15 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
       ...config,
       sections: config.sections.map((section) =>
         section.id === id ? { ...section, variant: variantName } : section
+      ),
+    }));
+  }
+
+  function setSectionTitle(id: SectionType, title: string) {
+    updateActiveConfig((config) => ({
+      ...config,
+      sections: config.sections.map((section) =>
+        section.id === id ? { ...section, title } : section
       ),
     }));
   }
@@ -1275,7 +1287,16 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
                     </div>
 
                     {section.visible && (
-                      <div className="variant-grid">
+                      <>
+                        <div className="section-title-editor">
+                          <Field
+                            label="Heading"
+                            value={section.title || ""}
+                            onChange={(value) => setSectionTitle(section.id, value)}
+                            hint="Leave blank to hide this heading"
+                          />
+                        </div>
+                        <div className="variant-grid">
                         {templateCatalog[section.id].map((variant) => (
                           <button
                             key={variant.id}
@@ -1296,6 +1317,7 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
                           </button>
                         ))}
                       </div>
+                      </>
                     )}
                   </div>
                 ))}
