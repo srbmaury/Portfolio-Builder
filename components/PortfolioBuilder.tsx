@@ -36,8 +36,10 @@ const EDITOR_WIDTH_KEY = "folioblocks:editor-width";
 type PreviewMode = "desktop" | "tablet" | "mobile";
 type CreateDialogKind = "experience" | "project" | "link" | "variant" | null;
 
-export function PortfolioBuilder() {
-  const [state, setState] = useState<BuilderState>(sampleBuilderState);
+export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean }) {
+  const [state, setState] = useState<BuilderState>(
+    startFresh ? emptyBuilderState : sampleBuilderState
+  );
   const [tab, setTab] = useState<"content" | "targeting" | "design">("content");
   const [previewMode, setPreviewMode] = useState<PreviewMode>("desktop");
   const [hydrated, setHydrated] = useState(false);
@@ -52,12 +54,15 @@ export function PortfolioBuilder() {
     const saved = window.localStorage.getItem(STORAGE_KEY);
     const savedWidth = Number(window.localStorage.getItem(EDITOR_WIDTH_KEY));
 
-    if (saved) {
+    if (!startFresh && saved) {
       try {
         setState(normalizeBuilderState(JSON.parse(saved) as BuilderState));
       } catch {
         window.localStorage.removeItem(STORAGE_KEY);
       }
+    } else if (startFresh) {
+      window.localStorage.removeItem(STORAGE_KEY);
+      setState(emptyBuilderState);
     }
 
     if (Number.isFinite(savedWidth) && savedWidth >= 320) {
@@ -66,7 +71,7 @@ export function PortfolioBuilder() {
     }
 
     setHydrated(true);
-  }, []);
+  }, [startFresh]);
 
   useEffect(() => {
     if (hydrated) {
@@ -109,6 +114,13 @@ export function PortfolioBuilder() {
       }
 
       setCloudUserId(data.user.id);
+
+      if (startFresh) {
+        setCloudStatus("local");
+        setCloudMessage("Fresh workspace · not saved yet");
+        return;
+      }
+
       setCloudStatus("loading");
 
       try {
@@ -137,7 +149,7 @@ export function PortfolioBuilder() {
     return () => {
       cancelled = true;
     };
-  }, [hydrated]);
+  }, [hydrated, startFresh]);
 
   const activeVariant =
     state.variants.find((variant) => variant.id === state.activeVariantId) ??
@@ -744,10 +756,20 @@ export function PortfolioBuilder() {
     }
   }
 
-  function startFresh() {
+  function startFreshWorkspace() {
+    if (
+      !window.confirm(
+        "Start a fresh workspace? Your current browser draft will be replaced. Cloud data is unchanged until you save."
+      )
+    ) {
+      return;
+    }
+
     setState(emptyBuilderState);
     setShareUrl("");
     window.localStorage.removeItem(STORAGE_KEY);
+    setCloudMessage(cloudUserId ? "Fresh workspace · not saved yet" : "Fresh local workspace");
+    setCloudStatus("local");
   }
 
   function loadDemo() {
@@ -794,7 +816,7 @@ export function PortfolioBuilder() {
               Sign in
             </a>
           )}
-          <button className="ghost-button reset-button" onClick={startFresh}>
+          <button className="ghost-button reset-button" onClick={startFreshWorkspace}>
             Start fresh
           </button>
           <button className="ghost-button reset-button" onClick={loadDemo}>
