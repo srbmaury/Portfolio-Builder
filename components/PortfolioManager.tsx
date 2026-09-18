@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import {
   deletePortfolio,
@@ -25,9 +26,7 @@ export function PortfolioManager({
 
   async function withUser<T>(
     variantKey: string,
-    action: (supabase: ReturnType<typeof createClient>, user: NonNullable<
-      Awaited<ReturnType<ReturnType<typeof createClient>["auth"]["getUser"]>>["data"]["user"]
-    >) => Promise<T>
+    action: (supabase: SupabaseClient, user: User) => Promise<T>
   ) {
     setBusyKey(variantKey);
     setMessage("");
