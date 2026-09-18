@@ -17,9 +17,21 @@ export function cloudinaryPortfolioTag(
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "")
-    .slice(0, 80);
+    .slice(0, 72);
+  const fingerprint = fnv1a32(variantKey);
 
-  return `fb-portfolio-${owner}-${slug || "portfolio"}`;
+  return `fb-portfolio-${owner}-${slug || "portfolio"}-${fingerprint}`;
+}
+
+function fnv1a32(value: string) {
+  let hash = 0x811c9dc5;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+
+  return (hash >>> 0).toString(16).padStart(8, "0");
 }
 
 export function parseCloudinaryAssetUrl(
