@@ -302,6 +302,37 @@ export const sampleBuilderState: BuilderState = {
   activeVariantId: "general",
 };
 
+export const emptyData: PortfolioData = {
+  profile: {
+    name: "",
+    role: "",
+    tagline: "",
+    about: "",
+    email: "",
+    location: "",
+    availability: "",
+    heroImageUrl: "",
+    socials: [],
+  },
+  experience: [],
+  projects: [],
+  skills: [],
+};
+
+export const emptyBuilderState: BuilderState = {
+  data: emptyData,
+  variants: [
+    {
+      id: "portfolio",
+      name: "Portfolio",
+      targetRole: "",
+      config: cloneConfig(defaultConfig),
+      content: fullContentConfig(emptyData),
+    },
+  ],
+  activeVariantId: "portfolio",
+};
+
 export const sampleSnapshot: PortfolioSnapshot = {
   data: sampleData,
   config: cloneConfig(defaultConfig),
