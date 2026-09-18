@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const migration = await readFile(
-  new URL("../supabase/migrations/20260918150000_add_first_party_analytics.sql", import.meta.url),
+  new URL("../supabase/migrations/20260918143237_add_first_party_analytics.sql", import.meta.url),
   "utf8"
 );
 
