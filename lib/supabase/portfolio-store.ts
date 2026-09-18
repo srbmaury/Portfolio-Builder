@@ -127,6 +127,14 @@ export async function loadBuilderState(
             shareDescription: "",
             shareImageUrl: "",
           },
+    resume:
+      row.resume_config && typeof row.resume_config === "object"
+        ? row.resume_config
+        : {
+            url: "",
+            publicId: "",
+            fileName: "",
+          },
   }));
 
   if (!variants.length) return null;
@@ -230,6 +238,7 @@ export async function saveBuilderState(
       section_config: variant.config.sections,
       content_config: variant.content,
       branding_config: variant.branding,
+      resume_config: variant.resume,
     })),
     { onConflict: "user_id,variant_key" }
   );
@@ -275,6 +284,7 @@ export async function publishVariant(
       section_config: cloneConfig(active.config).sections,
       content_config: active.content,
       branding_config: active.branding,
+      resume_config: active.resume,
       is_published: true,
       published_at: new Date().toISOString(),
       public_path: publicPath,
@@ -391,7 +401,7 @@ export async function duplicatePortfolio(
     await Promise.all([
       supabase
         .from("portfolios")
-        .select("name, target_role, theme, section_config, content_config, branding_config")
+        .select("name, target_role, theme, section_config, content_config, branding_config, resume_config")
         .eq("user_id", user.id)
         .eq("variant_key", variantKey)
         .single(),
@@ -429,6 +439,7 @@ export async function duplicatePortfolio(
     section_config: source.section_config,
     content_config: source.content_config,
     branding_config: source.branding_config || {},
+    resume_config: source.resume_config || {},
     is_published: false,
   });
 
