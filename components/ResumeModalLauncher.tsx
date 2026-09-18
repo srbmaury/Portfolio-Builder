@@ -23,10 +23,11 @@ export function ResumeModalLauncher({
     const dialog = dialogRef.current;
     if (!dialog) return;
 
+    const activeDialog = dialog;
     const previous = document.activeElement as HTMLElement | null;
     const focusable = () =>
       Array.from(
-        dialog.querySelectorAll<HTMLElement>(
+        activeDialog.querySelectorAll<HTMLElement>(
           'a[href], button:not([disabled]), iframe, [tabindex]:not([tabindex="-1"])'
         )
       );
