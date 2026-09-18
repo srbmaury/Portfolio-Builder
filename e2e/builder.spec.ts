@@ -107,6 +107,72 @@ test("tablet and mobile preview use real isolated viewport widths", async ({
   )).toBeVisible();
 });
 
+test("tablet and mobile keep photo hero hierarchy consistent", async ({ page }) => {
+  await page.goto("/builder");
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => Boolean(window.localStorage.getItem("folioblocks:workspace")))
+    )
+    .toBe(true);
+
+  await page.evaluate(() => {
+    const key = "folioblocks:workspace";
+    const raw = window.localStorage.getItem(key);
+    if (!raw) throw new Error("Builder state was not persisted.");
+
+    const state = JSON.parse(raw);
+    const active = state.variants.find(
+      (variant: { id: string }) => variant.id === state.activeVariantId
+    );
+    const hero = active.config.sections.find(
+      (section: { id: string }) => section.id === "hero"
+    );
+    hero.variant = "portrait";
+    window.localStorage.setItem(key, JSON.stringify(state));
+  });
+
+  await page.reload();
+
+  const preview = page.frameLocator(".preview-device-frame");
+  const copy = preview.locator(".hero-photo-copy");
+  const photo = preview.locator(".hero-photo-frame");
+
+  await page.getByRole("button", { name: "tablet" }).click();
+  await expect(copy).toBeVisible();
+  await expect(photo).toBeVisible();
+
+  const tabletCopy = await copy.boundingBox();
+  const tabletPhoto = await photo.boundingBox();
+  expect(tabletCopy).not.toBeNull();
+  expect(tabletPhoto).not.toBeNull();
+  expect(tabletCopy!.y).toBeLessThan(tabletPhoto!.y);
+
+  const tabletExperienceColumns = await preview
+    .locator(".experience-v-ledger .experience-layout-item")
+    .first()
+    .evaluate((element) => getComputedStyle(element).gridTemplateColumns);
+  expect(tabletExperienceColumns.trim().split(/\s+/)).toHaveLength(1);
+
+  const tabletProjectColumns = await preview
+    .locator(".github-project-grid")
+    .evaluate((element) => getComputedStyle(element).gridTemplateColumns);
+  expect(tabletProjectColumns.trim().split(/\s+/)).toHaveLength(2);
+
+  await page.getByRole("button", { name: "mobile" }).click();
+
+  const mobileCopy = await copy.boundingBox();
+  const mobilePhoto = await photo.boundingBox();
+  expect(mobileCopy).not.toBeNull();
+  expect(mobilePhoto).not.toBeNull();
+  expect(mobileCopy!.y).toBeLessThan(mobilePhoto!.y);
+
+  const mobileProjectColumns = await preview
+    .locator(".github-project-grid")
+    .evaluate((element) => getComputedStyle(element).gridTemplateColumns);
+  expect(mobileProjectColumns.trim().split(/\s+/)).toHaveLength(1);
+});
+
 test("SEO metadata routes expose crawler guidance", async ({ request }) => {
   const robots = await request.get("/robots.txt");
   expect(robots.ok()).toBeTruthy();
