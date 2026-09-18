@@ -76,7 +76,7 @@ export async function DELETE(
     );
 
     const taggedPortfolioAssets = await listCloudinaryUrlsByTag(
-      cloudinaryPortfolioTag(variantKey)
+      cloudinaryPortfolioTag(user.id, variantKey)
     );
 
     const remainingReferences = collectCloudinaryUrls(
