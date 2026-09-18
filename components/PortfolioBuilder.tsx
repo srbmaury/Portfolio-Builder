@@ -56,8 +56,9 @@ export function PortfolioBuilder() {
       }
     }
 
-    if (Number.isFinite(savedWidth) && savedWidth >= 320 && savedWidth <= 720) {
-      setEditorWidth(savedWidth);
+    if (Number.isFinite(savedWidth) && savedWidth >= 320) {
+      const maxWidth = Math.max(320, Math.min(720, window.innerWidth - 460));
+      setEditorWidth(Math.min(savedWidth, maxWidth));
     }
 
     setHydrated(true);
@@ -74,6 +75,17 @@ export function PortfolioBuilder() {
       window.localStorage.setItem(EDITOR_WIDTH_KEY, String(editorWidth));
     }
   }, [editorWidth, hydrated]);
+
+  useEffect(() => {
+    function clampEditorWidth() {
+      if (window.innerWidth <= 760) return;
+      const maxWidth = Math.max(320, Math.min(720, window.innerWidth - 460));
+      setEditorWidth((current) => Math.min(current, maxWidth));
+    }
+
+    window.addEventListener("resize", clampEditorWidth);
+    return () => window.removeEventListener("resize", clampEditorWidth);
+  }, []);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -580,6 +592,34 @@ export function PortfolioBuilder() {
           : variant
       ),
     }));
+  }
+
+  function nudgeEditorWidth(delta: number) {
+    const maxWidth = Math.max(320, Math.min(720, window.innerWidth - 460));
+    setEditorWidth((current) => Math.max(320, Math.min(maxWidth, current + delta)));
+  }
+
+  function handleResizerKeyDown(event: React.KeyboardEvent<HTMLButtonElement>) {
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      nudgeEditorWidth(-24);
+    }
+
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      nudgeEditorWidth(24);
+    }
+
+    if (event.key === "Home") {
+      event.preventDefault();
+      setEditorWidth(320);
+    }
+
+    if (event.key === "End") {
+      event.preventDefault();
+      const maxWidth = Math.max(320, Math.min(720, window.innerWidth - 460));
+      setEditorWidth(maxWidth);
+    }
   }
 
   function startResize(event: React.PointerEvent<HTMLButtonElement>) {
@@ -1191,8 +1231,10 @@ export function PortfolioBuilder() {
           type="button"
           className="builder-resizer"
           onPointerDown={startResize}
+          onKeyDown={handleResizerKeyDown}
+          onDoubleClick={() => setEditorWidth(420)}
           aria-label="Resize editor and preview panels"
-          title="Drag to resize panels"
+          title="Drag to resize · arrows to adjust · double-click to reset"
         >
           <span />
         </button>
