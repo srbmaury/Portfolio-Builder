@@ -163,19 +163,6 @@ export function PortfolioManager({
     setMessage("");
 
     try {
-      const cleanupResponse = await fetch("/api/account/assets", {
-        method: "DELETE",
-      });
-      const cleanupPayload = (await cleanupResponse.json().catch(() => ({}))) as {
-        error?: string;
-      };
-
-      if (!cleanupResponse.ok) {
-        throw new Error(
-          cleanupPayload.error || "Could not clean up uploaded assets."
-        );
-      }
-
       const supabase = createClient();
       const { error } = await supabase.functions.invoke("delete-account", {
         body: {},
