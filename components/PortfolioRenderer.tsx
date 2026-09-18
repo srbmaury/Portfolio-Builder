@@ -1,4 +1,6 @@
-import type { PortfolioSnapshot, SectionConfig } from "@/lib/portfolio";
+import Image from "next/image";
+import { skillIconUrl, skillInitials } from "@/lib/skill-icons";
+import type { PortfolioSnapshot, Project, SectionConfig } from "@/lib/portfolio";
 
 type Props = {
   snapshot: PortfolioSnapshot;
@@ -6,7 +8,7 @@ type Props = {
 };
 
 export function PortfolioRenderer({ snapshot, compact = false }: Props) {
-  const { data, config } = snapshot;
+  const { config } = snapshot;
 
   return (
     <main className={`portfolio theme-${config.theme} ${compact ? "portfolio-compact" : ""}`}>
@@ -14,11 +16,7 @@ export function PortfolioRenderer({ snapshot, compact = false }: Props) {
         {config.sections
           .filter((section) => section.visible)
           .map((section) => (
-            <PortfolioSection
-              key={section.id}
-              section={section}
-              snapshot={snapshot}
-            />
+            <PortfolioSection key={section.id} section={section} snapshot={snapshot} />
           ))}
       </div>
     </main>
@@ -50,6 +48,7 @@ function PortfolioSection({
 
 function Hero({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: string }) {
   const { profile } = snapshot.data;
+  const hasImage = Boolean(safeExternalUrl(profile.heroImageUrl));
 
   if (variant === "terminal") {
     return (
@@ -57,10 +56,49 @@ function Hero({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: str
         <div className="terminal-window">
           <div className="terminal-dots"><span /><span /><span /></div>
           <p><span className="terminal-prompt">$</span> whoami</p>
-          <h1>{profile.name}</h1>
-          <p className="terminal-role">{profile.role}</p>
+          <h1>{display(profile.name, "Your name")}</h1>
+          <p className="terminal-role">{display(profile.role, "Your role")}</p>
           <p><span className="terminal-prompt">$</span> cat mission.txt</p>
-          <p className="terminal-tagline">{profile.tagline}</p>
+          <p className="terminal-tagline">{display(profile.tagline, "Tell people what you build and why it matters.")}</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (variant === "cover" || variant === "glass") {
+    return (
+      <section className={`p-section hero-media hero-${variant} ${hasImage ? "has-image" : ""}`}>
+        <HeroImage url={profile.heroImageUrl} priority />
+        <div className="hero-media-overlay" />
+        <div className="hero-media-content">
+          <p className="eyebrow">{display(profile.role, "Your role")}</p>
+          <h1>{display(profile.name, "Your name")}</h1>
+          <p className="hero-copy">{display(profile.tagline, "A concise statement about the work you want to be known for.")}</p>
+          <Socials snapshot={snapshot} />
+          <div className="hero-media-meta">
+            <span>{display(profile.location, "Your location")}</span>
+            <span>{display(profile.availability, "Open to opportunities")}</span>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (["image-split", "portrait", "editorial-photo"].includes(variant)) {
+    return (
+      <section className={`p-section hero-photo hero-${variant}`}>
+        <div className="hero-photo-copy">
+          <p className="eyebrow">{display(profile.role, "Your role")}</p>
+          <h1>{display(profile.name, "Your name")}</h1>
+          <p className="hero-copy">{display(profile.tagline, "A concise statement about the work you want to be known for.")}</p>
+          <Socials snapshot={snapshot} />
+          <div className="hero-photo-meta">
+            <span>{display(profile.location, "Your location")}</span>
+            <span>{display(profile.availability, "Open to opportunities")}</span>
+          </div>
+        </div>
+        <div className="hero-photo-frame">
+          <HeroImage url={profile.heroImageUrl} priority />
         </div>
       </section>
     );
@@ -70,14 +108,14 @@ function Hero({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: str
     return (
       <section className="p-section hero-poster">
         <div className="poster-topline">
-          <span>{profile.role}</span>
-          <span>{profile.availability}</span>
+          <span>{display(profile.role, "Your role")}</span>
+          <span>{display(profile.availability, "Open to opportunities")}</span>
         </div>
-        <h1>{profile.name}</h1>
+        <h1>{display(profile.name, "Your name")}</h1>
         <div className="poster-bottom">
-          <p>{profile.tagline}</p>
+          <p>{display(profile.tagline, "A concise statement about your work.")}</p>
           <div>
-            <span>{profile.location}</span>
+            <span>{display(profile.location, "Your location")}</span>
             <Socials snapshot={snapshot} />
           </div>
         </div>
@@ -90,13 +128,13 @@ function Hero({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: str
       <section className="p-section hero-spotlight">
         <div className="spotlight-orb" aria-hidden="true" />
         <div className="spotlight-content">
-          <p className="eyebrow">{profile.role}</p>
-          <h1>{profile.name}</h1>
-          <p className="hero-copy">{profile.tagline}</p>
+          <p className="eyebrow">{display(profile.role, "Your role")}</p>
+          <h1>{display(profile.name, "Your name")}</h1>
+          <p className="hero-copy">{display(profile.tagline, "A concise statement about your work.")}</p>
           <Socials snapshot={snapshot} />
           <div className="spotlight-meta">
-            <span>{profile.location}</span>
-            <span>{profile.availability}</span>
+            <span>{display(profile.location, "Your location")}</span>
+            <span>{display(profile.availability, "Open to opportunities")}</span>
           </div>
         </div>
       </section>
@@ -106,9 +144,9 @@ function Hero({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: str
   if (variant === "minimal") {
     return (
       <section className="p-section hero-minimal">
-        <p className="eyebrow">{profile.role}</p>
-        <h1>{profile.name}</h1>
-        <p className="hero-copy">{profile.tagline}</p>
+        <p className="eyebrow">{display(profile.role, "Your role")}</p>
+        <h1>{display(profile.name, "Your name")}</h1>
+        <p className="hero-copy">{display(profile.tagline, "A concise statement about your work.")}</p>
         <Socials snapshot={snapshot} />
       </section>
     );
@@ -117,20 +155,43 @@ function Hero({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: str
   return (
     <section className="p-section hero-split">
       <div>
-        <p className="eyebrow">Portfolio / {profile.role}</p>
-        <h1>{profile.name}</h1>
-        <p className="hero-copy">{profile.tagline}</p>
+        <p className="eyebrow">Portfolio / {display(profile.role, "Your role")}</p>
+        <h1>{display(profile.name, "Your name")}</h1>
+        <p className="hero-copy">{display(profile.tagline, "A concise statement about your work.")}</p>
         <Socials snapshot={snapshot} />
       </div>
       <aside className="hero-card">
         <span className="status-dot" />
-        <p>{profile.availability}</p>
+        <p>{display(profile.availability, "Open to opportunities")}</p>
         <div className="hero-meta">
-          <span>{profile.location}</span>
-          <a href={`mailto:${profile.email}`}>{profile.email}</a>
+          <span>{display(profile.location, "Your location")}</span>
+          {profile.email ? <a href={`mailto:${profile.email}`}>{profile.email}</a> : <span>your@email.com</span>}
         </div>
       </aside>
     </section>
+  );
+}
+
+function HeroImage({ url, priority = false }: { url?: string; priority?: boolean }) {
+  const src = safeExternalUrl(url);
+
+  if (!src) {
+    return (
+      <div className="media-placeholder">
+        <span>Upload a hero image</span>
+      </div>
+    );
+  }
+
+  return (
+    <Image
+      src={src}
+      alt=""
+      fill
+      sizes="(max-width: 900px) 100vw, 50vw"
+      priority={priority}
+      unoptimized
+    />
   );
 }
 
@@ -153,44 +214,32 @@ function Socials({ snapshot }: { snapshot: PortfolioSnapshot }) {
 
 function About({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: string }) {
   const { profile } = snapshot.data;
-
-  if (variant === "stats") {
-    return (
-      <section className="p-section">
-        <SectionHeading index="01" title="About" />
-        <div className="about-stats">
-          <p>{profile.about}</p>
-          <div className="stats-grid">
-            <div><strong>{snapshot.data.projects.length}</strong><span>Selected projects</span></div>
-            <div><strong>{snapshot.data.experience.length}</strong><span>Career chapters</span></div>
-            <div><strong>{snapshot.data.skills.length}</strong><span>Core skills</span></div>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  if (variant === "manifesto") {
-    return (
-      <section className="p-section about-manifesto">
-        <SectionHeading index="01" title="About" />
-        <div className="manifesto-grid">
-          <p className="manifesto-copy">{profile.about}</p>
-          <div className="manifesto-notes">
-            <div><span>Based in</span><strong>{profile.location}</strong></div>
-            <div><span>Focus</span><strong>{profile.role}</strong></div>
-            <div><span>Now</span><strong>{profile.availability}</strong></div>
-          </div>
-        </div>
-      </section>
-    );
-  }
+  const story = display(profile.about, "Write a short story about your work, strengths, and what you care about.");
 
   return (
-    <section className="p-section">
+    <section className={`p-section about-layout about-${variant}`}>
       <SectionHeading index="01" title="About" />
-      <div className="editorial-copy">
-        <p>{profile.about}</p>
+      <div className="about-layout-grid">
+        <div className="about-story">
+          {variant === "quote" && <span className="about-quote-mark">“</span>}
+          <p>{story}</p>
+        </div>
+        <div className="about-side">
+          {(variant === "stats" || variant === "facts") && (
+            <div className="stats-grid">
+              <div><strong>{snapshot.data.projects.length}</strong><span>Selected projects</span></div>
+              <div><strong>{snapshot.data.experience.length}</strong><span>Career chapters</span></div>
+              <div><strong>{snapshot.data.skills.length}</strong><span>Core skills</span></div>
+            </div>
+          )}
+          {!["stats", "facts"].includes(variant) && (
+            <div className="about-facts">
+              <div><span>Based in</span><strong>{display(profile.location, "Your location")}</strong></div>
+              <div><span>Focus</span><strong>{display(profile.role, "Your role")}</strong></div>
+              <div><span>Now</span><strong>{display(profile.availability, "Open to opportunities")}</strong></div>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
@@ -199,16 +248,16 @@ function About({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: st
 function Experience({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: string }) {
   const items = snapshot.data.experience;
 
-  if (variant === "stacked") {
-    return (
-      <section className="p-section">
-        <SectionHeading index="02" title="Experience" />
-        <div className="experience-stacked">
+  return (
+    <section className={`p-section experience-layout experience-${variant}`}>
+      <SectionHeading index="02" title="Experience" />
+      {items.length ? (
+        <div className="experience-layout-list">
           {items.map((item, index) => (
-            <article key={item.id}>
-              <div className="stacked-index">0{index + 1}</div>
-              <div className="stacked-period">{item.period}</div>
-              <div className="stacked-role">
+            <article key={item.id} className="experience-layout-item">
+              <div className="experience-index">{String(index + 1).padStart(2, "0")}</div>
+              <div className="experience-period">{item.period}</div>
+              <div className="experience-role">
                 <h3>{item.role}</h3>
                 <h4>{item.company}</h4>
               </div>
@@ -216,37 +265,8 @@ function Experience({ snapshot, variant }: { snapshot: PortfolioSnapshot; varian
             </article>
           ))}
         </div>
-      </section>
-    );
-  }
-
-  return (
-    <section className="p-section">
-      <SectionHeading index="02" title="Experience" />
-      {variant === "cards" ? (
-        <div className="experience-cards">
-          {items.map((item) => (
-            <article key={item.id} className="experience-card">
-              <p className="muted">{item.period}</p>
-              <h3>{item.role}</h3>
-              <h4>{item.company}</h4>
-              <p>{item.summary}</p>
-            </article>
-          ))}
-        </div>
       ) : (
-        <div className="timeline">
-          {items.map((item) => (
-            <article key={item.id} className="timeline-item">
-              <div className="timeline-marker" />
-              <div>
-                <p className="muted">{item.period}</p>
-                <h3>{item.role} · {item.company}</h3>
-                <p>{item.summary}</p>
-              </div>
-            </article>
-          ))}
-        </div>
+        <EmptySection message="Add experience to tell your career story." />
       )}
     </section>
   );
@@ -255,37 +275,95 @@ function Experience({ snapshot, variant }: { snapshot: PortfolioSnapshot; varian
 function Projects({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: string }) {
   const projects = snapshot.data.projects;
 
-  if (variant === "list") {
+  if (!projects.length) {
     return (
       <section className="p-section">
         <SectionHeading index="03" title="Selected work" />
-        <div className="project-list">
-          {projects.map((project, index) => {
-            const href = safeExternalUrl(project.url);
-            const content = (
-              <>
-                <span className="project-number">0{index + 1}</span>
-                <div><h3>{project.title}</h3><p>{project.description}</p></div>
-                <span>{href ? "↗" : "—"}</span>
-              </>
-            );
+        <EmptySection message="Add projects to showcase your strongest work." />
+      </section>
+    );
+  }
 
-            return href ? (
-              <a
-                key={project.id}
-                className="project-list-row"
-                href={href}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {content}
-              </a>
-            ) : (
-              <div key={project.id} className="project-list-row project-list-row-static">
-                {content}
+  if (variant === "list") {
+    return (
+      <section className="p-section projects-list-layout">
+        <SectionHeading index="03" title="Selected work" />
+        <div className="project-list">
+          {projects.map((project, index) => (
+            <article key={project.id} className="project-list-row">
+              <span className="project-number">{String(index + 1).padStart(2, "0")}</span>
+              <div>
+                <h3>{project.title}</h3>
+                <p>{project.description}</p>
               </div>
-            );
-          })}
+              <ProjectActions project={project} compact />
+            </article>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (variant === "github") {
+    return (
+      <section className="p-section projects-github-layout">
+        <SectionHeading index="03" title="Selected work" />
+        <div className="github-project-grid">
+          {projects.map((project) => (
+            <article key={project.id} className="github-project-card">
+              <div className="github-project-head">
+                <span className="repo-icon">&lt;/&gt;</span>
+                <span>repository</span>
+              </div>
+              <h3>{project.title}</h3>
+              <p>{project.description}</p>
+              <div className="tag-row">{project.stack.map((item) => <span key={item}>{item}</span>)}</div>
+              <ProjectActions project={project} />
+            </article>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (variant === "browser") {
+    return (
+      <section className="p-section projects-browser-layout">
+        <SectionHeading index="03" title="Selected work" />
+        <div className="browser-project-list">
+          {projects.map((project) => (
+            <article key={project.id} className="browser-project-card">
+              <div className="browser-chrome"><span /><span /><span /><em>{project.liveUrl || project.githubUrl || project.title}</em></div>
+              <ProjectMedia project={project} />
+              <div className="browser-project-copy">
+                <div>
+                  <h3>{project.title}</h3>
+                  <p>{project.description}</p>
+                </div>
+                <ProjectActions project={project} />
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (variant === "gallery") {
+    return (
+      <section className="p-section projects-gallery-layout">
+        <SectionHeading index="03" title="Selected work" />
+        <div className="project-gallery">
+          {projects.map((project, index) => (
+            <article key={project.id} className="project-gallery-item">
+              <ProjectMedia project={project} />
+              <div className="project-gallery-overlay">
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <h3>{project.title}</h3>
+                <ProjectActions project={project} compact />
+              </div>
+            </article>
+          ))}
         </div>
       </section>
     );
@@ -296,54 +374,49 @@ function Projects({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant:
       <section className="p-section">
         <SectionHeading index="03" title="Selected work" />
         <div className="project-showcase">
-          {projects.map((project, index) => {
-            const href = safeExternalUrl(project.url);
-            return (
-              <article key={project.id} className="project-showcase-card">
-                <div className="showcase-number">0{index + 1}</div>
-                <div className="showcase-copy">
-                  <h3>{project.title}</h3>
-                  <p>{project.description}</p>
-                  <div className="tag-row">
-                    {project.stack.map((item) => <span key={item}>{item}</span>)}
-                  </div>
-                </div>
-                {href ? <a href={href} target="_blank" rel="noreferrer">Explore ↗</a> : <span />}
-              </article>
-            );
-          })}
+          {projects.map((project, index) => (
+            <article key={project.id} className="project-showcase-card">
+              <div className="showcase-number">{String(index + 1).padStart(2, "0")}</div>
+              <div className="showcase-copy">
+                <h3>{project.title}</h3>
+                <p>{project.description}</p>
+                <div className="tag-row">{project.stack.map((item) => <span key={item}>{item}</span>)}</div>
+              </div>
+              <ProjectActions project={project} />
+            </article>
+          ))}
         </div>
       </section>
     );
   }
 
+  const imageFirst = ["image-grid", "image-bento"].includes(variant);
   const gridClass =
     variant === "bento"
       ? "project-grid project-bento"
       : variant === "mosaic"
         ? "project-grid project-mosaic"
-        : "project-grid";
+        : variant === "image-bento"
+          ? "project-grid project-image-bento"
+          : variant === "image-grid"
+            ? "project-grid project-image-grid"
+            : "project-grid";
 
   return (
-    <section className="p-section">
+    <section className={`p-section projects-layout projects-${variant}`}>
       <SectionHeading index="03" title="Selected work" />
       <div className={gridClass}>
         {projects.map((project, index) => (
           <article key={project.id} className={`project-card project-${index + 1}`}>
-            <div>
-              <p className="muted">Project / 0{index + 1}</p>
+            {imageFirst && <ProjectMedia project={project} />}
+            <div className="project-card-copy">
+              <p className="muted">Project / {String(index + 1).padStart(2, "0")}</p>
               <h3>{project.title}</h3>
               <p>{project.description}</p>
             </div>
             <div className="project-footer">
-              <div className="tag-row">
-                {project.stack.map((item) => <span key={item}>{item}</span>)}
-              </div>
-              {safeExternalUrl(project.url) && (
-                <a href={safeExternalUrl(project.url) || undefined} target="_blank" rel="noreferrer">
-                  View ↗
-                </a>
-              )}
+              <div className="tag-row">{project.stack.map((item) => <span key={item}>{item}</span>)}</div>
+              <ProjectActions project={project} compact />
             </div>
           </article>
         ))}
@@ -352,70 +425,117 @@ function Projects({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant:
   );
 }
 
-function Skills({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: string }) {
-  const skills = snapshot.data.skills;
+function ProjectMedia({ project }: { project: Project }) {
+  const src = safeExternalUrl(project.imageUrl);
 
   return (
-    <section className="p-section">
-      <SectionHeading index="04" title="Capabilities" />
-      {variant === "columns" ? (
-        <div className="skill-columns">
-          {skills.map((skill, index) => (
-            <div key={skill}><span>0{index + 1}</span><strong>{skill}</strong></div>
-          ))}
+    <div className={`project-media ${src ? "has-image" : ""}`}>
+      {src ? (
+        <Image
+          src={src}
+          alt={project.title}
+          fill
+          sizes="(max-width: 800px) 100vw, 50vw"
+          unoptimized
+        />
+      ) : (
+        <div className="media-placeholder">
+          <span>{project.title}</span>
         </div>
-      ) : variant === "matrix" ? (
-        <div className="skill-matrix">
+      )}
+    </div>
+  );
+}
+
+function ProjectActions({ project, compact = false }: { project: Project; compact?: boolean }) {
+  const github = safeExternalUrl(project.githubUrl);
+  const live = safeExternalUrl(project.liveUrl);
+
+  if (!github && !live) return <span className="project-no-links">—</span>;
+
+  return (
+    <div className={`project-actions ${compact ? "compact" : ""}`}>
+      {github && <a href={github} target="_blank" rel="noreferrer">GitHub ↗</a>}
+      {live && <a href={live} target="_blank" rel="noreferrer">Live ↗</a>}
+    </div>
+  );
+}
+
+function Skills({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: string }) {
+  const skills = snapshot.data.skills;
+  const logoVariant = ["logos", "logo-grid"].includes(variant);
+
+  return (
+    <section className={`p-section skills-layout skills-${variant}`}>
+      <SectionHeading index="04" title="Capabilities" />
+      {skills.length ? (
+        <div className={`skills-layout-list ${logoVariant ? "with-logos" : ""}`}>
           {skills.map((skill, index) => (
-            <div key={skill}>
-              <span>{String(index + 1).padStart(2, "0")}</span>
+            <div key={skill} className="skill-item">
+              {logoVariant && <SkillLogo skill={skill} />}
+              <span className="skill-index">{String(index + 1).padStart(2, "0")}</span>
               <strong>{skill}</strong>
             </div>
           ))}
         </div>
       ) : (
-        <div className="skill-cloud">
-          {skills.map((skill) => <span key={skill}>{skill}</span>)}
-        </div>
+        <EmptySection message="Add skills to build your capability section." />
       )}
     </section>
   );
 }
 
+function SkillLogo({ skill }: { skill: string }) {
+  const url = skillIconUrl(skill);
+
+  return (
+    <span className="skill-logo">
+      {url ? (
+        <Image src={url} alt="" width={34} height={34} unoptimized />
+      ) : (
+        <span>{skillInitials(skill)}</span>
+      )}
+    </span>
+  );
+}
+
 function Contact({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: string }) {
   const { profile } = snapshot.data;
+  const email = profile.email || "your@email.com";
 
-  if (variant === "minimal") {
+  if (variant === "terminal") {
     return (
-      <footer className="p-section contact-minimal">
-        <p>Have something interesting in mind?</p>
-        <a href={`mailto:${profile.email}`}>{profile.email} ↗</a>
-      </footer>
-    );
-  }
-
-  if (variant === "banner") {
-    return (
-      <footer className="p-section contact-banner">
-        <p className="eyebrow">Available for the right challenge</p>
-        <a className="contact-banner-link" href={`mailto:${profile.email}`}>
-          Let's make<br />something matter. <span>↗</span>
-        </a>
-        <div className="contact-banner-meta">
-          <span>{profile.location}</span>
-          <span>{profile.email}</span>
+      <footer className="p-section contact-terminal">
+        <div className="terminal-window">
+          <p><span className="terminal-prompt">$</span> contact --next</p>
+          <h2>{email}</h2>
+          <p>{display(profile.availability, "Open to opportunities")}</p>
         </div>
       </footer>
     );
   }
 
   return (
-    <footer className="p-section contact-panel">
-      <p className="eyebrow">Let's build something useful</p>
-      <h2>Open to the next hard problem.</h2>
-      <p>{profile.availability}</p>
-      <a className="contact-button" href={`mailto:${profile.email}`}>Start a conversation ↗</a>
+    <footer className={`p-section contact-layout contact-${variant}`}>
+      <div className="contact-copy">
+        <p className="eyebrow">Let's build something useful</p>
+        <h2>{variant === "minimal" || variant === "compact" ? "Get in touch." : "Open to the next hard problem."}</h2>
+        <p>{display(profile.availability, "Open to opportunities")}</p>
+      </div>
+      <div className="contact-actions">
+        <a className="contact-button" href={`mailto:${email}`}>{email} ↗</a>
+        <Socials snapshot={snapshot} />
+      </div>
     </footer>
+  );
+}
+
+function EmptySection({ message }: { message: string }) {
+  return (
+    <div className="empty-portfolio-section">
+      <span>Empty section</span>
+      <p>{message}</p>
+    </div>
   );
 }
 
@@ -428,7 +548,6 @@ function SectionHeading({ index, title }: { index: string; title: string }) {
   );
 }
 
-
 function safeExternalUrl(value?: string) {
   if (!value) return null;
 
@@ -438,4 +557,8 @@ function safeExternalUrl(value?: string) {
   } catch {
     return null;
   }
+}
+
+function display(value: string | undefined, fallback: string) {
+  return value?.trim() || fallback;
 }
