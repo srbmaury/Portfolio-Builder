@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { BuilderState } from "@/lib/portfolio";
+import { useDialogFocusTrap } from "@/lib/accessibility";
 import {
   formatWorkspaceJson,
   parseWorkspaceJson,
@@ -19,19 +20,14 @@ export function WorkspaceJsonDialog({
   const original = JSON.stringify(state, null, 2);
   const [text, setText] = useState(original);
   const [error, setError] = useState("");
+  const dialogRef = useDialogFocusTrap<HTMLDivElement>(onClose);
 
   useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-
     document.body.classList.add("dialog-open");
-    window.addEventListener("keydown", onKeyDown);
     return () => {
       document.body.classList.remove("dialog-open");
-      window.removeEventListener("keydown", onKeyDown);
     };
-  }, [onClose]);
+  }, []);
 
   function format() {
     const result = formatWorkspaceJson(text);
@@ -63,6 +59,7 @@ export function WorkspaceJsonDialog({
       }}
     >
       <div
+        ref={dialogRef}
         className="create-dialog workspace-json-dialog"
         role="dialog"
         aria-modal="true"
