@@ -44,6 +44,32 @@ Deno.serve(async (request: Request) => {
     return Response.json({ error: "Authentication required." }, { status: 401 });
   }
 
+  const cleanupUrl =
+    Deno.env.get("ACCOUNT_CLEANUP_URL") ??
+    "https://portfolio-builder-miia.onrender.com/api/account/assets";
+
+  const cleanupResponse = await fetch(cleanupUrl, {
+    method: "DELETE",
+    headers: {
+      Authorization: authorization,
+    },
+  });
+
+  if (!cleanupResponse.ok) {
+    const payload = await cleanupResponse
+      .json()
+      .catch(() => ({ error: "Account asset cleanup failed." }));
+    return Response.json(
+      {
+        error:
+          typeof payload?.error === "string"
+            ? payload.error
+            : "Account asset cleanup failed.",
+      },
+      { status: 502 }
+    );
+  }
+
   const admin = createClient(supabaseUrl, serviceRoleKey, {
     auth: {
       persistSession: false,
