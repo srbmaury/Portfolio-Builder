@@ -59,19 +59,14 @@ export function CreateItemDialog({
     targetRole: kind === "variant" ? defaultTargetRole : "",
   }));
 
+  const dialogRef = useDialogFocusTrap<HTMLFormElement>(onClose);
+
   useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-
     document.body.classList.add("dialog-open");
-    window.addEventListener("keydown", onKeyDown);
-
     return () => {
       document.body.classList.remove("dialog-open");
-      window.removeEventListener("keydown", onKeyDown);
     };
-  }, [onClose]);
+  }, []);
 
   function update(key: string, value: string) {
     setError("");
@@ -185,6 +180,7 @@ export function CreateItemDialog({
       }}
     >
       <form
+        ref={dialogRef}
         className="create-dialog"
         role="dialog"
         aria-modal="true"
