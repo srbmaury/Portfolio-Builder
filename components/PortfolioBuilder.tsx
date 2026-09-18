@@ -1709,9 +1709,18 @@ function ImageUploadField({
 }) {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const cloudinaryConfigured = Boolean(
+    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME &&
+      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+  );
 
   async function upload(file?: File) {
     if (!file) return;
+
+    if (!cloudinaryConfigured) {
+      setStatus("Cloudinary upload is not configured yet. Paste a Cloudinary URL instead.");
+      return;
+    }
 
     if (!file.type.startsWith("image/")) {
       setStatus("Choose an image file.");
@@ -1749,14 +1758,24 @@ function ImageUploadField({
         placeholder="Cloudinary image URL"
         onChange={(event) => onChange(event.target.value)}
       />
-      <label className={`image-upload-button ${busy ? "disabled" : ""}`}>
+      <label
+        className={`image-upload-button ${
+          busy || !cloudinaryConfigured ? "disabled" : ""
+        }`}
+      >
         <input
           type="file"
           accept="image/*"
-          disabled={busy}
+          disabled={busy || !cloudinaryConfigured}
           onChange={(event) => upload(event.target.files?.[0])}
         />
-        {busy ? "Uploading…" : value ? "Replace image" : "Upload image"}
+        {busy
+          ? "Uploading…"
+          : !cloudinaryConfigured
+            ? "Configure Cloudinary to upload"
+            : value
+              ? "Replace image"
+              : "Upload image"}
       </label>
       {help && <small className="field-help">{help}</small>}
       {status && <small className="upload-status">{status}</small>}
