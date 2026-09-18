@@ -79,7 +79,7 @@ export async function DELETE(
         .maybeSingle(),
       supabase
         .from("projects")
-        .select("image_url")
+        .select("id, image_url")
         .eq("user_id", user.id),
       listCloudinaryUrlsByTag(
         cloudinaryPortfolioTag(user.id, variantKey)
@@ -106,17 +106,6 @@ export async function DELETE(
       cloudName
     );
 
-    const remainingReferences = collectCloudinaryUrls(
-      {
-        portfolios: remaining || [],
-        shared: {
-          profile: profileResult.data,
-          projects: projectResult.data || [],
-        },
-      },
-      cloudName
-    );
-
     const targetContent =
       target.content_config && typeof target.content_config === "object"
         ? target.content_config
@@ -129,6 +118,21 @@ export async function DELETE(
     const orphanedContent = selectOrphanedTargetContent(
       targetContent,
       remainingContents
+    );
+
+    const orphanedProjectIds = new Set(orphanedContent.projectIds);
+    const retainedProjects = (projectResult.data || []).filter(
+      (project) => !orphanedProjectIds.has(project.id)
+    );
+    const remainingReferences = collectCloudinaryUrls(
+      {
+        portfolios: remaining || [],
+        shared: {
+          profile: profileResult.data,
+          projects: retainedProjects,
+        },
+      },
+      cloudName
     );
 
     const orphanedProjectResult = orphanedContent.projectIds.length
