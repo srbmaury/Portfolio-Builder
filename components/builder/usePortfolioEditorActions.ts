@@ -25,6 +25,7 @@ import {
   type Experience,
   type PortfolioConfig,
   type PortfolioData,
+  type PortfolioResume,
   type Project,
   type ThemeName,
 } from "@/lib/portfolio";
@@ -200,11 +201,7 @@ export function usePortfolioEditorActions({
     }));
   }
 
-  function updateResume(resume: {
-    url: string;
-    publicId: string;
-    fileName: string;
-  }) {
+  function updateResume(resume: PortfolioResume) {
     setState((current) => ({
       ...current,
       variants: current.variants.map((variant) =>
