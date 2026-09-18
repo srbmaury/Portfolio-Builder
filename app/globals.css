@@ -185,7 +185,7 @@ a { color: inherit; text-decoration: none; }
 .preview-stage { min-width: 0; padding: 22px; }
 .preview-toolbar { max-width: 1120px; margin: 0 auto 10px; display: flex; justify-content: space-between; color: #7d8490; font-size: 12px; }
 .preview-window {
-  max-width: 1120px; margin: 0 auto; background: white; border-radius: 18px; overflow: hidden; min-height: calc(100vh - 132px);
+  max-width: 1120px; margin: 0 auto; background: white; border-radius: 18px; overflow: hidden; min-height: 0;
   box-shadow: 0 18px 60px rgba(36,40,48,.12), 0 0 0 1px rgba(42,48,58,.06);
 }
 
@@ -689,26 +689,49 @@ a { color: inherit; text-decoration: none; }
   box-shadow: 0 1px 4px rgba(20,25,32,.08);
 }
 .preview-window {
-  transition: max-width .24s ease, border-radius .24s ease;
+  width: min(1120px, 100%);
+  max-width: none;
+  min-height: 0;
+  transition: width .24s ease, border-radius .24s ease;
 }
-.preview-window.preview-tablet { max-width: 820px; }
-.preview-window.preview-mobile { max-width: 430px; }
-.preview-window.preview-mobile .portfolio-compact .p-section { padding-left: 24px; padding-right: 24px; }
-.preview-window.preview-mobile .hero-split,
-.preview-window.preview-mobile .about-v-stats,
-.preview-window.preview-mobile .experience-v-cards,
-.preview-window.preview-mobile .project-grid,
-.preview-window.preview-mobile .skill-columns {
-  grid-template-columns: 1fr;
+.preview-window.preview-tablet {
+  width: 768px;
+  max-width: none;
 }
-.preview-window.preview-mobile .project-bento .project-1 {
-  grid-row: auto;
-  min-height: 280px;
+.preview-window.preview-mobile {
+  width: 390px;
+  max-width: none;
+  border-radius: 22px;
 }
-.preview-window.preview-mobile .editorial-copy,
-.preview-window.preview-mobile .timeline { margin-left: 0; }
-.preview-window.preview-mobile .hero-split h1,
-.preview-window.preview-mobile .hero-minimal h1 { font-size: 58px; }
+.preview-device-frame {
+  display: block;
+  width: 100%;
+  min-width: 100%;
+  height: calc(100vh - 150px);
+  min-height: 640px;
+  border: 0;
+  background: #fff;
+}
+.preview-window.preview-tablet .preview-device-frame {
+  height: 1024px;
+  min-height: 1024px;
+}
+.preview-window.preview-mobile .preview-device-frame {
+  height: 844px;
+  min-height: 844px;
+}
+.builder-preview-page {
+  min-height: 100vh;
+}
+.builder-preview-loading {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: #f5f6f8;
+  color: #7d8490;
+  font-size: 12px;
+  font-weight: 700;
+}
 
 @media (max-width: 760px) {
   .variant-switcher { position: static; }
@@ -1047,7 +1070,7 @@ body.builder-resizing * {
   height: 100%;
   min-height: 0;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
 }
@@ -1688,35 +1711,6 @@ body.dialog-open {
 .variant-banner i:nth-child(2) {
   height: 20px !important;
   background: #8a74f7;
-}
-
-/* Responsive support for the richer layouts */
-.preview-window.preview-mobile .poster-bottom,
-.preview-window.preview-mobile .manifesto-grid,
-.preview-window.preview-mobile .experience-v-stacked article,
-.preview-window.preview-mobile .project-showcase-card,
-.preview-window.preview-mobile .project-mosaic,
-.preview-window.preview-mobile .skill-matrix {
-  grid-template-columns: 1fr;
-}
-.preview-window.preview-mobile .hero-poster h1 {
-  font-size: 64px;
-}
-.preview-window.preview-mobile .poster-bottom > div {
-  justify-items: start;
-}
-.preview-window.preview-mobile .poster-bottom .social-row {
-  justify-content: flex-start;
-}
-.preview-window.preview-mobile .project-mosaic .project-1,
-.preview-window.preview-mobile .project-mosaic .project-4,
-.preview-window.preview-mobile .project-mosaic .project-7 {
-  grid-column: auto;
-  grid-row: auto;
-  min-height: 260px;
-}
-.preview-window.preview-mobile .skill-matrix {
-  grid-template-columns: repeat(2, 1fr);
 }
 
 @media (max-width: 760px) {
@@ -3114,90 +3108,6 @@ body.dialog-open {
   .builder-topbar .topbar-link {
     display: none;
   }
-}
-
-/* Mirror phone responsiveness inside the builder's 430px preview on desktop. */
-.preview-window.preview-mobile .hero-poster {
-  min-height: 0;
-}
-.preview-window.preview-mobile .poster-topline {
-  flex-direction: column;
-  gap: 8px;
-}
-.preview-window.preview-mobile .hero-poster h1 {
-  margin: 30px 0 24px;
-  max-width: 100%;
-  font-size: 58px;
-  overflow-wrap: anywhere;
-}
-.preview-window.preview-mobile .poster-media {
-  min-height: 0;
-  aspect-ratio: 4 / 3;
-  margin: 0 0 28px;
-}
-.preview-window.preview-mobile :is(
-  .about-layout-grid,
-  .about-v-editorial .about-layout-grid,
-  .about-v-split .about-layout-grid,
-  .about-v-facts .about-layout-grid,
-  .about-v-statement .about-layout-grid,
-  .about-v-compact .about-layout-grid,
-  .experience-layout-item,
-  .experience-v-timeline .experience-layout-item,
-  .experience-v-ledger .experience-layout-item,
-  .experience-v-spotlight .experience-layout-item,
-  .experience-v-compact .experience-layout-item,
-  .experience-v-alternating .experience-layout-item,
-  .experience-v-resume .experience-layout-item,
-  .experience-v-steps .experience-layout-item,
-  .project-grid,
-  .project-showcase-card,
-  .project-mosaic,
-  .project-image-bento,
-  .github-project-grid,
-  .project-gallery,
-  .contact-layout,
-  .contact-v-split
-) {
-  grid-template-columns: 1fr !important;
-}
-.preview-window.preview-mobile .about-v-editorial .about-layout-grid {
-  padding-left: 0;
-}
-.preview-window.preview-mobile .about-v-columns .about-story p {
-  columns: 1;
-}
-.preview-window.preview-mobile .experience-v-timeline .experience-layout-list {
-  margin-left: 0;
-  border-left: 0;
-}
-.preview-window.preview-mobile .experience-v-timeline .experience-layout-item::before {
-  display: none;
-}
-.preview-window.preview-mobile .experience-layout-item > *,
-.preview-window.preview-mobile .experience-v-alternating .experience-layout-item > *,
-.preview-window.preview-mobile .experience-v-resume .experience-layout-item > *,
-.preview-window.preview-mobile .experience-v-steps .experience-layout-item > * {
-  grid-column: 1 !important;
-  grid-row: auto !important;
-}
-.preview-window.preview-mobile .skills-v-columns .skills-layout-list,
-.preview-window.preview-mobile .skills-v-matrix .skills-layout-list,
-.preview-window.preview-mobile .skills-v-cards .skills-layout-list {
-  grid-template-columns: 1fr !important;
-}
-.preview-window.preview-mobile .skills-v-logos .skills-layout-list,
-.preview-window.preview-mobile .skills-v-logo-grid .skills-layout-list {
-  grid-template-columns: repeat(2, minmax(0,1fr)) !important;
-}
-.preview-window.preview-mobile .contact-actions {
-  justify-items: start;
-}
-.preview-window.preview-mobile .contact-copy h2,
-.preview-window.preview-mobile .contact-v-banner .contact-copy h2,
-.preview-window.preview-mobile .contact-v-outline .contact-copy h2 {
-  font-size: 48px;
-  overflow-wrap: anywhere;
 }
 
 @media (max-width: 1100px) and (min-width: 761px) {
