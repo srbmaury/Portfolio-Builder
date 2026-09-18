@@ -50,6 +50,8 @@ function PortfolioSection({
       return <Projects snapshot={snapshot} variant={section.variant} title={section.title} />;
     case "skills":
       return <Skills snapshot={snapshot} variant={section.variant} title={section.title} />;
+    case "resume":
+      return <Resume snapshot={snapshot} variant={section.variant} title={section.title} />;
     case "contact":
       return <Contact snapshot={snapshot} variant={section.variant} title={section.title} />;
     case "custom":
@@ -557,6 +559,61 @@ function SkillLogo({ skill }: { skill: string }) {
         <span>{skillInitials(skill)}</span>
       )}
     </span>
+  );
+}
+
+function Resume({
+  snapshot,
+  variant,
+  title,
+}: {
+  snapshot: PortfolioSnapshot;
+  variant: string;
+  title?: string;
+}) {
+  const resume = snapshot.meta?.resume;
+  const url = safeCloudinaryUrl(resume?.url);
+  if (!resume || !url) return null;
+
+  const fileName = resume.fileName.trim() || "Resume.pdf";
+  const heading = sectionDisplayTitle("resume", title);
+
+  if (variant === "card") {
+    return (
+      <section className="p-section resume-section resume-v-card">
+        <SectionHeading index="05" title={heading} />
+        <div className="resume-card">
+          <div>
+            <span className="resume-file-type">PDF</span>
+            <h3>{fileName}</h3>
+            <p>
+              View the complete résumé in a new tab.
+            </p>
+          </div>
+          <a href={url} target="_blank" rel="noreferrer">
+            Open resume ↗
+          </a>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="p-section resume-section resume-v-embed">
+      <div className="resume-section-head">
+        <SectionHeading index="05" title={heading} />
+        <a href={url} target="_blank" rel="noreferrer">
+          Open PDF ↗
+        </a>
+      </div>
+      <div className="resume-frame">
+        <iframe
+          src={url}
+          title={`${snapshot.data.profile.name || "Portfolio"} resume`}
+          loading="lazy"
+        />
+      </div>
+    </section>
   );
 }
 
