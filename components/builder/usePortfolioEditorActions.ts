@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, type Dispatch, type SetStateAction } from "react";
 import {
   addCustomSection as addCustomSectionToState,
   addCustomSectionItem as addCustomSectionItemToState,
@@ -29,7 +29,7 @@ import {
   type ThemeName,
 } from "@/lib/portfolio";
 
-type SetBuilderState = React.Dispatch<React.SetStateAction<BuilderState>>;
+type SetBuilderState = Dispatch<SetStateAction<BuilderState>>;
 type TargetField = "experienceIds" | "projectIds" | "skills";
 
 export function usePortfolioEditorActions({
@@ -39,7 +39,7 @@ export function usePortfolioEditorActions({
 }: {
   state: BuilderState;
   setState: SetBuilderState;
-  setShareUrl: React.Dispatch<React.SetStateAction<string>>;
+  setShareUrl: Dispatch<SetStateAction<string>>;
 }) {
   const activeVariant =
     state.variants.find((variant) => variant.id === state.activeVariantId) ??
