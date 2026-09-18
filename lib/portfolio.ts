@@ -518,3 +518,39 @@ export function slugify(value: string) {
       .replace(/(^-|-$)/g, "") || "portfolio"
   );
 }
+
+
+export function sectionHasContent(
+  section: SectionType,
+  data: PortfolioData
+) {
+  const profile = data.profile;
+
+  switch (section) {
+    case "hero":
+      return Boolean(
+        profile.name.trim() ||
+          profile.role.trim() ||
+          profile.tagline.trim() ||
+          profile.location.trim() ||
+          profile.availability.trim() ||
+          profile.email.trim() ||
+          profile.heroImageUrl?.trim() ||
+          profile.socials.length
+      );
+    case "about":
+      return Boolean(profile.about.trim());
+    case "experience":
+      return data.experience.length > 0;
+    case "projects":
+      return data.projects.length > 0;
+    case "skills":
+      return data.skills.length > 0;
+    case "contact":
+      return Boolean(
+        profile.email.trim() ||
+          profile.availability.trim() ||
+          profile.socials.length
+      );
+  }
+}
