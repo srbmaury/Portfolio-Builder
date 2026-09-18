@@ -67,8 +67,9 @@ export function parseResumeText(value: string): ResumeImportDraft {
 
   const sections = splitSections(text);
   const headerLines = nonEmpty(sections.header);
-  const email = text.match(EMAIL_RE)?.[0];
-  const urls = Array.from(new Set(text.match(URL_RE) || []));
+  const headerText = headerLines.join("\n");
+  const email = headerText.match(EMAIL_RE)?.[0] || text.match(EMAIL_RE)?.[0];
+  const urls = Array.from(new Set(headerText.match(URL_RE) || []));
 
   const headerCandidates = headerLines.filter(
     (line) => !EMAIL_RE.test(line) && !line.match(/^https?:\/\//i) && !looksLikePhone(line)
