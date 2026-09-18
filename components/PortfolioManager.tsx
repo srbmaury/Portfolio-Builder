@@ -15,8 +15,10 @@ import {
 
 export function PortfolioManager({
   initialPortfolios,
+  isAdmin = false,
 }: {
   initialPortfolios: PortfolioSummary[];
+  isAdmin?: boolean;
 }) {
   const [portfolios, setPortfolios] = useState(initialPortfolios);
   const [editingKey, setEditingKey] = useState<string | null>(null);
@@ -201,6 +203,10 @@ export function PortfolioManager({
       <header className="portfolio-manager-topbar">
         <a className="brand" href="/">folio<span>blocks</span></a>
         <nav>
+          {isAdmin ? (
+            <a className="ghost-button" href="/admin/analytics">Admin analytics</a>
+          ) : null}
+          <a className="ghost-button" href="/analytics">Analytics</a>
           <a className="ghost-button" href="/builder">Back to builder</a>
           <a className="primary-button" href="/builder?create=1">New portfolio</a>
         </nav>
@@ -273,6 +279,12 @@ export function PortfolioManager({
                         Copy link
                       </button>
                     ) : null}
+                    <a
+                      className="ghost-button"
+                      href={`/analytics?portfolio=${encodeURIComponent(item.variantKey)}&days=30`}
+                    >
+                      Analytics
+                    </a>
                   </div>
 
                   <div className="portfolio-manager-actions secondary-actions">
