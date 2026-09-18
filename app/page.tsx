@@ -10,6 +10,7 @@ export default function Home() {
         <div className="landing-nav-links">
           <a href="#how">How it works</a>
           <a href="#why">Why it is different</a>
+          <Link href="/docs">Docs</Link>
           <Link className="nav-cta" href="/builder?fresh=1">Start fresh</Link>
         </div>
       </nav>
@@ -19,7 +20,7 @@ export default function Home() {
         <p className="landing-kicker">Portfolio building, without the blank canvas</p>
         <h1>Your story. <em>Your sections.</em> Your site.</h1>
         <p className="landing-subtitle">
-          Start completely blank or from a demo, then mix 60 section designs, images,
+          Start completely blank or from a demo, then mix 65 section layouts, images,
           role-targeted content, and themes into a portfolio that feels uniquely yours.
         </p>
         <div className="landing-actions">
@@ -28,7 +29,7 @@ export default function Home() {
         </div>
 
         <div className="landing-proof">
-          <span>60 section designs</span><span>10 themes</span><span>Cloudinary images</span><span>Role-targeted variants</span>
+          <span>65 section layouts</span><span>10 themes</span><span>Cloudinary images</span><span>Role-targeted variants</span>
         </div>
 
         <div className="landing-product-shot">
@@ -81,8 +82,11 @@ export default function Home() {
 
       <footer className="landing-footer">
         <a className="brand brand-light" href="/">folio<span>blocks</span></a>
-        <p>An MVP for modular professional portfolios.</p>
-        <Link href="/builder">Open builder →</Link>
+        <p>Modular portfolios for different roles.</p>
+        <div className="landing-footer-actions">
+          <Link href="/docs">Docs</Link>
+          <Link href="/builder">Open builder →</Link>
+        </div>
       </footer>
     </main>
   );

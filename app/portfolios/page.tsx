@@ -11,7 +11,19 @@ export default async function PortfoliosPage() {
     redirect("/login");
   }
 
-  const portfolios = await listPortfolios(supabase, data.user);
+  const [portfolios, adminResult] = await Promise.all([
+    listPortfolios(supabase, data.user),
+    supabase
+      .from("analytics_admins")
+      .select("user_id")
+      .eq("user_id", data.user.id)
+      .maybeSingle(),
+  ]);
 
-  return <PortfolioManager initialPortfolios={portfolios} />;
+  return (
+    <PortfolioManager
+      initialPortfolios={portfolios}
+      isAdmin={Boolean(adminResult.data)}
+    />
+  );
 }

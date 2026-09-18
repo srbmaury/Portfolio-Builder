@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { analyticsSocialTarget } from "@/lib/analytics";
 import { skillIconUrl, skillInitials } from "@/lib/skill-icons";
 import {
   sectionDisplayTitle,
@@ -196,7 +197,17 @@ function Hero({
         <p>{display(profile.availability, "Open to opportunities")}</p>
         <div className="hero-meta">
           <span>{display(profile.location, "Your location")}</span>
-          {profile.email ? <a href={`mailto:${profile.email}`}>{profile.email}</a> : <span>your@email.com</span>}
+          {profile.email ? (
+            <a
+              href={`mailto:${profile.email}`}
+              data-analytics-event="contact_clicked"
+              data-analytics-target="email"
+            >
+              {profile.email}
+            </a>
+          ) : (
+            <span>your@email.com</span>
+          )}
         </div>
       </aside>
     </section>
@@ -234,7 +245,14 @@ function Socials({ snapshot }: { snapshot: PortfolioSnapshot }) {
         if (!href) return null;
 
         return (
-          <a key={`${social.label}-${index}`} href={href} target="_blank" rel="noreferrer">
+          <a
+            key={`${social.label}-${index}`}
+            href={href}
+            target="_blank"
+            rel="noreferrer"
+            data-analytics-event="social_clicked"
+            data-analytics-target={analyticsSocialTarget(social.label, href)}
+          >
             {social.label} ↗
           </a>
         );
@@ -510,8 +528,28 @@ function ProjectActions({ project, compact = false }: { project: Project; compac
 
   return (
     <div className={`project-actions ${compact ? "compact" : ""}`}>
-      {github && <a href={github} target="_blank" rel="noreferrer">GitHub ↗</a>}
-      {live && <a href={live} target="_blank" rel="noreferrer">Live ↗</a>}
+      {github && (
+        <a
+          href={github}
+          target="_blank"
+          rel="noreferrer"
+          data-analytics-event="project_clicked"
+          data-analytics-target="project:github"
+        >
+          GitHub ↗
+        </a>
+      )}
+      {live && (
+        <a
+          href={live}
+          target="_blank"
+          rel="noreferrer"
+          data-analytics-event="project_clicked"
+          data-analytics-target="project:live"
+        >
+          Live ↗
+        </a>
+      )}
     </div>
   );
 }
@@ -590,7 +628,13 @@ function Resume({
               View the complete résumé in a new tab.
             </p>
           </div>
-          <a href={url} target="_blank" rel="noreferrer">
+          <a
+            href={url}
+            target="_blank"
+            rel="noreferrer"
+            data-analytics-event="resume_opened"
+            data-analytics-target="resume"
+          >
             Open resume ↗
           </a>
         </div>
@@ -602,7 +646,13 @@ function Resume({
     <section className="p-section resume-section resume-v-embed">
       <div className="resume-section-head">
         <SectionHeading index="05" title={heading} />
-        <a href={url} target="_blank" rel="noreferrer">
+        <a
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+          data-analytics-event="resume_opened"
+          data-analytics-target="resume"
+        >
           Open PDF ↗
         </a>
       </div>
@@ -649,7 +699,14 @@ function Contact({
         <p>{display(profile.availability, "Open to opportunities")}</p>
       </div>
       <div className="contact-actions">
-        <a className="contact-button" href={`mailto:${email}`}>{email} ↗</a>
+        <a
+          className="contact-button"
+          href={`mailto:${email}`}
+          data-analytics-event="contact_clicked"
+          data-analytics-target="email"
+        >
+          {email} ↗
+        </a>
         <Socials snapshot={snapshot} />
       </div>
     </footer>
@@ -754,7 +811,14 @@ function CustomItemLink({
   if (!href) return null;
 
   return (
-    <a className="custom-item-link" href={href} target="_blank" rel="noreferrer">
+    <a
+      className="custom-item-link"
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      data-analytics-event="custom_link_clicked"
+      data-analytics-target="custom:link"
+    >
       {item.linkLabel.trim() || "Open"} ↗
     </a>
   );

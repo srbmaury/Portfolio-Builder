@@ -1,30 +1,115 @@
 # FolioBlocks — Modular Portfolio Builder
 
-FolioBlocks stores professional content once and lets users create focused portfolio variants for different roles.
+FolioBlocks is a portfolio builder for developers and other professionals who need different portfolios for different roles.
 
-## Product model
+**One shared profile → multiple role-specific portfolios.** Content is stored separately from presentation, so the same experience, projects, skills, links, and custom content can be reused across variants while each portfolio keeps its own targeting, section order, layouts, theme, branding, resume, and public URL.
 
-- One shared professional profile
-- Multiple named portfolio variants
-- Per-variant target role
-- Per-variant experience, project, and skill selection
-- Per-variant section headings
-- Automatic suppression of empty sections
-- Independent ordering for targeted evidence
-- Independent theme, section visibility, section order, and layout variants
-- **10 designs for every section**: Hero, About, Experience, Projects, Skills, and Contact
-- 10 portfolio themes
-- Cloudinary-backed hero and project images
-- Separate GitHub and Live Demo links for every project
-- Skill-logo layouts powered by Simple Icons with text fallbacks
-- Desktop, tablet, and mobile previews
-- Resizable desktop editor/preview split
-- Independent editor and preview scrolling
-- True blank "Start fresh" mode
-- Local draft autosave
-- Supabase authentication and cloud persistence
-- Clean public portfolio URLs
-- Snapshot-based public publishing with raw profile data kept private
+## What is included
+
+### Content and authoring
+
+- Shared professional profile with experience, projects, skills, social links, and custom sections.
+- True blank **Start fresh** mode plus a demo workspace.
+- **Resume import** from PDF or DOCX (maximum 5 MB). Import parsing happens in memory and the uploaded import file is not stored.
+- Review/edit imported profile, experience, projects, and skills before applying them.
+- **Edit workspace as JSON** for the complete structured workspace. Invalid JSON is never applied.
+- Local draft autosave plus authenticated Supabase cloud persistence.
+
+### Role-specific portfolios
+
+- Multiple named portfolio variants from one shared profile.
+- Per-variant target role.
+- Per-variant selection and ordering of experience, projects, and skills.
+- Per-variant section titles, visibility, ordering, layouts, theme, branding, and resume.
+- Duplicate, rename, publish, unpublish, open, copy-link, analytics, and delete controls.
+- Automatic suppression of empty sections.
+
+### Design system
+
+FolioBlocks currently provides **65 section layouts**:
+
+- Hero: 10
+- About: 10
+- Experience: 10
+- Projects: 10
+- Skills: 10
+- Resume: 2
+- Contact: 10
+- Custom sections: 3
+
+It also includes:
+
+- 10 portfolio themes.
+- Desktop, tablet, and mobile previews.
+- Resizable desktop editor/preview split with independent scrolling.
+- Cloudinary-backed hero/project images.
+- Separate GitHub and Live Demo links for each project.
+- Skill-logo layouts powered by Simple Icons with text fallbacks.
+- Design shuffle for quickly exploring combinations.
+
+### Resume and custom sections
+
+- Per-portfolio public resume upload.
+- Embedded PDF or compact resume-card presentation.
+- Custom sections for content such as education, certifications, awards, writing, speaking, open source, or other structured material.
+- Custom-section list, cards, and timeline layouts with optional metadata and links.
+
+### Branding and public sharing
+
+- Clean public URLs:
+
+  ```text
+  /<username>/<portfolio>
+  ```
+
+- Per-portfolio favicon.
+- Custom social share title and description.
+- Custom social preview image with generated fallback.
+- Snapshot-based publishing: public routes read an immutable published snapshot while raw draft rows stay private.
+
+### First-party analytics
+
+Creators can view first-party analytics directly inside FolioBlocks:
+
+- Views and unique visitors.
+- Engaged visitors and engagement rate.
+- Resume opens.
+- Contact clicks.
+- Project clicks.
+- Social clicks.
+- Custom-link clicks.
+- 7 / 30 / 90 day windows.
+- Daily traffic.
+- Referrer-host breakdown.
+- Device breakdown.
+- Action breakdown.
+- Per-portfolio comparisons.
+
+Admin analytics additionally includes account counts, total/published/active portfolios, traffic, signups, top referrers/devices/actions, and top portfolios.
+
+Analytics privacy:
+
+- Uses opaque anonymous visitor and session UUIDs.
+- De-duplicates portfolio views once per portfolio/session.
+- Honors browser Do Not Track.
+- Does not store IP addresses, names, emails, resume text, profile text, project descriptions, custom-section names, or full referrer URLs.
+- Analytics failures never break the public portfolio experience.
+
+## Public docs
+
+The app includes a public feature reference at:
+
+```text
+/docs
+```
+
+It explains the builder workflow, current features, analytics/privacy behavior, publishing model, and deletion lifecycle.
+
+## Data lifecycle
+
+Deleting a portfolio removes its saved/published data, target-only content, attached resume, analytics events, and uploaded assets that are no longer referenced by another portfolio. Deleting the last portfolio also removes the shared workspace data.
+
+The account danger zone permanently removes all portfolios, shared workspace data, published pages, uploaded Cloudinary assets, analytics-admin membership, and the sign-in account.
 
 ## Run locally
 
@@ -34,43 +119,46 @@ Create a local environment file:
 cp .env.example .env.local
 ```
 
-Fill in Supabase and Cloudinary configuration, then run:
+Fill in Supabase and Cloudinary configuration:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+```
+
+Then run:
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open:
+Useful routes:
 
 - `http://localhost:3000`
-- `http://localhost:3000/builder?fresh=1` for a blank workspace
-- `http://localhost:3000/builder` for the demo/saved workspace
+- `http://localhost:3000/docs`
+- `http://localhost:3000/builder?fresh=1` — blank workspace
+- `http://localhost:3000/builder` — demo/saved workspace
 - `http://localhost:3000/login`
+- `http://localhost:3000/portfolios` — authenticated portfolio manager
+- `http://localhost:3000/analytics` — authenticated creator analytics
+- `http://localhost:3000/admin/analytics` — allowlisted admin analytics
 
-## Cloudinary images
+## Validation
 
-Configure Cloudinary only on the server:
-
-```env
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
+```bash
+npm test
+npm run typecheck
+npm run build
 ```
 
-End users only choose an image. The browser requests a short-lived signed upload from the app and uploads directly to Cloudinary; the API secret never reaches client code. Published portfolio images are restricted to `res.cloudinary.com` URLs.
+## Cloudinary security
 
-## Publishing
-
-Publishing requires an authenticated account and persists the current portfolio variant to Supabase.
-
-Public URLs use:
-
-```text
-/<username>/<portfolio>
-```
-
-The public endpoint reads only the immutable published snapshot. Draft profile, experience, project, and skill rows remain owner-only under RLS.
+Cloudinary credentials stay server-side. The browser requests short-lived signed uploads from the app and uploads directly to Cloudinary; the API secret never reaches client code. Published portfolio images are restricted to `res.cloudinary.com` URLs.
 
 ## Supabase
 
@@ -85,4 +173,4 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 
 Never expose a Supabase secret or service-role key to the browser.
 
-Before production deployment, configure the production domain in Supabase Auth URL Configuration so authentication redirects are accepted.
+Before production deployment, configure the production domain in Supabase Auth URL Configuration so authentication redirects are accepted. The analytics schema and admin access are protected with Row Level Security plus an explicit admin allowlist.

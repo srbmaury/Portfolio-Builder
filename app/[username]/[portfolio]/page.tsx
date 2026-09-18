@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { PortfolioAnalyticsTracker } from "@/components/PortfolioAnalyticsTracker";
 import { PortfolioRenderer } from "@/components/PortfolioRenderer";
 import {
+  loadPublishedPortfolio,
   loadPublishedSnapshot,
   safePublishedImageUrl,
 } from "@/lib/supabase/public-portfolio";
@@ -87,9 +89,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PublicPortfolioPage({ params }: Props) {
   const { username, portfolio } = await params;
-  const snapshot = await loadPublishedSnapshot(username, portfolio);
+  const published = await loadPublishedPortfolio(username, portfolio);
 
-  if (!snapshot) notFound();
+  if (!published) notFound();
 
-  return <PortfolioRenderer snapshot={snapshot} />;
+  return (
+    <>
+      <PortfolioAnalyticsTracker portfolioId={published.id} />
+      <PortfolioRenderer snapshot={published.snapshot} />
+    </>
+  );
 }
