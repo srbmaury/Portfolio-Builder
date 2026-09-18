@@ -1036,7 +1036,12 @@ function heroLabel(title: string | undefined, role: string) {
 
 function safeResumeUrl(value?: string) {
   if (!value) return null;
-  if (value.startsWith("/api/public-resume/")) return value;
+  if (
+    value.startsWith("/api/public-resume/") ||
+    value.startsWith("/api/resume/")
+  ) {
+    return value;
+  }
   return safeCloudinaryUrl(value);
 }
 
