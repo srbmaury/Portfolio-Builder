@@ -1,23 +1,27 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { PortfolioRenderer } from "@/components/PortfolioRenderer";
-import { createPublicClient } from "@/lib/supabase/public";
-import type { PortfolioSnapshot } from "@/lib/portfolio";
+import {
+  loadPublishedSnapshot,
+  safePublishedImageUrl,
+} from "@/lib/supabase/public-portfolio";
 
 type Props = {
   params: Promise<{ username: string; portfolio: string }>;
 };
 
-async function loadPublishedSnapshot(username: string, portfolio: string) {
-  const supabase = createPublicClient();
-  const { data, error } = await supabase
-    .from("portfolios")
-    .select("published_snapshot")
-    .eq("public_path", `${username}/${portfolio}`)
-    .maybeSingle();
+async function publicOrigin() {
+  const requestHeaders = await headers();
+  const host =
+    requestHeaders.get("x-forwarded-host") ||
+    requestHeaders.get("host") ||
+    "portfolio-builder-miia.onrender.com";
+  const protocol =
+    requestHeaders.get("x-forwarded-proto") ||
+    (host.startsWith("localhost") ? "http" : "https");
 
-  if (error || !data?.published_snapshot) return null;
-  return data.published_snapshot as PortfolioSnapshot;
+  return `${protocol}://${host}`;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -30,9 +34,54 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
+  const branding = snapshot.meta?.branding;
+  const title =
+    branding?.shareTitle?.trim() ||
+    `${snapshot.data.profile.name} — ${snapshot.meta?.targetRole || snapshot.data.profile.role}`;
+  const description =
+    branding?.shareDescription?.trim() ||
+    snapshot.data.profile.tagline;
+  const favicon = safePublishedImageUrl(branding?.faviconUrl);
+  const customShareImage = safePublishedImageUrl(branding?.shareImageUrl);
+  const origin = await publicOrigin();
+  const canonicalUrl = `${origin}/${username}/${portfolio}`;
+  const shareImage =
+    customShareImage ||
+    `${canonicalUrl}/share-image`;
+
   return {
-    title: `${snapshot.data.profile.name} — ${snapshot.meta?.targetRole || snapshot.data.profile.role}`,
-    description: snapshot.data.profile.tagline,
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    icons: favicon
+      ? {
+          icon: [{ url: favicon }],
+          shortcut: [{ url: favicon }],
+          apple: [{ url: favicon }],
+        }
+      : undefined,
+    openGraph: {
+      type: "website",
+      url: canonicalUrl,
+      title,
+      description,
+      images: [
+        {
+          url: shareImage,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [shareImage],
+    },
   };
 }
 

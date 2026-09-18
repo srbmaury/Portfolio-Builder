@@ -73,12 +73,20 @@ export type VariantContentConfig = {
   skills: string[];
 };
 
+export type PortfolioBranding = {
+  faviconUrl: string;
+  shareTitle: string;
+  shareDescription: string;
+  shareImageUrl: string;
+};
+
 export type PortfolioVariant = {
   id: string;
   name: string;
   targetRole: string;
   config: PortfolioConfig;
   content: VariantContentConfig;
+  branding: PortfolioBranding;
 };
 
 export type BuilderState = {
@@ -93,6 +101,7 @@ export type PortfolioSnapshot = {
   meta?: {
     name: string;
     targetRole: string;
+    branding?: PortfolioBranding;
   };
 };
 
@@ -173,6 +182,19 @@ export const templateCatalog: Record<
     { id: "spotlight", label: "Spotlight", description: "Luminous full-width closing CTA" },
   ],
 };
+
+export const defaultBranding: PortfolioBranding = {
+  faviconUrl: "",
+  shareTitle: "",
+  shareDescription: "",
+  shareImageUrl: "",
+};
+
+export function cloneBranding(
+  branding: PortfolioBranding = defaultBranding
+): PortfolioBranding {
+  return { ...branding };
+}
 
 export const defaultConfig: PortfolioConfig = {
   theme: "ink",
@@ -309,6 +331,7 @@ export const sampleBuilderState: BuilderState = {
       targetRole: "Software Engineer",
       config: cloneConfig(defaultConfig),
       content: fullContentConfig(sampleData),
+      branding: cloneBranding(),
     },
   ],
   activeVariantId: "general",
@@ -340,6 +363,7 @@ export const emptyBuilderState: BuilderState = {
       targetRole: "",
       config: cloneConfig(defaultConfig),
       content: fullContentConfig(emptyData),
+      branding: cloneBranding(),
     },
   ],
   activeVariantId: "portfolio",
@@ -351,6 +375,7 @@ export const sampleSnapshot: PortfolioSnapshot = {
   meta: {
     name: "General",
     targetRole: "Software Engineer",
+    branding: cloneBranding(),
   },
 };
 
@@ -368,6 +393,7 @@ export function snapshotForVariant(state: BuilderState): PortfolioSnapshot {
       meta: {
         name: "Portfolio",
         targetRole: normalized.data.profile.role,
+        branding: cloneBranding(),
       },
     };
   }
@@ -399,6 +425,7 @@ export function snapshotForVariant(state: BuilderState): PortfolioSnapshot {
     meta: {
       name: active.name,
       targetRole: active.targetRole,
+      branding: cloneBranding(active.branding),
     },
   };
 }
@@ -453,6 +480,24 @@ export function normalizeBuilderState(input: BuilderState): BuilderState {
             }),
           }
         : cloneConfig(defaultConfig),
+      branding: {
+        faviconUrl:
+          typeof variant.branding?.faviconUrl === "string"
+            ? variant.branding.faviconUrl
+            : "",
+        shareTitle:
+          typeof variant.branding?.shareTitle === "string"
+            ? variant.branding.shareTitle
+            : "",
+        shareDescription:
+          typeof variant.branding?.shareDescription === "string"
+            ? variant.branding.shareDescription
+            : "",
+        shareImageUrl:
+          typeof variant.branding?.shareImageUrl === "string"
+            ? variant.branding.shareImageUrl
+            : "",
+      },
       content: {
         experienceIds:
           rawContent?.experienceIds !== undefined
@@ -475,6 +520,7 @@ export function normalizeBuilderState(input: BuilderState): BuilderState {
       targetRole: data.profile.role,
       config: cloneConfig(defaultConfig),
       content: fallbackContent,
+      branding: cloneBranding(),
     });
   }
 
