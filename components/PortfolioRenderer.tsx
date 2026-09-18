@@ -173,7 +173,7 @@ function Hero({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: str
 }
 
 function HeroImage({ url, priority = false }: { url?: string; priority?: boolean }) {
-  const src = safeExternalUrl(url);
+  const src = safeCloudinaryUrl(url);
 
   if (!src) {
     return (
@@ -426,7 +426,7 @@ function Projects({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant:
 }
 
 function ProjectMedia({ project }: { project: Project }) {
-  const src = safeExternalUrl(project.imageUrl);
+  const src = safeCloudinaryUrl(project.imageUrl);
 
   return (
     <div className={`project-media ${src ? "has-image" : ""}`}>
@@ -546,6 +546,17 @@ function SectionHeading({ index, title }: { index: string; title: string }) {
       <h2>{title}</h2>
     </div>
   );
+}
+
+function safeCloudinaryUrl(value?: string) {
+  const url = safeExternalUrl(value);
+  if (!url) return null;
+
+  try {
+    return new URL(url).hostname === "res.cloudinary.com" ? url : null;
+  } catch {
+    return null;
+  }
 }
 
 function safeExternalUrl(value?: string) {
