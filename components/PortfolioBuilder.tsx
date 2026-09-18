@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PortfolioRenderer } from "@/components/PortfolioRenderer";
 import { uploadImageToCloudinary } from "@/lib/cloudinary";
 import { createClient } from "@/lib/supabase/client";
@@ -41,9 +41,11 @@ type CreateDialogKind = "experience" | "project" | "link" | "variant" | null;
 export function PortfolioBuilder({
   startFresh = false,
   initialVariantId,
+  openCreateVariant = false,
 }: {
   startFresh?: boolean;
   initialVariantId?: string;
+  openCreateVariant?: boolean;
 }) {
   const [state, setState] = useState<BuilderState>(
     startFresh ? emptyBuilderState : sampleBuilderState
@@ -57,6 +59,7 @@ export function PortfolioBuilder({
   const [cloudMessage, setCloudMessage] = useState("");
   const [editorWidth, setEditorWidth] = useState(420);
   const [createDialog, setCreateDialog] = useState<CreateDialogKind>(null);
+  const createVariantOpenedRef = useRef(false);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(STORAGE_KEY);
@@ -169,6 +172,14 @@ export function PortfolioBuilder({
       cancelled = true;
     };
   }, [hydrated, initialVariantId, startFresh]);
+
+  useEffect(() => {
+    if (!hydrated || !openCreateVariant || createVariantOpenedRef.current) return;
+    if (cloudStatus === "loading") return;
+
+    createVariantOpenedRef.current = true;
+    setCreateDialog("variant");
+  }, [cloudStatus, hydrated, openCreateVariant]);
 
   const activeVariant =
     state.variants.find((variant) => variant.id === state.activeVariantId) ??
