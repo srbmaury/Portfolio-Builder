@@ -3,23 +3,55 @@ export type CloudinaryUploadResult = {
   public_id: string;
 };
 
-export async function uploadImageToCloudinary(file: File) {
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+type SignatureResponse = {
+  signature: string;
+  timestamp: number;
+  cloudName: string;
+  apiKey: string;
+  folder: string;
+};
 
-  if (!cloudName || !uploadPreset) {
-    throw new Error(
-      "Cloudinary is not configured. Add NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET."
-    );
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+const ALLOWED_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/avif",
+]);
+
+export async function uploadImageToCloudinary(file: File) {
+  if (!ALLOWED_TYPES.has(file.type)) {
+    throw new Error("Choose a JPG, PNG, WebP, GIF, or AVIF image.");
   }
+
+  if (file.size > MAX_IMAGE_SIZE) {
+    throw new Error("Image must be 10 MB or smaller.");
+  }
+
+  const signatureResponse = await fetch("/api/uploads/cloudinary-signature", {
+    method: "POST",
+  });
+
+  if (signatureResponse.status === 401) {
+    throw new Error("Sign in to upload images.");
+  }
+
+  if (!signatureResponse.ok) {
+    throw new Error("Image uploads are temporarily unavailable.");
+  }
+
+  const signed = (await signatureResponse.json()) as SignatureResponse;
 
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("upload_preset", uploadPreset);
-  formData.append("folder", "folioblocks");
+  formData.append("api_key", signed.apiKey);
+  formData.append("timestamp", String(signed.timestamp));
+  formData.append("signature", signed.signature);
+  formData.append("folder", signed.folder);
 
   const response = await fetch(
-    `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+    `https://api.cloudinary.com/v1_1/${signed.cloudName}/image/upload`,
     {
       method: "POST",
       body: formData,
@@ -27,8 +59,7 @@ export async function uploadImageToCloudinary(file: File) {
   );
 
   if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || "Cloudinary upload failed.");
+    throw new Error("Image upload failed. Please try again.");
   }
 
   return (await response.json()) as CloudinaryUploadResult;
