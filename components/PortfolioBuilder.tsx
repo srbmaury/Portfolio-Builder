@@ -16,8 +16,10 @@ import {
   snapshotForVariant,
   templateCatalog,
   type BuilderState,
+  type Experience,
   type PortfolioConfig,
   type PortfolioData,
+  type Project,
   type SectionType,
   type ThemeName,
 } from "@/lib/portfolio";
@@ -83,7 +85,7 @@ export function PortfolioBuilder() {
     return [
       ...activeVariant.content.experienceIds
         .map((id) => byId.get(id))
-        .filter((item): item is (typeof state.data.experience)[number] => Boolean(item)),
+        .filter((item): item is Experience => Boolean(item)),
       ...state.data.experience.filter((item) => !selected.has(item.id)),
     ];
   }, [activeVariant, state.data.experience]);
@@ -95,7 +97,7 @@ export function PortfolioBuilder() {
     return [
       ...activeVariant.content.projectIds
         .map((id) => byId.get(id))
-        .filter((item): item is (typeof state.data.projects)[number] => Boolean(item)),
+        .filter((item): item is Project => Boolean(item)),
       ...state.data.projects.filter((item) => !selected.has(item.id)),
     ];
   }, [activeVariant, state.data.projects]);
