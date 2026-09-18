@@ -14,7 +14,6 @@ async function loadPublishedSnapshot(username: string, portfolio: string) {
     .from("portfolios")
     .select("published_snapshot")
     .eq("public_path", `${username}/${portfolio}`)
-    .eq("is_published", true)
     .maybeSingle();
 
   if (error || !data?.published_snapshot) return null;
