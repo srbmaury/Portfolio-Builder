@@ -307,14 +307,15 @@ export function sectionDisplayTitle(
 
 export const sampleData: PortfolioData = {
   profile: {
-    name: "Alex Morgan",
+    name: "Maya Chen",
     role: "Software Engineer",
-    tagline: "I build reliable products that turn complex systems into simple experiences.",
+    tagline:
+      "I build dependable systems, fast internal tools, and product experiences that stay simple as they scale.",
     about:
-      "I am a product-minded software engineer focused on backend systems, developer tooling, and thoughtful user experiences. I enjoy taking ambiguous problems from architecture to production.",
-    email: "alex@example.com",
+      "I am a product-minded software engineer who enjoys the seams between backend architecture, developer experience, and thoughtful interfaces. I like turning ambiguous operational problems into systems that are observable, maintainable, and easy for other teams to build on.",
+    email: "maya@example.com",
     location: "Bengaluru, India",
-    availability: "Open to interesting product and platform roles",
+    availability: "Open to backend, platform, and product engineering opportunities",
     heroImageUrl: "",
     socials: [
       { label: "GitHub", url: "https://github.com" },
@@ -323,49 +324,67 @@ export const sampleData: PortfolioData = {
   },
   experience: [
     {
-      id: "exp-northstar",
-      company: "Northstar Labs",
+      id: "exp-meridian",
+      company: "Meridian Cloud",
       role: "Software Engineer",
       period: "2024 — Present",
       summary:
-        "Built platform capabilities used by multiple product teams, improving reliability, observability, and developer velocity.",
+        "Built shared platform services for deployment metadata, caching, and observability. Cut repetitive release work by automating dependency discovery and gave product teams clearer operational signals during incidents.",
     },
     {
-      id: "exp-atlas",
-      company: "Atlas Systems",
-      role: "Engineering Intern",
+      id: "exp-relay",
+      company: "Relay Systems",
+      role: "Associate Software Engineer",
       period: "2023 — 2024",
       summary:
-        "Shipped internal tooling and production monitoring that shortened incident investigation time.",
+        "Shipped workflow APIs and internal tooling used by operations teams, with a focus on predictable failure handling, faster debugging, and safer incremental releases.",
+    },
+    {
+      id: "exp-orbit",
+      company: "Orbit Labs",
+      role: "Software Engineering Intern",
+      period: "2022 — 2023",
+      summary:
+        "Created service dashboards, alerts, and automation around a growing payments platform, helping engineers move from reactive debugging to measurable service health.",
     },
   ],
   projects: [
     {
-      id: "project-search",
-      title: "Search Engine",
+      id: "project-traceflow",
+      title: "TraceFlow",
       description:
-        "A personalized product search experience with ranked retrieval, caching, and experimentation support.",
-      stack: ["Next.js", "PostgreSQL", "Redis"],
+        "A developer investigation workspace that brings logs, traces, source context, and deployment history into one searchable timeline for faster incident triage.",
+      stack: ["Java", "PostgreSQL", "Redis", "OpenTelemetry"],
       imageUrl: "",
       githubUrl: "https://github.com",
       liveUrl: "",
     },
     {
-      id: "project-agent",
-      title: "Developer Agent",
+      id: "project-vector-gateway",
+      title: "Vector Search Gateway",
       description:
-        "An agentic debugging workflow that combines code, logs, and issue context to accelerate investigation.",
-      stack: ["LLM", "RAG", "MCP"],
+        "A multi-tenant retrieval service with hybrid search, request-level caching, ingestion jobs, and observable ranking experiments behind a simple API.",
+      stack: ["Go", "PostgreSQL", "Redis", "Kafka"],
       imageUrl: "",
       githubUrl: "https://github.com",
       liveUrl: "",
     },
     {
-      id: "project-visualizer",
-      title: "Realtime Visualizer",
+      id: "project-schema-studio",
+      title: "Schema Studio",
       description:
-        "A collaborative visualization tool built for large structured documents and realtime editing.",
-      stack: ["React", "WebSockets", "D3"],
+        "A collaborative schema editor that turns structured configuration into explorable diagrams, reviewable changes, and shareable developer documentation.",
+      stack: ["TypeScript", "React", "WebSockets", "D3"],
+      imageUrl: "",
+      githubUrl: "https://github.com",
+      liveUrl: "",
+    },
+    {
+      id: "project-queuescope",
+      title: "QueueScope",
+      description:
+        "An operations console for delayed jobs and event pipelines with replay controls, failure grouping, throughput trends, and guardrails for production recovery.",
+      stack: ["Java", "Kafka", "React", "Observability"],
       imageUrl: "",
       githubUrl: "https://github.com",
       liveUrl: "",
@@ -373,17 +392,57 @@ export const sampleData: PortfolioData = {
   ],
   skills: [
     "Java",
+    "Go",
     "TypeScript",
+    "React",
     "Distributed Systems",
     "PostgreSQL",
     "Redis",
-    "React",
+    "Kafka",
+    "Kubernetes",
+    "AWS",
     "Observability",
     "System Design",
   ],
-  customSections: [],
+  customSections: [
+    {
+      id: "impact",
+      title: "Selected impact",
+      items: [
+        {
+          id: "impact-release",
+          heading: "10×",
+          subheading: "Faster release preparation",
+          meta: "Platform automation",
+          description:
+            "Automated dependency discovery and validation that replaced a manual release checklist across multiple component types.",
+          linkLabel: "",
+          linkUrl: "",
+        },
+        {
+          id: "impact-debugging",
+          heading: "< 10 min",
+          subheading: "From alert to useful context",
+          meta: "Observability",
+          description:
+            "Connected service metrics, dashboards, and actionable alerts so engineers could narrow down production issues without reconstructing context by hand.",
+          linkLabel: "",
+          linkUrl: "",
+        },
+        {
+          id: "impact-scale",
+          heading: "4 teams",
+          subheading: "Building on shared platform primitives",
+          meta: "Developer experience",
+          description:
+            "Designed reusable platform capabilities and documentation that product teams could adopt without owning the underlying infrastructure.",
+          linkLabel: "",
+          linkUrl: "",
+        },
+      ],
+    },
+  ],
 };
-
 export function cloneConfig(config: PortfolioConfig): PortfolioConfig {
   return {
     theme: config.theme,
@@ -409,22 +468,119 @@ export function cloneContentConfig(
   };
 }
 
+const sampleBackendConfig: PortfolioConfig = {
+  theme: "cobalt",
+  sections: [
+    { id: "hero", type: "hero", variant: "spotlight", visible: true, title: "Backend & Platform" },
+    { id: "about", type: "about", variant: "dossier", visible: true, title: "Profile" },
+    { id: "experience", type: "experience", variant: "ledger", visible: true, title: "Experience" },
+    { id: "projects", type: "projects", variant: "github", visible: true, title: "Selected systems" },
+    {
+      id: "custom-impact",
+      type: "custom",
+      customSectionId: "impact",
+      variant: "spotlight",
+      visible: true,
+      title: "Impact",
+    },
+    { id: "skills", type: "skills", variant: "logo-grid", visible: true, title: "Technical toolkit" },
+    { id: "resume", type: "resume", variant: "compact", visible: false, title: "Résumé" },
+    { id: "contact", type: "contact", variant: "split", visible: true, title: "Let’s build" },
+  ],
+};
+
+const sampleProductConfig: PortfolioConfig = {
+  theme: "sunset",
+  sections: [
+    { id: "hero", type: "hero", variant: "poster", visible: true, title: "Product Engineering" },
+    { id: "projects", type: "projects", variant: "showcase", visible: true, title: "Things I shipped" },
+    { id: "about", type: "about", variant: "statement", visible: true, title: "How I work" },
+    { id: "experience", type: "experience", variant: "stacked", visible: true, title: "Experience" },
+    {
+      id: "custom-impact",
+      type: "custom",
+      customSectionId: "impact",
+      variant: "badges",
+      visible: true,
+      title: "Proof points",
+    },
+    { id: "skills", type: "skills", variant: "ticker", visible: true, title: "Stack" },
+    { id: "resume", type: "resume", variant: "minimal", visible: false, title: "Résumé" },
+    { id: "contact", type: "contact", variant: "banner", visible: true, title: "Start a conversation" },
+  ],
+};
+
 export const sampleBuilderState: BuilderState = {
   data: sampleData,
   variants: [
     {
-      id: "general",
-      name: "General",
-      targetRole: "Software Engineer",
-      config: cloneConfig(defaultConfig),
-      content: fullContentConfig(sampleData),
-      branding: cloneBranding(),
+      id: "backend-platform",
+      name: "Backend & Platform",
+      targetRole: "Backend & Platform Engineer",
+      config: cloneConfig(sampleBackendConfig),
+      content: {
+        experienceIds: ["exp-meridian", "exp-relay", "exp-orbit"],
+        projectIds: [
+          "project-traceflow",
+          "project-vector-gateway",
+          "project-queuescope",
+        ],
+        skills: [
+          "Java",
+          "Go",
+          "Distributed Systems",
+          "PostgreSQL",
+          "Redis",
+          "Kafka",
+          "Kubernetes",
+          "AWS",
+          "Observability",
+          "System Design",
+        ],
+      },
+      branding: {
+        faviconUrl: "",
+        shareTitle: "Maya Chen — Backend & Platform Engineer",
+        shareDescription:
+          "Distributed systems, platform engineering, observability, and developer tooling.",
+        shareImageUrl: "",
+      },
+      resume: cloneResume(),
+    },
+    {
+      id: "product-engineer",
+      name: "Product Engineer",
+      targetRole: "Product Engineer",
+      config: cloneConfig(sampleProductConfig),
+      content: {
+        experienceIds: ["exp-meridian", "exp-relay"],
+        projectIds: [
+          "project-schema-studio",
+          "project-traceflow",
+          "project-queuescope",
+        ],
+        skills: [
+          "TypeScript",
+          "React",
+          "Java",
+          "PostgreSQL",
+          "Redis",
+          "Observability",
+          "System Design",
+        ],
+      },
+      branding: {
+        faviconUrl: "",
+        shareTitle: "Maya Chen — Product Engineer",
+        shareDescription:
+          "Product-minded engineering across thoughtful interfaces, developer tools, and reliable systems.",
+        shareImageUrl: "",
+      },
       resume: cloneResume(),
     },
   ],
-  activeVariantId: "general",
+  activeVariantId: "backend-platform",
 };
-
 export const emptyData: PortfolioData = {
   profile: {
     name: "",
@@ -460,16 +616,44 @@ export const emptyBuilderState: BuilderState = {
 };
 
 export const sampleSnapshot: PortfolioSnapshot = {
-  data: sampleData,
-  config: cloneConfig(defaultConfig),
+  data: {
+    ...sampleData,
+    profile: {
+      ...sampleData.profile,
+      role: "Backend & Platform Engineer",
+    },
+    experience: sampleData.experience,
+    projects: sampleData.projects.filter((project) =>
+      [
+        "project-traceflow",
+        "project-vector-gateway",
+        "project-queuescope",
+      ].includes(project.id)
+    ),
+    skills: sampleBackendConfig.sections.length
+      ? [
+          "Java",
+          "Go",
+          "Distributed Systems",
+          "PostgreSQL",
+          "Redis",
+          "Kafka",
+          "Kubernetes",
+          "AWS",
+          "Observability",
+          "System Design",
+        ]
+      : [],
+    customSections: sampleData.customSections,
+  },
+  config: cloneConfig(sampleBackendConfig),
   meta: {
-    name: "General",
-    targetRole: "Software Engineer",
-    branding: cloneBranding(),
+    name: "Backend & Platform",
+    targetRole: "Backend & Platform Engineer",
+    branding: cloneBranding(sampleBuilderState.variants[0].branding),
     resume: cloneResume(),
   },
 };
-
 export function snapshotForVariant(state: BuilderState): PortfolioSnapshot {
   const normalized = normalizeBuilderState(state);
   const active =
