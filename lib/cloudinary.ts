@@ -55,15 +55,20 @@ export async function uploadResumeToCloudinary(
     throw new Error("Resume must be 5 MB or smaller.");
   }
 
-  return uploadToCloudinary(file, {
-    scope: "portfolio",
-    variantKey,
-  });
+  return uploadToCloudinary(
+    file,
+    {
+      scope: "portfolio",
+      variantKey,
+    },
+    "raw"
+  );
 }
 
 async function uploadToCloudinary(
   file: File,
-  uploadScope: CloudinaryUploadScope
+  uploadScope: CloudinaryUploadScope,
+  resourceType: "image" | "raw" = "image"
 ) {
   const signatureResponse = await fetch("/api/uploads/cloudinary-signature", {
     method: "POST",
@@ -90,7 +95,7 @@ async function uploadToCloudinary(
   formData.append("tags", signed.tags);
 
   const response = await fetch(
-    `https://api.cloudinary.com/v1_1/${signed.cloudName}/image/upload`,
+    `https://api.cloudinary.com/v1_1/${signed.cloudName}/${resourceType}/upload`,
     {
       method: "POST",
       body: formData,
