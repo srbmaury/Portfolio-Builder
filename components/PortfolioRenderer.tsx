@@ -60,7 +60,7 @@ function Hero({
   title?: string;
 }) {
   const { profile } = snapshot.data;
-  const hasImage = Boolean(safeExternalUrl(profile.heroImageUrl));
+  const hasImage = Boolean(safeCloudinaryUrl(profile.heroImageUrl));
 
   if (variant === "terminal") {
     return (
@@ -83,7 +83,7 @@ function Hero({
         <HeroImage url={profile.heroImageUrl} priority />
         <div className="hero-media-overlay" />
         <div className="hero-media-content">
-          <p className="eyebrow">{display(profile.role, "Your role")}</p>
+          <p className="eyebrow">{heroLabel(title, profile.role)}</p>
           <h1>{display(profile.name, "Your name")}</h1>
           <p className="hero-copy">{display(profile.tagline, "A concise statement about the work you want to be known for.")}</p>
           <Socials snapshot={snapshot} />
@@ -100,7 +100,7 @@ function Hero({
     return (
       <section className={`p-section hero-photo hero-${variant}`}>
         <div className="hero-photo-copy">
-          <p className="eyebrow">{display(profile.role, "Your role")}</p>
+          <p className="eyebrow">{heroLabel(title, profile.role)}</p>
           <h1>{display(profile.name, "Your name")}</h1>
           <p className="hero-copy">{display(profile.tagline, "A concise statement about the work you want to be known for.")}</p>
           <Socials snapshot={snapshot} />
@@ -120,7 +120,7 @@ function Hero({
     return (
       <section className="p-section hero-poster">
         <div className="poster-topline">
-          <span>{display(profile.role, "Your role")}</span>
+          <span>{heroLabel(title, profile.role)}</span>
           <span>{display(profile.availability, "Open to opportunities")}</span>
         </div>
         <h1>{display(profile.name, "Your name")}</h1>
@@ -140,7 +140,7 @@ function Hero({
       <section className="p-section hero-spotlight">
         <div className="spotlight-orb" aria-hidden="true" />
         <div className="spotlight-content">
-          <p className="eyebrow">{display(profile.role, "Your role")}</p>
+          <p className="eyebrow">{heroLabel(title, profile.role)}</p>
           <h1>{display(profile.name, "Your name")}</h1>
           <p className="hero-copy">{display(profile.tagline, "A concise statement about your work.")}</p>
           <Socials snapshot={snapshot} />
@@ -156,7 +156,7 @@ function Hero({
   if (variant === "minimal") {
     return (
       <section className="p-section hero-minimal">
-        <p className="eyebrow">{display(profile.role, "Your role")}</p>
+        <p className="eyebrow">{heroLabel(title, profile.role)}</p>
         <h1>{display(profile.name, "Your name")}</h1>
         <p className="hero-copy">{display(profile.tagline, "A concise statement about your work.")}</p>
         <Socials snapshot={snapshot} />
@@ -602,6 +602,12 @@ function SectionHeading({ index, title }: { index: string; title?: string }) {
       <h2>{title.trim()}</h2>
     </div>
   );
+}
+
+function heroLabel(title: string | undefined, role: string) {
+  const cleanTitle = title?.trim();
+  const cleanRole = display(role, "Your role");
+  return cleanTitle ? `${cleanTitle} / ${cleanRole}` : cleanRole;
 }
 
 function safeCloudinaryUrl(value?: string) {
