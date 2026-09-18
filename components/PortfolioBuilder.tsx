@@ -1759,7 +1759,11 @@ export function PortfolioBuilder({
                           aria-label={`Edit ${section.id} section name`}
                         />
                         <small>
-                          {section.id} · {section.visible ? section.variant : "hidden"}
+                          {sectionType(section) === "custom"
+                            ? state.data.customSections.find(
+                                (item) => item.id === section.customSectionId
+                              )?.title || "custom"
+                            : section.id} · {section.visible ? section.variant : "hidden"}
                         </small>
                       </div>
 
@@ -1787,7 +1791,7 @@ export function PortfolioBuilder({
                     {section.visible && (
                       <>
                         <div className="variant-grid">
-                        {templateCatalog[section.id].map((variant) => (
+                        {templateCatalog[sectionType(section)].map((variant) => (
                           <button
                             key={variant.id}
                             className={
