@@ -1223,6 +1223,22 @@ export function PortfolioBuilder({
                   Content is shared across every portfolio variant. Change it here and
                   each version stays up to date.
                 </p>
+                <div className="panel-intro-actions">
+                  <button
+                    type="button"
+                    className="primary-button"
+                    onClick={() => setResumeImportOpen(true)}
+                  >
+                    Import resume
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    onClick={() => setJsonEditorOpen(true)}
+                  >
+                    Edit as JSON
+                  </button>
+                </div>
               </div>
 
               <EditorSection title="Profile" subtitle="Identity and positioning" defaultOpen>
@@ -1366,6 +1382,150 @@ export function PortfolioBuilder({
                   onChange={updateSkills}
                   hint="Comma separated"
                 />
+              </EditorSection>
+
+              <EditorSection
+                title="Custom sections"
+                subtitle={`${state.data.customSections.length} sections`}
+                actionLabel="+ Add"
+                onAction={() => setCreateDialog("custom-section")}
+              >
+                {state.data.customSections.length === 0 ? (
+                  <p className="editor-empty-note">
+                    Add Education, Certifications, Awards, Publications, Talks,
+                    Open Source, Testimonials, or any section you need.
+                  </p>
+                ) : null}
+
+                {state.data.customSections.map((customSection) => (
+                  <EditorCard
+                    key={customSection.id}
+                    title={customSection.title || "Custom section"}
+                    onDelete={() => removeCustomSection(customSection.id)}
+                  >
+                    <Field
+                      label="Section title"
+                      value={customSection.title}
+                      onChange={(value) =>
+                        renameCustomSection(customSection.id, value)
+                      }
+                    />
+
+                    <div className="custom-editor-items-head">
+                      <div>
+                        <strong>Items</strong>
+                        <span>{customSection.items.length} entries</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => addCustomItem(customSection.id)}
+                      >
+                        + Item
+                      </button>
+                    </div>
+
+                    {customSection.items.length === 0 ? (
+                      <p className="editor-empty-note">
+                        Add an item, then use only the fields that make sense for
+                        this section.
+                      </p>
+                    ) : null}
+
+                    <div className="custom-editor-items">
+                      {customSection.items.map((item, itemIndex) => (
+                        <div className="custom-editor-item" key={item.id}>
+                          <div className="custom-editor-item-head">
+                            <strong>
+                              {item.heading || `Item ${itemIndex + 1}`}
+                            </strong>
+                            <button
+                              type="button"
+                              className="danger-link"
+                              onClick={() =>
+                                removeCustomItem(customSection.id, item.id)
+                              }
+                            >
+                              Remove
+                            </button>
+                          </div>
+                          <Field
+                            label="Heading"
+                            value={item.heading}
+                            onChange={(value) =>
+                              updateCustomItem(
+                                customSection.id,
+                                item.id,
+                                "heading",
+                                value
+                              )
+                            }
+                          />
+                          <Field
+                            label="Subheading"
+                            value={item.subheading}
+                            onChange={(value) =>
+                              updateCustomItem(
+                                customSection.id,
+                                item.id,
+                                "subheading",
+                                value
+                              )
+                            }
+                          />
+                          <Field
+                            label="Period / meta"
+                            value={item.meta}
+                            onChange={(value) =>
+                              updateCustomItem(
+                                customSection.id,
+                                item.id,
+                                "meta",
+                                value
+                              )
+                            }
+                          />
+                          <Field
+                            label="Description"
+                            multiline
+                            value={item.description}
+                            onChange={(value) =>
+                              updateCustomItem(
+                                customSection.id,
+                                item.id,
+                                "description",
+                                value
+                              )
+                            }
+                          />
+                          <Field
+                            label="Link label"
+                            value={item.linkLabel}
+                            onChange={(value) =>
+                              updateCustomItem(
+                                customSection.id,
+                                item.id,
+                                "linkLabel",
+                                value
+                              )
+                            }
+                          />
+                          <Field
+                            label="Link URL"
+                            value={item.linkUrl}
+                            onChange={(value) =>
+                              updateCustomItem(
+                                customSection.id,
+                                item.id,
+                                "linkUrl",
+                                value
+                              )
+                            }
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </EditorCard>
+                ))}
               </EditorSection>
 
               <EditorSection
