@@ -15,7 +15,6 @@ export default async function PublicPortfolioPage({ params }: Props) {
     .from("portfolios")
     .select("published_snapshot")
     .eq("public_path", `${username}/${portfolio}`)
-    .eq("is_published", true)
     .maybeSingle();
 
   if (error || !data?.published_snapshot) notFound();
