@@ -508,7 +508,7 @@ export function PortfolioBuilder() {
               >
                 {state.data.experience.map((item, index) => (
                   <EditorCard
-                    key={`${item.company}-${index}`}
+                    key={`experience-${index}`}
                     title={item.role || `Role ${index + 1}`}
                     onDelete={() => removeExperience(index)}
                   >
@@ -545,7 +545,7 @@ export function PortfolioBuilder() {
               >
                 {state.data.projects.map((project, index) => (
                   <EditorCard
-                    key={`${project.title}-${index}`}
+                    key={`project-${index}`}
                     title={project.title || `Project ${index + 1}`}
                     onDelete={() => removeProject(index)}
                   >
@@ -593,7 +593,7 @@ export function PortfolioBuilder() {
               >
                 {state.data.profile.socials.map((social, index) => (
                   <EditorCard
-                    key={`${social.label}-${index}`}
+                    key={`social-${index}`}
                     title={social.label || `Link ${index + 1}`}
                     onDelete={() => removeSocial(index)}
                   >
@@ -768,31 +768,37 @@ function EditorSection({
   defaultOpen?: boolean;
   children: React.ReactNode;
 }) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
   return (
-    <details className="editor-section" open={defaultOpen}>
-      <summary>
-        <div>
-          <strong>{title}</strong>
-          <span>{subtitle}</span>
-        </div>
-        <div className="editor-section-summary-actions">
-          {actionLabel && onAction && (
-            <button
-              type="button"
-              onClick={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                onAction();
-              }}
-            >
-              {actionLabel}
-            </button>
-          )}
+    <section className={`editor-section ${isOpen ? "open" : ""}`}>
+      <div className="editor-section-heading">
+        <button
+          type="button"
+          className="editor-section-toggle"
+          onClick={() => setIsOpen((current) => !current)}
+          aria-expanded={isOpen}
+        >
+          <div>
+            <strong>{title}</strong>
+            <span>{subtitle}</span>
+          </div>
           <span className="editor-chevron">⌄</span>
-        </div>
-      </summary>
-      <div className="editor-section-body">{children}</div>
-    </details>
+        </button>
+
+        {actionLabel && onAction && (
+          <button
+            type="button"
+            className="editor-section-action"
+            onClick={onAction}
+          >
+            {actionLabel}
+          </button>
+        )}
+      </div>
+
+      {isOpen && <div className="editor-section-body">{children}</div>}
+    </section>
   );
 }
 
@@ -805,24 +811,27 @@ function EditorCard({
   onDelete: () => void;
   children: React.ReactNode;
 }) {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <details className="editor-card">
-      <summary>
-        <strong>{title}</strong>
+    <section className={`editor-card ${isOpen ? "open" : ""}`}>
+      <div className="editor-card-heading">
         <button
           type="button"
-          className="danger-link"
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            onDelete();
-          }}
+          className="editor-card-toggle"
+          onClick={() => setIsOpen((current) => !current)}
+          aria-expanded={isOpen}
         >
+          <strong>{title}</strong>
+          <span>{isOpen ? "−" : "+"}</span>
+        </button>
+        <button type="button" className="danger-link" onClick={onDelete}>
           Remove
         </button>
-      </summary>
-      <div className="editor-card-body">{children}</div>
-    </details>
+      </div>
+
+      {isOpen && <div className="editor-card-body">{children}</div>}
+    </section>
   );
 }
 
