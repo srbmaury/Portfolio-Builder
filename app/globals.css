@@ -2377,3 +2377,10 @@ body.dialog-open {
 .contact-layout {
   display: grid;
 }
+
+.section-title-editor {
+  padding: 12px 0 2px;
+}
+.section-title-editor .field {
+  margin-bottom: 8px;
+}
