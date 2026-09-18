@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { trackProductEvent } from "@/lib/product-analytics";
+import { formatPortfolioDate } from "@/lib/date-format";
 import {
   deletePortfolio,
   duplicatePortfolio,
@@ -263,7 +264,7 @@ export function PortfolioManager({
                   <div className="portfolio-manager-meta">
                     {publicUrl ? <code>{publicUrl}</code> : <span>Publish to create a public link.</span>}
                     {item.publishedAt && (
-                      <span>Updated {new Date(item.publishedAt).toLocaleDateString()}</span>
+                      <span>Updated {formatPortfolioDate(item.publishedAt)}</span>
                     )}
                   </div>
 
