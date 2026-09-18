@@ -174,6 +174,7 @@ Deno.serve(async (request: Request) => {
         id: portfolioId,
         name: portfolio?.name || "Untitled portfolio",
         publicPath: portfolio?.public_path || null,
+        isPublished: Boolean(portfolio?.is_published),
         views: stats.views,
         uniqueVisitors: stats.visitors.size,
         engagementRate:
