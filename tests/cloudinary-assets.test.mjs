@@ -76,6 +76,6 @@ test("Cloudinary ownership tags are deterministic and scoped", () => {
       "c0e01d99-0000-0000-0000-000000000000",
       "Backend & Platform"
     ),
-    "fb-portfolio-c0e01d99000000000000000000000000-backend-platform"
+    "fb-portfolio-c0e01d99000000000000000000000000-backend-platform-0b515d0c"
   );
 });
