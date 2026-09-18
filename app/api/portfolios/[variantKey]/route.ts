@@ -43,7 +43,7 @@ export async function DELETE(
 
   const { data: target, error: targetError } = await supabase
     .from("portfolios")
-    .select("variant_key, branding_config, resume_config")
+    .select("variant_key, branding_config, resume_config, published_snapshot")
     .eq("user_id", user.id)
     .eq("variant_key", variantKey)
     .maybeSingle();
@@ -58,7 +58,7 @@ export async function DELETE(
 
   const { data: remaining, error: remainingError } = await supabase
     .from("portfolios")
-    .select("variant_key, branding_config, resume_config")
+    .select("variant_key, branding_config, resume_config, published_snapshot")
     .eq("user_id", user.id)
     .neq("variant_key", variantKey);
 
@@ -67,51 +67,66 @@ export async function DELETE(
   }
 
   try {
+    const [
+      profileResult,
+      projectResult,
+      taggedPortfolioAssets,
+    ] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("hero_image_url")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("projects")
+        .select("image_url")
+        .eq("user_id", user.id),
+      listCloudinaryUrlsByTag(
+        cloudinaryPortfolioTag(user.id, variantKey)
+      ),
+    ]);
+
+    if (profileResult.error) throw profileResult.error;
+    if (projectResult.error) throw projectResult.error;
+
     const targetReferences = collectCloudinaryUrls(
       {
         branding: target.branding_config,
         resume: target.resume_config,
+        publishedSnapshot: target.published_snapshot,
       },
       cloudName
     );
 
-    const taggedPortfolioAssets = await listCloudinaryUrlsByTag(
-      cloudinaryPortfolioTag(user.id, variantKey)
-    );
-
-    const remainingReferences = collectCloudinaryUrls(
-      remaining || [],
+    const sharedReferences = collectCloudinaryUrls(
+      {
+        profile: profileResult.data,
+        projects: projectResult.data || [],
+      },
       cloudName
     );
 
-    let candidates = [...targetReferences, ...taggedPortfolioAssets];
+    const remainingReferences = collectCloudinaryUrls(
+      {
+        portfolios: remaining || [],
+        shared: {
+          profile: profileResult.data,
+          projects: projectResult.data || [],
+        },
+      },
+      cloudName
+    );
+
     const isLastPortfolio = (remaining || []).length === 0;
+    let candidates = [...targetReferences, ...taggedPortfolioAssets];
 
     if (isLastPortfolio) {
-      const [
-        profileResult,
-        projectResult,
-        taggedUserAssets,
-      ] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("hero_image_url")
-          .eq("user_id", user.id)
-          .maybeSingle(),
-        supabase
-          .from("projects")
-          .select("image_url")
-          .eq("user_id", user.id),
-        listCloudinaryUrlsByTag(cloudinaryUserTag(user.id)),
-      ]);
-
-      if (profileResult.error) throw profileResult.error;
-      if (projectResult.error) throw projectResult.error;
-
+      const taggedUserAssets = await listCloudinaryUrlsByTag(
+        cloudinaryUserTag(user.id)
+      );
       candidates = [
         ...candidates,
-        ...collectCloudinaryUrls(profileResult.data, cloudName),
-        ...collectCloudinaryUrls(projectResult.data || [], cloudName),
+        ...sharedReferences,
         ...taggedUserAssets,
       ];
     }
