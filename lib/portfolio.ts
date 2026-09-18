@@ -530,6 +530,29 @@ export function slugify(value: string) {
   );
 }
 
+export function publicUsernameForProfile(
+  existingUsername: string | null | undefined,
+  profileName: string,
+  userId: string
+) {
+  const profileSlug = slugify(profileName).slice(0, 30);
+  const generated = `${profileSlug}-${userId.slice(0, 6)}`;
+  const demoSlug = slugify(sampleData.profile.name);
+  const demoPrefix = `${demoSlug}-`;
+
+  if (
+    existingUsername &&
+    !(
+      existingUsername.startsWith(demoPrefix) &&
+      profileSlug !== demoSlug
+    )
+  ) {
+    return existingUsername;
+  }
+
+  return generated;
+}
+
 
 export function sectionHasContent(
   section: SectionType,

@@ -2,6 +2,7 @@ import type { SupabaseClient, User } from "@supabase/supabase-js";
 import {
   cloneConfig,
   normalizeBuilderState,
+  publicUsernameForProfile,
   slugify,
   snapshotForVariant,
   type BuilderState,
@@ -432,9 +433,14 @@ async function ensureProfile(
 
   if (existingError) throw existingError;
 
-  const username =
-    existing?.username ||
-    `${slugify(state.data.profile.name).slice(0, 30)}-${user.id.slice(0, 6)}`;
+  const username = publicUsernameForProfile(
+    existing?.username,
+    state.data.profile.name,
+    user.id
+  );
+  const usernameChanged = Boolean(
+    existing?.username && existing.username !== username
+  );
 
   const { error } = await supabase.from("profiles").upsert({
     user_id: user.id,
@@ -451,6 +457,28 @@ async function ensureProfile(
   });
 
   if (error) throw error;
+
+  if (usernameChanged) {
+    const { data: portfolios, error: portfolioError } = await supabase
+      .from("portfolios")
+      .select("variant_key, slug, public_path")
+      .eq("user_id", user.id);
+
+    if (portfolioError) throw portfolioError;
+
+    for (const portfolio of portfolios || []) {
+      if (!portfolio.public_path) continue;
+
+      const { error: pathError } = await supabase
+        .from("portfolios")
+        .update({ public_path: `${username}/${portfolio.slug}` })
+        .eq("user_id", user.id)
+        .eq("variant_key", portfolio.variant_key);
+
+      if (pathError) throw pathError;
+    }
+  }
+
   return username;
 }
 

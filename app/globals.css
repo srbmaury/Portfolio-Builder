@@ -86,7 +86,7 @@ a { color: inherit; text-decoration: none; }
 .topbar-more {
   position: relative;
 }
-.topbar-more > summary {
+.topbar-more-trigger {
   width: 38px;
   height: 38px;
   display: grid;
@@ -96,13 +96,11 @@ a { color: inherit; text-decoration: none; }
   background: #fff;
   color: #6e7581;
   cursor: pointer;
-  list-style: none;
   letter-spacing: .08em;
   font-weight: 800;
 }
-.topbar-more > summary::-webkit-details-marker { display: none; }
-.topbar-more[open] > summary,
-.topbar-more > summary:hover {
+.topbar-more-trigger:hover,
+.topbar-more-trigger[aria-expanded="true"] {
   background: #f5f3ff;
   border-color: #d9d1ff;
   color: #6549ee;
@@ -119,8 +117,12 @@ a { color: inherit; text-decoration: none; }
   background: #fff;
   box-shadow: 0 16px 42px rgba(32,37,45,.16);
 }
-.topbar-menu button {
+.topbar-menu button,
+.topbar-menu a {
   width: 100%;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
   border: 0;
   border-radius: 8px;
   background: transparent;
@@ -131,7 +133,10 @@ a { color: inherit; text-decoration: none; }
   font-weight: 650;
   cursor: pointer;
 }
-.topbar-menu button:hover { background: #f3f4f6; color: #232933; }
+.topbar-menu button:hover,
+.topbar-menu a:hover { background: #f3f4f6; color: #232933; }
+.topbar-menu button:disabled { opacity: .45; cursor: wait; }
+.topbar-menu-mobile-action { display: none !important; }
 .builder-grid { min-height: calc(100vh - 68px); display: grid; grid-template-columns: 410px minmax(0, 1fr); }
 .builder-panel { background: white; border-right: 1px solid #dfe2e7; position: relative; }
 .panel-tabs { display: grid; grid-template-columns: 1fr 1fr; padding: 14px 18px 0; gap: 6px; position: sticky; top: 68px; background: white; z-index: 4; }
@@ -395,10 +400,11 @@ a { color: inherit; text-decoration: none; }
     padding: 9px 13px;
     font-size: 11px;
   }
-  .topbar-more > summary {
+  .topbar-more-trigger {
     width: 36px;
     height: 36px;
   }
+  .topbar-menu-mobile-action { display: flex !important; }
   .builder-grid { display: block; }
   .builder-panel { border-right: 0; }
   .preview-stage { padding: 14px; }
