@@ -72,7 +72,10 @@ test("Cloudinary ownership tags are deterministic and scoped", () => {
     "fb-user-c0e01d99000000000000000000000000"
   );
   assert.equal(
-    cloudinaryPortfolioTag("Backend & Platform"),
-    "fb-portfolio-backend-platform"
+    cloudinaryPortfolioTag(
+      "c0e01d99-0000-0000-0000-000000000000",
+      "Backend & Platform"
+    ),
+    "fb-portfolio-c0e01d99000000000000000000000000-backend-platform"
   );
 });
