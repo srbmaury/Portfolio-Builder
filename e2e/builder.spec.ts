@@ -45,14 +45,60 @@ test("fresh builder supports keyboard-first editing without inaccessible control
   await expect(resizer).toBeFocused();
 });
 
-test("reduced-motion preference and responsive preview remain usable", async ({
+test("tablet and mobile preview use real isolated viewport widths", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/builder");
 
+  const previewFrame = page.frameLocator(".preview-device-frame");
+  await expect(previewFrame.locator("body")).toBeVisible();
+
   await page.getByRole("button", { name: "mobile" }).click();
   await expect(page.locator(".preview-window.preview-mobile")).toBeVisible();
+
+  await expect
+    .poll(async () => {
+      const frame = page
+        .frames()
+        .find((candidate) => candidate.url().includes("/builder/preview"));
+      return frame?.evaluate(() => window.innerWidth);
+    })
+    .toBe(390);
+
+  await expect
+    .poll(async () => {
+      const frame = page
+        .frames()
+        .find((candidate) => candidate.url().includes("/builder/preview"));
+      return frame?.evaluate(() =>
+        window.matchMedia("(max-width: 760px)").matches
+      );
+    })
+    .toBe(true);
+
+  await page.getByRole("button", { name: "tablet" }).click();
+  await expect(page.locator(".preview-window.preview-tablet")).toBeVisible();
+
+  await expect
+    .poll(async () => {
+      const frame = page
+        .frames()
+        .find((candidate) => candidate.url().includes("/builder/preview"));
+      return frame?.evaluate(() => window.innerWidth);
+    })
+    .toBe(768);
+
+  await expect
+    .poll(async () => {
+      const frame = page
+        .frames()
+        .find((candidate) => candidate.url().includes("/builder/preview"));
+      return frame?.evaluate(() =>
+        window.matchMedia("(max-width: 760px)").matches
+      );
+    })
+    .toBe(false);
 
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator(".builder-shell")).toBeVisible();
