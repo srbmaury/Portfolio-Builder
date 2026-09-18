@@ -594,6 +594,33 @@ export function PortfolioBuilder({
                     </small>
                   </span>
                 </label>
+                <label className="resume-hero-toggle">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(
+                      activeVariant?.resume.hideSectionWhenHeroLink
+                    )}
+                    disabled={
+                      !activeVariant?.resume.url ||
+                      !activeVariant?.resume.showInHero
+                    }
+                    onChange={(event) =>
+                      updateResume({
+                        ...(activeVariant?.resume || cloneResume()),
+                        hideSectionWhenHeroLink: event.target.checked,
+                      })
+                    }
+                  />
+                  <span>
+                    <strong>
+                      Hide standalone Resume section when hero link is shown
+                    </strong>
+                    <small>
+                      Keeps the résumé available from the hero without repeating
+                      the full Resume section lower on the page.
+                    </small>
+                  </span>
+                </label>
               </EditorSection>
 
               <EditorSection
