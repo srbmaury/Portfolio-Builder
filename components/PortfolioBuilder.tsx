@@ -9,7 +9,6 @@ import {
   saveBuilderState,
 } from "@/lib/supabase/portfolio-store";
 import {
-  builderStateFromSnapshot,
   cloneConfig,
   cloneContentConfig,
   createEntityId,
@@ -29,9 +28,8 @@ import {
   type ThemeName,
 } from "@/lib/portfolio";
 
-const STORAGE_KEY = "portfolio-builder:v3";
-const V2_STORAGE_KEY = "portfolio-builder:v2";
-const LEGACY_STORAGE_KEY = "portfolio-builder:v1";
+const STORAGE_KEY = "folioblocks:workspace";
+const EDITOR_WIDTH_KEY = "folioblocks:editor-width";
 
 type PreviewMode = "desktop" | "tablet" | "mobile";
 
@@ -48,8 +46,7 @@ export function PortfolioBuilder() {
 
   useEffect(() => {
     const saved = window.localStorage.getItem(STORAGE_KEY);
-    const v2 = window.localStorage.getItem(V2_STORAGE_KEY);
-    const legacy = window.localStorage.getItem(LEGACY_STORAGE_KEY);
+    const savedWidth = Number(window.localStorage.getItem(EDITOR_WIDTH_KEY));
 
     if (saved) {
       try {
@@ -57,18 +54,10 @@ export function PortfolioBuilder() {
       } catch {
         window.localStorage.removeItem(STORAGE_KEY);
       }
-    } else if (v2) {
-      try {
-        setState(normalizeBuilderState(JSON.parse(v2) as BuilderState));
-      } catch {
-        window.localStorage.removeItem(V2_STORAGE_KEY);
-      }
-    } else if (legacy) {
-      try {
-        setState(builderStateFromSnapshot(JSON.parse(legacy)));
-      } catch {
-        window.localStorage.removeItem(LEGACY_STORAGE_KEY);
-      }
+    }
+
+    if (Number.isFinite(savedWidth) && savedWidth >= 320 && savedWidth <= 720) {
+      setEditorWidth(savedWidth);
     }
 
     setHydrated(true);
@@ -79,6 +68,12 @@ export function PortfolioBuilder() {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }
   }, [hydrated, state]);
+
+  useEffect(() => {
+    if (hydrated) {
+      window.localStorage.setItem(EDITOR_WIDTH_KEY, String(editorWidth));
+    }
+  }, [editorWidth, hydrated]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -689,8 +684,6 @@ export function PortfolioBuilder() {
     setState(sampleBuilderState);
     setShareUrl("");
     window.localStorage.removeItem(STORAGE_KEY);
-    window.localStorage.removeItem(V2_STORAGE_KEY);
-    window.localStorage.removeItem(LEGACY_STORAGE_KEY);
   }
 
   return (
