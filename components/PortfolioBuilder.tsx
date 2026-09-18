@@ -37,7 +37,13 @@ const EDITOR_WIDTH_KEY = "folioblocks:editor-width";
 type PreviewMode = "desktop" | "tablet" | "mobile";
 type CreateDialogKind = "experience" | "project" | "link" | "variant" | null;
 
-export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean }) {
+export function PortfolioBuilder({
+  startFresh = false,
+  initialVariantId,
+}: {
+  startFresh?: boolean;
+  initialVariantId?: string;
+}) {
   const [state, setState] = useState<BuilderState>(
     startFresh ? emptyBuilderState : sampleBuilderState
   );
@@ -57,7 +63,13 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
 
     if (!startFresh && saved) {
       try {
-        setState(normalizeBuilderState(JSON.parse(saved) as BuilderState));
+        const localState = normalizeBuilderState(JSON.parse(saved) as BuilderState);
+        setState(
+          initialVariantId &&
+            localState.variants.some((variant) => variant.id === initialVariantId)
+            ? { ...localState, activeVariantId: initialVariantId }
+            : localState
+        );
       } catch {
         window.localStorage.removeItem(STORAGE_KEY);
       }
@@ -72,7 +84,7 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
     }
 
     setHydrated(true);
-  }, [startFresh]);
+  }, [initialVariantId, startFresh]);
 
   useEffect(() => {
     if (hydrated) {
@@ -129,7 +141,12 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
         if (cancelled) return;
 
         if (remote) {
-          setState(remote);
+          setState(
+            initialVariantId &&
+              remote.variants.some((variant) => variant.id === initialVariantId)
+              ? { ...remote, activeVariantId: initialVariantId }
+              : remote
+          );
           setCloudMessage("Loaded from cloud");
           setCloudStatus("saved");
         } else {
@@ -150,7 +167,7 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
     return () => {
       cancelled = true;
     };
-  }, [hydrated, startFresh]);
+  }, [hydrated, initialVariantId, startFresh]);
 
   const activeVariant =
     state.variants.find((variant) => variant.id === state.activeVariantId) ??
@@ -812,6 +829,9 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
         <div className="topbar-actions">
           {cloudUserId ? (
             <>
+              <a className="ghost-button portfolio-manager-link" href="/portfolios">
+                My portfolios
+              </a>
               <button
                 className="ghost-button"
                 onClick={saveToCloud}
@@ -1293,7 +1313,7 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
                             label="Heading"
                             value={section.title || ""}
                             onChange={(value) => setSectionTitle(section.id, value)}
-                            hint="Leave blank to hide this heading"
+                            hint="Shown as the section heading"
                           />
                         </div>
                         <div className="variant-grid">
