@@ -47,7 +47,7 @@ const events = [
     event_type: "project_clicked",
     visitor_id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
     session_id: "aaaaaaaa-0000-4000-8000-000000000001",
-    target: "project-1:github",
+    target: "project:github",
     referrer_host: "linkedin.com",
     device_type: "desktop",
     created_at: "2026-09-18T05:03:00.000Z",
@@ -80,7 +80,7 @@ test("analytics event input accepts only fixed non-content fields", () => {
     eventType: "project_clicked",
     visitorId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
     sessionId: "aaaaaaaa-0000-4000-8000-000000000001",
-    target: "project-1:github",
+    target: "project:github",
     referrerHost: "LinkedIn.COM",
     deviceType: "desktop",
   });
@@ -93,7 +93,7 @@ test("analytics event input accepts only fixed non-content fields", () => {
     eventType: "project_clicked",
     visitorId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
     sessionId: "aaaaaaaa-0000-4000-8000-000000000001",
-    target: "project-1:github",
+    target: "project:github",
     referrerHost: "linkedin.com",
     deviceType: "desktop",
   });
