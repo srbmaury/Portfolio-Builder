@@ -1052,7 +1052,7 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
                       label="Project image"
                       value={project.imageUrl || ""}
                       onChange={(value) => updateProject(index, "imageUrl", value)}
-                      help="Used by image grid, gallery, browser, and image-bento designs."
+                      help="Upload a screenshot or visual for image-based project layouts."
                     />
                     <Field
                       label="GitHub URL"
@@ -1709,18 +1709,9 @@ function ImageUploadField({
 }) {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
-  const cloudinaryConfigured = Boolean(
-    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME &&
-      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
-  );
 
   async function upload(file?: File) {
     if (!file) return;
-
-    if (!cloudinaryConfigured) {
-      setStatus("Cloudinary upload is not configured yet. Paste a Cloudinary URL instead.");
-      return;
-    }
 
     if (!file.type.startsWith("image/")) {
       setStatus("Choose an image file.");
@@ -1752,30 +1743,14 @@ function ImageUploadField({
           </button>
         </div>
       ) : null}
-      <input
-        className="image-url-input"
-        value={value}
-        placeholder="Cloudinary image URL"
-        onChange={(event) => onChange(event.target.value)}
-      />
-      <label
-        className={`image-upload-button ${
-          busy || !cloudinaryConfigured ? "disabled" : ""
-        }`}
-      >
+      <label className={`image-upload-button ${busy ? "disabled" : ""}`}>
         <input
           type="file"
-          accept="image/*"
-          disabled={busy || !cloudinaryConfigured}
+          accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+          disabled={busy}
           onChange={(event) => upload(event.target.files?.[0])}
         />
-        {busy
-          ? "Uploading…"
-          : !cloudinaryConfigured
-            ? "Configure Cloudinary to upload"
-            : value
-              ? "Replace image"
-              : "Upload image"}
+        {busy ? "Uploading…" : value ? "Replace image" : "Upload image"}
       </label>
       {help && <small className="field-help">{help}</small>}
       {status && <small className="upload-status">{status}</small>}
