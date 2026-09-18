@@ -10,7 +10,7 @@ export default function Home() {
         <div className="landing-nav-links">
           <a href="#how">How it works</a>
           <a href="#why">Why it is different</a>
-          <Link className="nav-cta" href="/builder">Start building</Link>
+          <Link className="nav-cta" href="/builder?fresh=1">Start fresh</Link>
         </div>
       </nav>
 
@@ -23,8 +23,8 @@ export default function Home() {
           and publish a polished portfolio in minutes.
         </p>
         <div className="landing-actions">
-          <Link className="landing-primary" href="/builder">Build my portfolio →</Link>
-          <a className="landing-secondary" href="#how">See how it works</a>
+          <Link className="landing-primary" href="/builder?fresh=1">Start fresh →</Link>
+          <Link className="landing-secondary" href="/builder">Explore with demo</Link>
         </div>
 
         <div className="landing-proof">
@@ -64,7 +64,7 @@ export default function Home() {
             Traditional builders lock your information into a page. FolioBlocks stores your professional profile separately,
             then lets any compatible section render it. One shared profile can power several role-specific portfolios, each with its own design.
           </p>
-          <Link className="landing-primary" href="/builder">Try the builder →</Link>
+          <Link className="landing-primary" href="/builder?fresh=1">Start from scratch →</Link>
         </div>
         <div className="architecture-card">
           <div className="arch-node arch-data"><strong>Your profile</strong><span>Experience · Projects · Skills</span></div>
