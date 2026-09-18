@@ -43,6 +43,13 @@ Java, Distributed Systems, PostgreSQL, Redis
   assert.equal(draft.profile.location, "Hyderabad, India");
   assert.match(draft.profile.about || "", /distributed systems/i);
   assert.equal(draft.profile.socials[0]?.label, "GitHub");
+  assert.equal(
+    draft.profile.socials.some((social) =>
+      social.url.includes("Ecommerce-Search")
+    ),
+    false,
+    "project URLs should not be imported as profile links"
+  );
 
   assert.equal(draft.experience.length, 2);
   assert.equal(draft.experience[0].company, "Salesforce");
