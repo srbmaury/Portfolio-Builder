@@ -73,6 +73,10 @@ revoke all on table public.analytics_events from anon, authenticated;
 grant insert on table public.analytics_events to anon, authenticated;
 grant select on table public.analytics_events to authenticated;
 
+-- The public insert policy checks only these two portfolio columns.
+-- Public portfolio content remains restricted to the existing published columns.
+grant select (id, is_published) on table public.portfolios to anon;
+
 create table if not exists public.analytics_admins (
   user_id uuid primary key references auth.users(id) on delete cascade,
   created_at timestamptz not null default now()
