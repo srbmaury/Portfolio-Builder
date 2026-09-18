@@ -58,7 +58,9 @@ export function PortfolioBuilder({
   const [cloudResolved, setCloudResolved] = useState(false);
   const [editorWidth, setEditorWidth] = useState(420);
   const [createDialog, setCreateDialog] = useState<CreateDialogKind>(null);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const createVariantOpenedRef = useRef(false);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(STORAGE_KEY);
@@ -111,6 +113,33 @@ export function PortfolioBuilder({
     window.addEventListener("resize", clampEditorWidth);
     return () => window.removeEventListener("resize", clampEditorWidth);
   }, []);
+
+  useEffect(() => {
+    if (!moreMenuOpen) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (
+        moreMenuRef.current &&
+        !moreMenuRef.current.contains(event.target as Node)
+      ) {
+        setMoreMenuOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMoreMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [moreMenuOpen]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -899,16 +928,84 @@ export function PortfolioBuilder({
               </a>
             )}
 
-            <details className="topbar-more">
-              <summary aria-label="More builder actions" title="More actions">
-                •••
-              </summary>
-              <div className="topbar-menu">
-                <button onClick={startFreshWorkspace}>Start fresh</button>
-                <button onClick={loadDemo}>Load demo</button>
-                {cloudUserId ? <button onClick={signOut}>Sign out</button> : null}
-              </div>
-            </details>
+            <div className="topbar-more" ref={moreMenuRef}>
+              <button
+                type="button"
+                className="topbar-more-trigger"
+                aria-label="More builder actions"
+                aria-expanded={moreMenuOpen}
+                aria-haspopup="menu"
+                title="More actions"
+                onClick={() => setMoreMenuOpen((open) => !open)}
+              >
+                <span aria-hidden="true">•••</span>
+              </button>
+
+              {moreMenuOpen ? (
+                <div className="topbar-menu" role="menu">
+                  {cloudUserId ? (
+                    <>
+                      <a
+                        className="topbar-menu-mobile-action"
+                        href="/portfolios"
+                        role="menuitem"
+                      >
+                        Portfolios
+                      </a>
+                      <button
+                        className="topbar-menu-mobile-action"
+                        role="menuitem"
+                        disabled={cloudStatus === "loading"}
+                        onClick={() => {
+                          setMoreMenuOpen(false);
+                          void saveToCloud();
+                        }}
+                      >
+                        Save
+                      </button>
+                    </>
+                  ) : (
+                    <a
+                      className="topbar-menu-mobile-action"
+                      href="/login"
+                      role="menuitem"
+                    >
+                      Sign in
+                    </a>
+                  )}
+
+                  <button
+                    role="menuitem"
+                    onClick={() => {
+                      setMoreMenuOpen(false);
+                      startFreshWorkspace();
+                    }}
+                  >
+                    Start fresh
+                  </button>
+                  <button
+                    role="menuitem"
+                    onClick={() => {
+                      setMoreMenuOpen(false);
+                      loadDemo();
+                    }}
+                  >
+                    Load demo
+                  </button>
+                  {cloudUserId ? (
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        setMoreMenuOpen(false);
+                        void signOut();
+                      }}
+                    >
+                      Sign out
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
 
             <button
               className="primary-button topbar-publish"
