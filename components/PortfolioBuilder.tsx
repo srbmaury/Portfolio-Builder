@@ -13,7 +13,11 @@ import {
   updateCustomSectionTitle as updateCustomSectionTitleInState,
 } from "@/lib/custom-sections";
 import { mergeResumeImport } from "@/lib/resume-import";
-import { uploadImageToCloudinary } from "@/lib/cloudinary";
+import {
+  uploadImageToCloudinary,
+  uploadResumeToCloudinary,
+  type CloudinaryUploadScope,
+} from "@/lib/cloudinary";
 import { createClient } from "@/lib/supabase/client";
 import {
   deletePortfolio,
@@ -402,6 +406,20 @@ export function PortfolioBuilder({
           : variant
       ),
     }));
+  }
+
+  function updateResume(
+    resume: { url: string; publicId: string; fileName: string }
+  ) {
+    setState((current) => ({
+      ...current,
+      variants: current.variants.map((variant) =>
+        variant.id === current.activeVariantId
+          ? { ...variant, resume }
+          : variant
+      ),
+    }));
+    setShareUrl("");
   }
 
   function setVariant(configId: string, variantName: string) {
@@ -1293,6 +1311,21 @@ export function PortfolioBuilder({
               </EditorSection>
 
               <EditorSection
+                title="Resume"
+                subtitle={activeVariant?.resume.url ? "PDF attached" : "Optional PDF"}
+              >
+                <p className="editor-empty-note">
+                  This resume belongs to <strong>{activeVariant?.name || "this portfolio"}</strong>,
+                  so different role-specific portfolios can show different resumes.
+                </p>
+                <ResumeUploadField
+                  value={activeVariant?.resume || cloneResume()}
+                  variantKey={activeVariant?.id || state.activeVariantId}
+                  onChange={updateResume}
+                />
+              </EditorSection>
+
+              <EditorSection
                 title="Experience"
                 subtitle={`${state.data.experience.length} roles`}
                 actionLabel="+ Add"
@@ -1689,6 +1722,10 @@ export function PortfolioBuilder({
                   label="Favicon"
                   value={activeVariant?.branding.faviconUrl || ""}
                   onChange={(value) => updateBranding("faviconUrl", value)}
+                  uploadScope={{
+                    scope: "portfolio",
+                    variantKey: activeVariant?.id || state.activeVariantId,
+                  }}
                   help="Optional. Use a square PNG or WebP; this icon appears in the browser tab for this portfolio."
                 />
                 <Field
@@ -1708,6 +1745,10 @@ export function PortfolioBuilder({
                   label="Social share card"
                   value={activeVariant?.branding.shareImageUrl || ""}
                   onChange={(value) => updateBranding("shareImageUrl", value)}
+                  uploadScope={{
+                    scope: "portfolio",
+                    variantKey: activeVariant?.id || state.activeVariantId,
+                  }}
                   help="Optional. Recommended 1200 × 630. Leave blank to use an automatically generated card personalized to this portfolio."
                 />
                 <div className="sharing-preview-note">
@@ -2249,11 +2290,13 @@ function ImageUploadField({
   value,
   onChange,
   help,
+  uploadScope = { scope: "shared" },
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   help?: string;
+  uploadScope?: CloudinaryUploadScope;
 }) {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
@@ -2270,7 +2313,7 @@ function ImageUploadField({
     setStatus("Uploading…");
 
     try {
-      const result = await uploadImageToCloudinary(file);
+      const result = await uploadImageToCloudinary(file, uploadScope);
       onChange(result.secure_url);
       setStatus("Uploaded");
     } catch (error) {
@@ -2302,6 +2345,78 @@ function ImageUploadField({
       </label>
       {help && <small className="field-help">{help}</small>}
       {status && <small className="upload-status">{status}</small>}
+    </div>
+  );
+}
+
+function ResumeUploadField({
+  value,
+  variantKey,
+  onChange,
+}: {
+  value: { url: string; publicId: string; fileName: string };
+  variantKey: string;
+  onChange: (value: { url: string; publicId: string; fileName: string }) => void;
+}) {
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function upload(file?: File) {
+    if (!file) return;
+
+    setBusy(true);
+    setStatus("Uploading…");
+
+    try {
+      const result = await uploadResumeToCloudinary(file, variantKey);
+      onChange({
+        url: result.secure_url,
+        publicId: result.public_id,
+        fileName: file.name,
+      });
+      setStatus("Resume uploaded");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Upload failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="field resume-upload-field">
+      <span>Public resume PDF</span>
+      {value.url ? (
+        <div className="resume-upload-current">
+          <div>
+            <strong>{value.fileName || "Resume.pdf"}</strong>
+            <a href={value.url} target="_blank" rel="noreferrer">
+              Open PDF ↗
+            </a>
+          </div>
+          <button
+            type="button"
+            className="danger-link"
+            onClick={() =>
+              onChange({ url: "", publicId: "", fileName: "" })
+            }
+          >
+            Remove
+          </button>
+        </div>
+      ) : null}
+      <label className={`image-upload-button ${busy ? "disabled" : ""}`}>
+        <input
+          type="file"
+          accept="application/pdf,.pdf"
+          disabled={busy}
+          onChange={(event) => upload(event.target.files?.[0])}
+        />
+        {busy ? "Uploading…" : value.url ? "Replace resume" : "Upload PDF"}
+      </label>
+      <small className="field-help">
+        PDF only, up to 5 MB. Visitors can view it inside the portfolio or open it in a new tab.
+      </small>
+      {status ? <small className="upload-status">{status}</small> : null}
     </div>
   );
 }
