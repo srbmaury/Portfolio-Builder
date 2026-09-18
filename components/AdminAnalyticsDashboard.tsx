@@ -13,6 +13,12 @@ export type AdminAnalyticsData = {
     contactClicks: number;
     projectClicks: number;
     socialClicks: number;
+    activeCreators: number;
+    returningCreators: number;
+    publishRate: number;
+    averageVariantsPerUser: number;
+    avgMinutesToFirstPublish: number;
+    resumeImportSuccessRate: number;
   };
   daily: Array<{
     date: string;
@@ -23,6 +29,8 @@ export type AdminAnalyticsData = {
   referrers: Array<{ label: string; count: number }>;
   devices: Array<{ label: string; count: number }>;
   actions: Array<{ label: string; count: number }>;
+  productFunnel: Array<{ label: string; count: number }>;
+  creatorActions: Array<{ label: string; count: number }>;
   topPortfolios: Array<{
     id: string;
     name: string;
@@ -108,6 +116,30 @@ export function AdminAnalyticsDashboard({
             label="Engagement rate"
             value={`${data.summary.engagementRate}%`}
           />
+          <AdminMetric
+            label={`Active creators · ${data.days}d`}
+            value={data.summary.activeCreators}
+          />
+          <AdminMetric
+            label="Returning creators"
+            value={data.summary.returningCreators}
+          />
+          <AdminMetric
+            label="Publish rate"
+            value={`${data.summary.publishRate}%`}
+          />
+          <AdminMetric
+            label="Variants / account"
+            value={data.summary.averageVariantsPerUser}
+          />
+          <AdminMetric
+            label="Avg. minutes to first publish"
+            value={data.summary.avgMinutesToFirstPublish}
+          />
+          <AdminMetric
+            label="Resume import success"
+            value={`${data.summary.resumeImportSuccessRate}%`}
+          />
         </div>
 
         <div className="analytics-grid analytics-grid-wide">
@@ -144,6 +176,24 @@ export function AdminAnalyticsDashboard({
               <span>Intent signals</span>
             </div>
             <AdminBreakdown items={data.actions} />
+          </section>
+        </div>
+
+        <div className="analytics-grid">
+          <section className="analytics-panel">
+            <div className="analytics-panel-heading">
+              <h2>Creator funnel</h2>
+              <span>Activation · {data.days}d</span>
+            </div>
+            <AdminBreakdown items={data.productFunnel} />
+          </section>
+
+          <section className="analytics-panel">
+            <div className="analytics-panel-heading">
+              <h2>Creator actions</h2>
+              <span>Builder behavior</span>
+            </div>
+            <AdminBreakdown items={data.creatorActions} />
           </section>
         </div>
 

@@ -78,6 +78,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         },
       ],
     },
+    robots: {
+      index: true,
+      follow: true,
+    },
     twitter: {
       card: "summary_large_image",
       title,
@@ -93,8 +97,31 @@ export default async function PublicPortfolioPage({ params }: Props) {
 
   if (!published) notFound();
 
+  const origin = await publicOrigin();
+  const publicUrl = `${origin}/${username}/${portfolio}`;
+  const profile = published.snapshot.data.profile;
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    url: publicUrl,
+    mainEntity: {
+      "@type": "Person",
+      name: profile.name,
+      jobTitle: published.snapshot.meta?.targetRole || profile.role,
+      description: profile.tagline || profile.about,
+      url: publicUrl,
+      sameAs: profile.socials.map((social) => social.url).filter(Boolean),
+    },
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
+        }}
+      />
       <PortfolioAnalyticsTracker portfolioId={published.id} />
       <PortfolioRenderer snapshot={published.snapshot} />
     </>

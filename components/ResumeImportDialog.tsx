@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import type { ResumeImportDraft } from "@/lib/resume-parser";
 import { validateResumeFileMetadata } from "@/lib/resume-upload";
+import { trackProductEvent } from "@/lib/product-analytics";
+import { useDialogFocusTrap } from "@/lib/accessibility";
 
 type IncludeState = {
   profile: boolean;
@@ -28,19 +30,16 @@ export function ResumeImportDialog({
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const dialogRef = useDialogFocusTrap<HTMLDivElement>(() => {
+    if (!busy) onClose();
+  });
 
   useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !busy) onClose();
-    }
-
     document.body.classList.add("dialog-open");
-    window.addEventListener("keydown", onKeyDown);
     return () => {
       document.body.classList.remove("dialog-open");
-      window.removeEventListener("keydown", onKeyDown);
     };
-  }, [busy, onClose]);
+  }, []);
 
   function chooseFile(next?: File) {
     setError("");
@@ -69,6 +68,7 @@ export function ResumeImportDialog({
 
     setBusy(true);
     setError("");
+    trackProductEvent("resume_import_started");
 
     try {
       const formData = new FormData();
@@ -87,7 +87,9 @@ export function ResumeImportDialog({
       }
 
       setDraft(payload.draft);
+      trackProductEvent("resume_import_succeeded");
     } catch (parseError) {
+      trackProductEvent("resume_import_failed");
       setError(
         parseError instanceof Error
           ? parseError.message
@@ -220,6 +222,7 @@ export function ResumeImportDialog({
       }}
     >
       <div
+        ref={dialogRef}
         className="create-dialog resume-import-dialog"
         role="dialog"
         aria-modal="true"

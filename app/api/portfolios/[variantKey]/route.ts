@@ -180,11 +180,18 @@ export async function DELETE(
         supabase.from("projects").delete().eq("user_id", user.id),
         supabase.from("skills").delete().eq("user_id", user.id),
         supabase.from("profiles").delete().eq("user_id", user.id),
+        supabase.from("product_events").delete().eq("user_id", user.id),
       ]);
       const cleanupError = cleanupResults.find((result) => result.error)?.error;
       if (cleanupError) throw cleanupError;
     } else {
-      const cleanupResults = [];
+      const cleanupResults = [
+        await supabase
+          .from("product_events")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("variant_key", variantKey),
+      ];
 
       if (orphanedContent.experienceIds.length) {
         cleanupResults.push(

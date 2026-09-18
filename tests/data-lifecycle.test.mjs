@@ -43,3 +43,10 @@ test("portfolio deletion considers published snapshots and removes target-only c
     "database portfolio row should be deleted only after remote cleanup"
   );
 });
+
+
+test("portfolio deletion also cleans creator product events", () => {
+  assert.match(portfolioDeleteSource, /from\("product_events"\)/);
+  assert.match(portfolioDeleteSource, /eq\("variant_key", variantKey\)/);
+  assert.match(portfolioDeleteSource, /delete\(\)\.eq\("user_id", user\.id\)/);
+});

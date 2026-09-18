@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
+import { trackProductEvent } from "@/lib/product-analytics";
 import {
   deletePortfolio,
   duplicatePortfolio,
@@ -83,7 +84,10 @@ export function PortfolioManager({
       );
       await refresh();
       setMessage("Draft copy created.");
-      if (newKey) window.location.href = `/builder?portfolio=${encodeURIComponent(newKey)}`;
+      if (newKey) {
+        trackProductEvent("portfolio_created", newKey);
+        window.location.href = `/builder?portfolio=${encodeURIComponent(newKey)}`;
+      }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Duplicate failed.");
     }
@@ -120,6 +124,7 @@ export function PortfolioManager({
           )
         );
         setMessage("Portfolio published.");
+        trackProductEvent("portfolio_published", item.variantKey);
       }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Publish action failed.");

@@ -13,7 +13,7 @@ FolioBlocks is a portfolio builder for developers and other professionals who ne
 - **Resume import** from PDF or DOCX (maximum 5 MB). Import parsing happens in memory and the uploaded import file is not stored.
 - Review/edit imported profile, experience, projects, and skills before applying them.
 - **Edit workspace as JSON** for the complete structured workspace. Invalid JSON is never applied.
-- Local draft autosave plus authenticated Supabase cloud persistence.
+- Local draft autosave plus authenticated Supabase cloud persistence through an atomic Postgres RPC, so a failed save cannot leave half-replaced experience/project/skill data.
 
 ### Role-specific portfolios
 
@@ -66,6 +66,8 @@ It also includes:
 - Custom social share title and description.
 - Custom social preview image with generated fallback.
 - Snapshot-based publishing: public routes read an immutable published snapshot while raw draft rows stay private.
+- Public portfolio SEO includes canonical/Open Graph/Twitter metadata, JSON-LD profile data, `robots.txt`, and a dynamic `sitemap.xml`.
+- Generated public portfolios include skip navigation and reduced-motion support.
 
 ### First-party analytics
 
@@ -85,7 +87,7 @@ Creators can view first-party analytics directly inside FolioBlocks:
 - Action breakdown.
 - Per-portfolio comparisons.
 
-Admin analytics additionally includes account counts, total/published/active portfolios, traffic, signups, top referrers/devices/actions, and top portfolios.
+Admin analytics additionally includes account counts, total/published/active portfolios, creator activation funnel, active/returning creators, publish rate, average variants per account, time-to-first-publish, resume-import success rate, traffic, signups, top referrers/devices/actions, and top portfolios.
 
 Analytics privacy:
 
@@ -94,6 +96,7 @@ Analytics privacy:
 - Honors browser Do Not Track.
 - Does not store IP addresses, names, emails, resume text, profile text, project descriptions, custom-section names, or full referrer URLs.
 - Analytics failures never break the public portfolio experience.
+- Authenticated product analytics store only the creator user ID, event type, optional portfolio variant key, and timestamp; normal creators cannot read the aggregate product-events table.
 
 ## Public docs
 
@@ -122,6 +125,7 @@ cp .env.example .env.local
 Fill in Supabase and Cloudinary configuration:
 
 ```env
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 
@@ -154,6 +158,9 @@ Useful routes:
 npm test
 npm run typecheck
 npm run build
+
+# Browser journeys (requires Playwright test package/browser)
+npx playwright test
 ```
 
 ## Cloudinary security

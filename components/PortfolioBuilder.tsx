@@ -1,66 +1,43 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import type { CreateDialogKind, PreviewMode } from "@/components/builder/types";
+import { useEditorResize } from "@/components/builder/useEditorResize";
+import { usePortfolioEditorActions } from "@/components/builder/usePortfolioEditorActions";
+import {
+  CreateItemDialog,
+  EditorCard,
+  EditorSection,
+  Field,
+  ImageUploadField,
+  ResumeUploadField,
+  TargetingSection,
+  TargetRow,
+} from "@/components/builder/BuilderDialogs";
 import { PortfolioRenderer } from "@/components/PortfolioRenderer";
 import { ResumeImportDialog } from "@/components/ResumeImportDialog";
 import { WorkspaceJsonDialog } from "@/components/WorkspaceJsonDialog";
-import {
-  addCustomSection as addCustomSectionToState,
-  addCustomSectionItem as addCustomSectionItemToState,
-  removeCustomSection as removeCustomSectionFromState,
-  removeCustomSectionItem as removeCustomSectionItemFromState,
-  updateCustomSectionItem as updateCustomSectionItemInState,
-  updateCustomSectionTitle as updateCustomSectionTitleInState,
-} from "@/lib/custom-sections";
 import { mergeResumeImport } from "@/lib/resume-import";
 import {
-  uploadImageToCloudinary,
-  uploadResumeToCloudinary,
-  type CloudinaryUploadScope,
-} from "@/lib/cloudinary";
+  useBuilderWorkspace,
+  WORKSPACE_STORAGE_KEY,
+} from "@/components/builder/useBuilderWorkspace";
 import { createClient } from "@/lib/supabase/client";
+import { deletePortfolio } from "@/lib/supabase/portfolio-store";
 import {
-  deletePortfolio,
-  loadBuilderState,
-  publishVariant,
-  saveBuilderState,
-} from "@/lib/supabase/portfolio-store";
-import {
-  cloneBranding,
-  cloneConfig,
-  cloneContentConfig,
   cloneResume,
-  createEntityId,
-  defaultConfig,
   emptyBuilderState,
-  fullContentConfig,
   normalizeBuilderState,
   sampleBuilderState,
   sectionHasContent,
   sectionType,
-  slugify,
   snapshotForVariant,
   templateCatalog,
   type BuilderState,
-  type Experience,
-  type PortfolioConfig,
-  type PortfolioData,
-  type Project,
   type SectionType,
   type ThemeName,
 } from "@/lib/portfolio";
 
-const STORAGE_KEY = "folioblocks:workspace";
-const EDITOR_WIDTH_KEY = "folioblocks:editor-width";
-
-type PreviewMode = "desktop" | "tablet" | "mobile";
-type CreateDialogKind =
-  | "experience"
-  | "project"
-  | "link"
-  | "variant"
-  | "custom-section"
-  | null;
 
 export function PortfolioBuilder({
   startFresh = false,
@@ -71,16 +48,30 @@ export function PortfolioBuilder({
   initialVariantId?: string;
   openCreateVariant?: boolean;
 }) {
-  const [state, setState] = useState<BuilderState>(emptyBuilderState);
+  const {
+    state,
+    setState,
+    hydrated,
+    shareUrl,
+    setShareUrl,
+    cloudUserId,
+    cloudStatus,
+    setCloudStatus,
+    cloudMessage,
+    setCloudMessage,
+    cloudResolved,
+    saveToCloud,
+    publish,
+    signOut,
+  } = useBuilderWorkspace({ startFresh, initialVariantId });
   const [tab, setTab] = useState<"content" | "targeting" | "design">("content");
   const [previewMode, setPreviewMode] = useState<PreviewMode>("desktop");
-  const [hydrated, setHydrated] = useState(false);
-  const [shareUrl, setShareUrl] = useState("");
-  const [cloudUserId, setCloudUserId] = useState<string | null>(null);
-  const [cloudStatus, setCloudStatus] = useState<"local" | "loading" | "saved" | "error">("local");
-  const [cloudMessage, setCloudMessage] = useState("");
-  const [cloudResolved, setCloudResolved] = useState(false);
-  const [editorWidth, setEditorWidth] = useState(420);
+  const {
+    editorWidth,
+    startResize,
+    handleResizerKeyDown,
+    resetEditorWidth,
+  } = useEditorResize();
   const [createDialog, setCreateDialog] = useState<CreateDialogKind>(null);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [resumeImportOpen, setResumeImportOpen] = useState(false);
@@ -88,57 +79,9 @@ export function PortfolioBuilder({
   const createVariantOpenedRef = useRef(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const saved = window.localStorage.getItem(STORAGE_KEY);
-    const savedWidth = Number(window.localStorage.getItem(EDITOR_WIDTH_KEY));
 
-    if (!startFresh && saved) {
-      try {
-        const localState = normalizeBuilderState(JSON.parse(saved) as BuilderState);
-        setState(
-          initialVariantId &&
-            localState.variants.some((variant) => variant.id === initialVariantId)
-            ? { ...localState, activeVariantId: initialVariantId }
-            : localState
-        );
-      } catch {
-        window.localStorage.removeItem(STORAGE_KEY);
-      }
-    } else if (startFresh) {
-      window.localStorage.removeItem(STORAGE_KEY);
-      setState(emptyBuilderState);
-    }
 
-    if (Number.isFinite(savedWidth) && savedWidth >= 320) {
-      const maxWidth = Math.max(320, Math.min(720, window.innerWidth - 460));
-      setEditorWidth(Math.min(savedWidth, maxWidth));
-    }
 
-    setHydrated(true);
-  }, [initialVariantId, startFresh]);
-
-  useEffect(() => {
-    if (hydrated) {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    }
-  }, [hydrated, state]);
-
-  useEffect(() => {
-    if (hydrated) {
-      window.localStorage.setItem(EDITOR_WIDTH_KEY, String(editorWidth));
-    }
-  }, [editorWidth, hydrated]);
-
-  useEffect(() => {
-    function clampEditorWidth() {
-      if (window.innerWidth <= 760) return;
-      const maxWidth = Math.max(320, Math.min(720, window.innerWidth - 460));
-      setEditorWidth((current) => Math.min(current, maxWidth));
-    }
-
-    window.addEventListener("resize", clampEditorWidth);
-    return () => window.removeEventListener("resize", clampEditorWidth);
-  }, []);
 
   useEffect(() => {
     if (!moreMenuOpen) return;
@@ -167,69 +110,6 @@ export function PortfolioBuilder({
     };
   }, [moreMenuOpen]);
 
-  useEffect(() => {
-    if (!hydrated) return;
-
-    let cancelled = false;
-
-    async function loadCloudWorkspace() {
-      const supabase = createClient();
-      const { data, error } = await supabase.auth.getUser();
-
-      if (cancelled) return;
-
-      if (error || !data.user) {
-        setCloudUserId(null);
-        setCloudStatus("local");
-        setCloudResolved(true);
-        return;
-      }
-
-      setCloudUserId(data.user.id);
-
-      if (startFresh) {
-        setCloudStatus("local");
-        setCloudMessage("Fresh workspace · not saved yet");
-        setCloudResolved(true);
-        return;
-      }
-
-      setCloudStatus("loading");
-
-      try {
-        const remote = await loadBuilderState(supabase, data.user);
-        if (cancelled) return;
-
-        if (remote) {
-          setState(
-            initialVariantId &&
-              remote.variants.some((variant) => variant.id === initialVariantId)
-              ? { ...remote, activeVariantId: initialVariantId }
-              : remote
-          );
-          setCloudMessage("Loaded from cloud");
-          setCloudStatus("saved");
-        } else {
-          setCloudMessage("Signed in · local draft not saved yet");
-          setCloudStatus("local");
-        }
-      } catch (loadError) {
-        if (cancelled) return;
-        setCloudMessage(
-          loadError instanceof Error ? loadError.message : "Could not load cloud workspace"
-        );
-        setCloudStatus("error");
-      } finally {
-        if (!cancelled) setCloudResolved(true);
-      }
-    }
-
-    loadCloudWorkspace();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [hydrated, initialVariantId, startFresh]);
 
   useEffect(() => {
     if (
@@ -245,449 +125,57 @@ export function PortfolioBuilder({
     setCreateDialog("variant");
   }, [cloudResolved, hydrated, openCreateVariant]);
 
-  const activeVariant =
-    state.variants.find((variant) => variant.id === state.activeVariantId) ??
-    state.variants[0];
+
+  const {
+    activeVariant,
+    targetedExperience,
+    targetedProjects,
+    targetedSkills,
+    toggleTarget,
+    moveTarget,
+    selectAllTargets,
+    clearTargets,
+    updateProfile,
+    updateTheme,
+    updateBranding,
+    updateResume,
+    setVariant,
+    setSectionTitle,
+    toggleSection,
+    moveSection,
+    shuffleDesign,
+    updateExperience,
+    addExperience,
+    removeExperience,
+    updateProject,
+    updateProjectStack,
+    addProject,
+    removeProject,
+    updateSkills,
+    updateSocial,
+    addSocial,
+    removeSocial,
+    createCustomSection,
+    renameCustomSection,
+    addCustomItem,
+    updateCustomItem,
+    removeCustomItem,
+    removeCustomSection,
+    createVariant,
+    duplicateVariant,
+    updateVariantMeta,
+  } = usePortfolioEditorActions({
+    state,
+    setState,
+    setShareUrl,
+  });
 
   const snapshot = useMemo(() => snapshotForVariant(state), [state]);
   const visibleSections = snapshot.config.sections.filter(
-    (section) => section.visible &&
+    (section) =>
+      section.visible &&
       sectionHasContent(section, snapshot.data, snapshot.meta?.resume)
   ).length;
-
-  const targetedExperience = useMemo(() => {
-    if (!activeVariant) return state.data.experience;
-    const selected = new Set(activeVariant.content.experienceIds);
-    const byId = new Map(state.data.experience.map((item) => [item.id, item]));
-    return [
-      ...activeVariant.content.experienceIds
-        .map((id) => byId.get(id))
-        .filter((item): item is Experience => Boolean(item)),
-      ...state.data.experience.filter((item) => !selected.has(item.id)),
-    ];
-  }, [activeVariant, state.data.experience]);
-
-  const targetedProjects = useMemo(() => {
-    if (!activeVariant) return state.data.projects;
-    const selected = new Set(activeVariant.content.projectIds);
-    const byId = new Map(state.data.projects.map((item) => [item.id, item]));
-    return [
-      ...activeVariant.content.projectIds
-        .map((id) => byId.get(id))
-        .filter((item): item is Project => Boolean(item)),
-      ...state.data.projects.filter((item) => !selected.has(item.id)),
-    ];
-  }, [activeVariant, state.data.projects]);
-
-  const targetedSkills = useMemo(() => {
-    if (!activeVariant) return state.data.skills;
-    const selected = new Set(activeVariant.content.skills);
-    return [
-      ...activeVariant.content.skills.filter((skill) => state.data.skills.includes(skill)),
-      ...state.data.skills.filter((skill) => !selected.has(skill)),
-    ];
-  }, [activeVariant, state.data.skills]);
-
-  function updateData(updater: (data: PortfolioData) => PortfolioData) {
-    setState((current) => ({ ...current, data: updater(current.data) }));
-  }
-
-  function updateActiveConfig(updater: (config: PortfolioConfig) => PortfolioConfig) {
-    setState((current) => ({
-      ...current,
-      variants: current.variants.map((variant) =>
-        variant.id === current.activeVariantId
-          ? { ...variant, config: updater(variant.config) }
-          : variant
-      ),
-    }));
-  }
-
-  function updateActiveContent(
-    field: "experienceIds" | "projectIds" | "skills",
-    updater: (items: string[]) => string[]
-  ) {
-    setState((current) => ({
-      ...current,
-      variants: current.variants.map((variant) =>
-        variant.id === current.activeVariantId
-          ? {
-              ...variant,
-              content: {
-                ...variant.content,
-                [field]: updater(variant.content[field]),
-              },
-            }
-          : variant
-      ),
-    }));
-  }
-
-  function toggleTarget(
-    field: "experienceIds" | "projectIds" | "skills",
-    value: string
-  ) {
-    updateActiveContent(field, (items) =>
-      items.includes(value)
-        ? items.filter((item) => item !== value)
-        : [...items, value]
-    );
-  }
-
-  function moveTarget(
-    field: "experienceIds" | "projectIds" | "skills",
-    value: string,
-    direction: -1 | 1
-  ) {
-    updateActiveContent(field, (items) => {
-      const index = items.indexOf(value);
-      if (index < 0) return items;
-      const nextIndex = index + direction;
-      if (nextIndex < 0 || nextIndex >= items.length) return items;
-      const next = [...items];
-      [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
-      return next;
-    });
-  }
-
-  function selectAllTargets(
-    field: "experienceIds" | "projectIds" | "skills"
-  ) {
-    const all =
-      field === "experienceIds"
-        ? state.data.experience.map((item) => item.id)
-        : field === "projectIds"
-          ? state.data.projects.map((item) => item.id)
-          : state.data.skills;
-    updateActiveContent(field, () => [...all]);
-  }
-
-  function clearTargets(field: "experienceIds" | "projectIds" | "skills") {
-    updateActiveContent(field, () => []);
-  }
-
-  function updateProfile(
-    field:
-      | "name"
-      | "role"
-      | "tagline"
-      | "about"
-      | "email"
-      | "location"
-      | "availability"
-      | "heroImageUrl",
-    value: string
-  ) {
-    updateData((data) => ({
-      ...data,
-      profile: { ...data.profile, [field]: value },
-    }));
-  }
-
-  function updateTheme(theme: ThemeName) {
-    updateActiveConfig((config) => ({ ...config, theme }));
-  }
-
-  function updateBranding(
-    field: "faviconUrl" | "shareTitle" | "shareDescription" | "shareImageUrl",
-    value: string
-  ) {
-    setState((current) => ({
-      ...current,
-      variants: current.variants.map((variant) =>
-        variant.id === current.activeVariantId
-          ? {
-              ...variant,
-              branding: {
-                ...variant.branding,
-                [field]: value,
-              },
-            }
-          : variant
-      ),
-    }));
-  }
-
-  function updateResume(
-    resume: { url: string; publicId: string; fileName: string }
-  ) {
-    setState((current) => ({
-      ...current,
-      variants: current.variants.map((variant) =>
-        variant.id === current.activeVariantId
-          ? { ...variant, resume }
-          : variant
-      ),
-    }));
-    setShareUrl("");
-  }
-
-  function setVariant(configId: string, variantName: string) {
-    updateActiveConfig((config) => ({
-      ...config,
-      sections: config.sections.map((section) =>
-        section.id === configId ? { ...section, variant: variantName } : section
-      ),
-    }));
-  }
-
-  function setSectionTitle(configId: string, title: string) {
-    updateActiveConfig((config) => ({
-      ...config,
-      sections: config.sections.map((section) =>
-        section.id === configId ? { ...section, title } : section
-      ),
-    }));
-  }
-
-  function toggleSection(configId: string) {
-    updateActiveConfig((config) => ({
-      ...config,
-      sections: config.sections.map((section) =>
-        section.id === configId
-          ? { ...section, visible: !section.visible }
-          : section
-      ),
-    }));
-  }
-
-  function moveSection(index: number, direction: -1 | 1) {
-    updateActiveConfig((config) => {
-      const nextIndex = index + direction;
-      if (nextIndex < 0 || nextIndex >= config.sections.length) return config;
-      const sections = [...config.sections];
-      [sections[index], sections[nextIndex]] = [sections[nextIndex], sections[index]];
-      return { ...config, sections };
-    });
-  }
-
-  function shuffleDesign() {
-    const themes: ThemeName[] = [
-      "ink",
-      "sand",
-      "moss",
-      "aurora",
-      "cobalt",
-      "rose",
-      "mono",
-      "sunset",
-      "ice",
-      "noir",
-    ];
-    updateActiveConfig((config) => ({
-      ...config,
-      theme: themes[Math.floor(Math.random() * themes.length)],
-      sections: config.sections.map((section) => {
-        const options = templateCatalog[sectionType(section)];
-        return {
-          ...section,
-          variant: options[Math.floor(Math.random() * options.length)].id,
-        };
-      }),
-    }));
-  }
-
-  function updateExperience(
-    index: number,
-    field: "company" | "role" | "period" | "summary",
-    value: string
-  ) {
-    updateData((data) => ({
-      ...data,
-      experience: data.experience.map((item, itemIndex) =>
-        itemIndex === index ? { ...item, [field]: value } : item
-      ),
-    }));
-  }
-
-  function addExperience(input: {
-    company: string;
-    role: string;
-    period: string;
-    summary: string;
-  }) {
-    const id = createEntityId("experience");
-    setState((current) => ({
-      ...current,
-      data: {
-        ...current.data,
-        experience: [...current.data.experience, { id, ...input }],
-      },
-      variants: current.variants.map((variant) =>
-        variant.id === current.activeVariantId
-          ? {
-              ...variant,
-              content: {
-                ...variant.content,
-                experienceIds: [...variant.content.experienceIds, id],
-              },
-            }
-          : variant
-      ),
-    }));
-  }
-
-  function removeExperience(index: number) {
-    const id = state.data.experience[index]?.id;
-    if (!id) return;
-    setState((current) => ({
-      ...current,
-      data: {
-        ...current.data,
-        experience: current.data.experience.filter((item) => item.id !== id),
-      },
-      variants: current.variants.map((variant) => ({
-        ...variant,
-        content: {
-          ...variant.content,
-          experienceIds: variant.content.experienceIds.filter(
-            (experienceId) => experienceId !== id
-          ),
-        },
-      })),
-    }));
-  }
-
-  function updateProject(
-    index: number,
-    field: "title" | "description" | "imageUrl" | "githubUrl" | "liveUrl",
-    value: string
-  ) {
-    updateData((data) => ({
-      ...data,
-      projects: data.projects.map((project, projectIndex) =>
-        projectIndex === index ? { ...project, [field]: value } : project
-      ),
-    }));
-  }
-
-  function updateProjectStack(index: number, value: string) {
-    const stack = value
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-
-    updateData((data) => ({
-      ...data,
-      projects: data.projects.map((project, projectIndex) =>
-        projectIndex === index ? { ...project, stack } : project
-      ),
-    }));
-  }
-
-  function addProject(input: {
-    title: string;
-    description: string;
-    stack: string[];
-    imageUrl?: string;
-    githubUrl?: string;
-    liveUrl?: string;
-  }) {
-    const id = createEntityId("project");
-    setState((current) => ({
-      ...current,
-      data: {
-        ...current.data,
-        projects: [...current.data.projects, { id, ...input }],
-      },
-      variants: current.variants.map((variant) =>
-        variant.id === current.activeVariantId
-          ? {
-              ...variant,
-              content: {
-                ...variant.content,
-                projectIds: [...variant.content.projectIds, id],
-              },
-            }
-          : variant
-      ),
-    }));
-  }
-
-  function removeProject(index: number) {
-    const id = state.data.projects[index]?.id;
-    if (!id) return;
-    setState((current) => ({
-      ...current,
-      data: {
-        ...current.data,
-        projects: current.data.projects.filter((item) => item.id !== id),
-      },
-      variants: current.variants.map((variant) => ({
-        ...variant,
-        content: {
-          ...variant.content,
-          projectIds: variant.content.projectIds.filter(
-            (projectId) => projectId !== id
-          ),
-        },
-      })),
-    }));
-  }
-
-  function updateSkills(value: string) {
-    const skills = Array.from(
-      new Set(
-        value
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean)
-      )
-    );
-
-    setState((current) => {
-      const previous = new Set(current.data.skills);
-      const next = new Set(skills);
-      const added = skills.filter((skill) => !previous.has(skill));
-
-      return {
-        ...current,
-        data: { ...current.data, skills },
-        variants: current.variants.map((variant) => ({
-          ...variant,
-          content: {
-            ...variant.content,
-            skills: [
-              ...variant.content.skills.filter((skill) => next.has(skill)),
-              ...(variant.id === current.activeVariantId ? added : []),
-            ],
-          },
-        })),
-      };
-    });
-  }
-
-  function updateSocial(index: number, field: "label" | "url", value: string) {
-    updateData((data) => ({
-      ...data,
-      profile: {
-        ...data.profile,
-        socials: data.profile.socials.map((social, socialIndex) =>
-          socialIndex === index ? { ...social, [field]: value } : social
-        ),
-      },
-    }));
-  }
-
-  function addSocial(input: { label: string; url: string }) {
-    updateData((data) => ({
-      ...data,
-      profile: {
-        ...data.profile,
-        socials: [...data.profile.socials, input],
-      },
-    }));
-  }
-
-  function removeSocial(index: number) {
-    updateData((data) => ({
-      ...data,
-      profile: {
-        ...data.profile,
-        socials: data.profile.socials.filter((_, socialIndex) => socialIndex !== index),
-      },
-    }));
-  }
 
   function applyResumeImport(
     draft: Parameters<typeof mergeResumeImport>[1]
@@ -700,113 +188,6 @@ export function PortfolioBuilder({
   function applyWorkspaceJson(next: BuilderState) {
     setState(normalizeBuilderState(next));
     setJsonEditorOpen(false);
-    setShareUrl("");
-  }
-
-  function createCustomSection(title: string) {
-    setState((current) => addCustomSectionToState(current, title));
-    setShareUrl("");
-  }
-
-  function renameCustomSection(customSectionId: string, title: string) {
-    setState((current) =>
-      updateCustomSectionTitleInState(current, customSectionId, title)
-    );
-  }
-
-  function addCustomItem(customSectionId: string) {
-    setState((current) =>
-      addCustomSectionItemToState(current, customSectionId)
-    );
-  }
-
-  function updateCustomItem(
-    customSectionId: string,
-    itemId: string,
-    field:
-      | "heading"
-      | "subheading"
-      | "meta"
-      | "description"
-      | "linkLabel"
-      | "linkUrl",
-    value: string
-  ) {
-    setState((current) =>
-      updateCustomSectionItemInState(
-        current,
-        customSectionId,
-        itemId,
-        field,
-        value
-      )
-    );
-  }
-
-  function removeCustomItem(customSectionId: string, itemId: string) {
-    setState((current) =>
-      removeCustomSectionItemFromState(current, customSectionId, itemId)
-    );
-  }
-
-  function removeCustomSection(customSectionId: string) {
-    if (!window.confirm("Delete this custom section from every portfolio variant?")) {
-      return;
-    }
-    setState((current) =>
-      removeCustomSectionFromState(current, customSectionId)
-    );
-    setShareUrl("");
-  }
-
-  function createVariant(input: { name: string; targetRole: string }) {
-    const currentConfig = activeVariant?.config ?? defaultConfig;
-    const number = state.variants.length + 1;
-    const id = `portfolio-${number}-${Date.now().toString(36)}`;
-
-    setState((current) => ({
-      ...current,
-      activeVariantId: id,
-      variants: [
-        ...current.variants,
-        {
-          id,
-          name: input.name,
-          targetRole: input.targetRole,
-          config: cloneConfig(currentConfig),
-          content: cloneContentConfig(
-            activeVariant?.content ?? fullContentConfig(current.data)
-          ),
-          branding: cloneBranding(activeVariant?.branding),
-          resume: cloneResume(activeVariant?.resume),
-        },
-      ],
-    }));
-
-    setShareUrl("");
-  }
-
-  function duplicateVariant() {
-    if (!activeVariant) return;
-    const id = `${slugify(activeVariant.name)}-copy-${Date.now().toString(36)}`;
-
-    setState((current) => ({
-      ...current,
-      activeVariantId: id,
-      variants: [
-        ...current.variants,
-        {
-          id,
-          name: `${activeVariant.name} Copy`,
-          targetRole: activeVariant.targetRole,
-          config: cloneConfig(activeVariant.config),
-          content: cloneContentConfig(activeVariant.content),
-          branding: cloneBranding(activeVariant.branding),
-          resume: cloneResume(activeVariant.resume),
-        },
-      ],
-    }));
-
     setShareUrl("");
   }
 
@@ -857,150 +238,6 @@ export function PortfolioBuilder({
     setShareUrl("");
   }
 
-  function updateVariantMeta(field: "name" | "targetRole", value: string) {
-    setState((current) => ({
-      ...current,
-      variants: current.variants.map((variant) =>
-        variant.id === current.activeVariantId
-          ? { ...variant, [field]: value }
-          : variant
-      ),
-    }));
-  }
-
-  function getMaxEditorWidth() {
-    return Math.max(320, Math.min(720, window.innerWidth - 460));
-  }
-
-  function resetEditorWidth() {
-    setEditorWidth(Math.min(420, getMaxEditorWidth()));
-  }
-
-  function nudgeEditorWidth(delta: number) {
-    const maxWidth = getMaxEditorWidth();
-    setEditorWidth((current) => Math.max(320, Math.min(maxWidth, current + delta)));
-  }
-
-  function handleResizerKeyDown(event: React.KeyboardEvent<HTMLButtonElement>) {
-    if (event.key === "ArrowLeft") {
-      event.preventDefault();
-      nudgeEditorWidth(-24);
-    }
-
-    if (event.key === "ArrowRight") {
-      event.preventDefault();
-      nudgeEditorWidth(24);
-    }
-
-    if (event.key === "Home") {
-      event.preventDefault();
-      setEditorWidth(320);
-    }
-
-    if (event.key === "End") {
-      event.preventDefault();
-      setEditorWidth(getMaxEditorWidth());
-    }
-  }
-
-  function startResize(event: React.PointerEvent<HTMLButtonElement>) {
-    if (window.innerWidth <= 760) return;
-
-    event.preventDefault();
-    const startX = event.clientX;
-    const startWidth = editorWidth;
-
-    document.body.classList.add("builder-resizing");
-
-    function onPointerMove(moveEvent: PointerEvent) {
-      const maxWidth = Math.min(720, window.innerWidth - 460);
-      const nextWidth = Math.max(
-        320,
-        Math.min(maxWidth, startWidth + moveEvent.clientX - startX)
-      );
-      setEditorWidth(nextWidth);
-    }
-
-    function stopResize() {
-      document.body.classList.remove("builder-resizing");
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerup", stopResize);
-      window.removeEventListener("pointercancel", stopResize);
-    }
-
-    window.addEventListener("pointermove", onPointerMove);
-    window.addEventListener("pointerup", stopResize);
-    window.addEventListener("pointercancel", stopResize);
-  }
-
-  async function saveToCloud() {
-    const supabase = createClient();
-    const { data, error } = await supabase.auth.getUser();
-
-    if (error || !data.user) {
-      window.location.href = "/login";
-      return;
-    }
-
-    setCloudStatus("loading");
-    setCloudMessage("Saving…");
-
-    try {
-      await saveBuilderState(supabase, data.user, state);
-      setCloudUserId(data.user.id);
-      setCloudStatus("saved");
-      setCloudMessage("Saved to cloud");
-    } catch (saveError) {
-      setCloudStatus("error");
-      setCloudMessage(
-        saveError instanceof Error ? saveError.message : "Cloud save failed"
-      );
-    }
-  }
-
-  async function signOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    setCloudUserId(null);
-    setCloudStatus("local");
-    setCloudMessage("Signed out · local draft preserved");
-  }
-
-  async function publish() {
-    const supabase = createClient();
-    const { data, error } = await supabase.auth.getUser();
-
-    if (error || !data.user) {
-      window.location.href = "/login";
-      return;
-    }
-
-    setCloudStatus("loading");
-    setCloudMessage("Publishing…");
-
-    try {
-      await saveBuilderState(supabase, data.user, state);
-      const publicPath = await publishVariant(supabase, data.user, state);
-      const url = `${window.location.origin}/${publicPath}`;
-
-      setShareUrl(url);
-      setCloudUserId(data.user.id);
-      setCloudStatus("saved");
-      setCloudMessage("Published from cloud");
-
-      try {
-        await navigator.clipboard.writeText(url);
-      } catch {
-        // Clipboard can be blocked in some preview environments.
-      }
-    } catch (publishError) {
-      setCloudStatus("error");
-      setCloudMessage(
-        publishError instanceof Error ? publishError.message : "Publish failed"
-      );
-    }
-  }
-
   function startFreshWorkspace() {
     if (
       !window.confirm(
@@ -1012,7 +249,7 @@ export function PortfolioBuilder({
 
     setState(emptyBuilderState);
     setShareUrl("");
-    window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(WORKSPACE_STORAGE_KEY);
     setCloudMessage(cloudUserId ? "Fresh workspace · not saved yet" : "Fresh local workspace");
     setCloudStatus("local");
   }
@@ -1030,7 +267,7 @@ export function PortfolioBuilder({
         </a>
 
         <div className="builder-topbar-controls">
-          <div className="builder-status" title={cloudMessage || undefined}>
+          <div className="builder-status" title={cloudMessage || undefined} aria-live="polite">
             <span className={`save-dot cloud-${cloudStatus}`} />
             <span>
               {cloudUserId
@@ -1158,7 +395,7 @@ export function PortfolioBuilder({
 
       <div
         className="builder-grid"
-        style={{ "--editor-width": `${editorWidth}px` } as React.CSSProperties}
+        style={{ "--editor-width": `${editorWidth}px` } as CSSProperties}
       >
         <aside className="builder-panel">
           <div className="panel-tabs panel-tabs-three">
@@ -1968,647 +1205,3 @@ export function PortfolioBuilder({
   );
 }
 
-function CreateItemDialog({
-  kind,
-  defaultTargetRole,
-  onClose,
-  onCreateExperience,
-  onCreateProject,
-  onCreateLink,
-  onCreateVariant,
-  onCreateCustomSection,
-}: {
-  kind: Exclude<CreateDialogKind, null>;
-  defaultTargetRole: string;
-  onClose: () => void;
-  onCreateExperience: (input: {
-    company: string;
-    role: string;
-    period: string;
-    summary: string;
-  }) => void;
-  onCreateProject: (input: {
-    title: string;
-    description: string;
-    stack: string[];
-    imageUrl?: string;
-    githubUrl?: string;
-    liveUrl?: string;
-  }) => void;
-  onCreateLink: (input: { label: string; url: string }) => void;
-  onCreateVariant: (input: { name: string; targetRole: string }) => void;
-  onCreateCustomSection: (title: string) => void;
-}) {
-  const [error, setError] = useState("");
-  const [values, setValues] = useState<Record<string, string>>(() => ({
-    company: "",
-    role: "",
-    period: "",
-    summary: "",
-    title: "",
-    description: "",
-    stack: "",
-    imageUrl: "",
-    githubUrl: "",
-    liveUrl: "",
-    label: "",
-    url: "",
-    name: "",
-    sectionTitle: "",
-    targetRole: kind === "variant" ? defaultTargetRole : "",
-  }));
-
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-
-    document.body.classList.add("dialog-open");
-    window.addEventListener("keydown", onKeyDown);
-
-    return () => {
-      document.body.classList.remove("dialog-open");
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [onClose]);
-
-  function update(key: string, value: string) {
-    setError("");
-    setValues((current) => ({ ...current, [key]: value }));
-  }
-
-  function submit(event: React.FormEvent) {
-    event.preventDefault();
-
-    if (kind === "experience") {
-      const company = values.company.trim();
-      const role = values.role.trim();
-      const period = values.period.trim();
-      const summary = values.summary.trim();
-
-      if (!company || !role || !period || !summary) {
-        setError("Complete all experience fields before adding it.");
-        return;
-      }
-
-      onCreateExperience({ company, role, period, summary });
-      return;
-    }
-
-    if (kind === "project") {
-      const title = values.title.trim();
-      const description = values.description.trim();
-      const stack = values.stack
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean);
-
-      if (!title || !description || stack.length === 0) {
-        setError("Add a title, description, and at least one technology.");
-        return;
-      }
-
-      onCreateProject({
-        title,
-        description,
-        stack,
-        imageUrl: values.imageUrl.trim() || undefined,
-        githubUrl: values.githubUrl.trim() || undefined,
-        liveUrl: values.liveUrl.trim() || undefined,
-      });
-      return;
-    }
-
-    if (kind === "link") {
-      const label = values.label.trim();
-      const url = values.url.trim();
-
-      if (!label || !url) {
-        setError("Add both a label and URL.");
-        return;
-      }
-
-      onCreateLink({ label, url });
-      return;
-    }
-
-    if (kind === "custom-section") {
-      const sectionTitle = values.sectionTitle.trim();
-      if (!sectionTitle) {
-        setError("Add a section title before creating it.");
-        return;
-      }
-      onCreateCustomSection(sectionTitle);
-      return;
-    }
-
-    const name = values.name.trim();
-    const targetRole = values.targetRole.trim();
-
-    if (!name || !targetRole) {
-      setError("Add both a portfolio name and target role.");
-      return;
-    }
-
-    onCreateVariant({ name, targetRole });
-  }
-
-  const title =
-    kind === "experience"
-      ? "Add experience"
-      : kind === "project"
-        ? "Add project"
-        : kind === "link"
-          ? "Add link"
-          : kind === "custom-section"
-            ? "Add custom section"
-            : "Create portfolio variant";
-
-  const submitLabel =
-    kind === "experience"
-      ? "Add experience"
-      : kind === "project"
-        ? "Add project"
-        : kind === "link"
-          ? "Add link"
-          : kind === "custom-section"
-            ? "Add section"
-            : "Create portfolio";
-
-  return (
-    <div
-      className="create-dialog-backdrop"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <form
-        className="create-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="create-dialog-title"
-        onSubmit={submit}
-      >
-        <div className="create-dialog-head">
-          <div>
-            <p className="panel-kicker">Add details</p>
-            <h2 id="create-dialog-title">{title}</h2>
-          </div>
-          <button type="button" className="dialog-close" onClick={onClose} aria-label="Close">
-            ×
-          </button>
-        </div>
-
-        <div className="create-dialog-body">
-          {kind === "experience" && (
-            <>
-              <DialogField label="Company" value={values.company} onChange={(value) => update("company", value)} autoFocus required />
-              <DialogField label="Role" value={values.role} onChange={(value) => update("role", value)} required />
-              <DialogField label="Period" placeholder="e.g. 2024 — Present" value={values.period} onChange={(value) => update("period", value)} required />
-              <DialogField label="Summary" multiline value={values.summary} onChange={(value) => update("summary", value)} required />
-            </>
-          )}
-
-          {kind === "project" && (
-            <>
-              <DialogField label="Project title" value={values.title} onChange={(value) => update("title", value)} autoFocus required />
-              <DialogField label="Description" multiline value={values.description} onChange={(value) => update("description", value)} required />
-              <DialogField label="Tech stack" placeholder="Java, Redis, PostgreSQL" value={values.stack} onChange={(value) => update("stack", value)} required />
-              <ImageUploadField
-                label="Project image"
-                value={values.imageUrl}
-                onChange={(value) => update("imageUrl", value)}
-                help="Optional. Upload a screenshot or visual for image-based project layouts."
-              />
-              <DialogField label="GitHub URL" placeholder="https://github.com/..." value={values.githubUrl} onChange={(value) => update("githubUrl", value)} type="url" />
-              <DialogField label="Live URL" placeholder="https://..." value={values.liveUrl} onChange={(value) => update("liveUrl", value)} type="url" />
-            </>
-          )}
-
-          {kind === "link" && (
-            <>
-              <DialogField label="Label" placeholder="GitHub, LinkedIn, Website..." value={values.label} onChange={(value) => update("label", value)} autoFocus required />
-              <DialogField label="URL" placeholder="https://..." value={values.url} onChange={(value) => update("url", value)} type="url" required />
-            </>
-          )}
-
-          {kind === "custom-section" && (
-            <>
-              <DialogField
-                label="Section title"
-                placeholder="Education, Certifications, Awards..."
-                value={values.sectionTitle}
-                onChange={(value) => update("sectionTitle", value)}
-                autoFocus
-                required
-              />
-              <p className="dialog-hint">
-                Add flexible items afterward. The section is visible in this
-                portfolio and available, hidden, in your other variants.
-              </p>
-            </>
-          )}
-
-          {kind === "variant" && (
-            <>
-              <DialogField label="Portfolio name" placeholder="Backend, AI, General..." value={values.name} onChange={(value) => update("name", value)} autoFocus required />
-              <DialogField label="Target role" placeholder="Backend Engineer" value={values.targetRole} onChange={(value) => update("targetRole", value)} required />
-              <p className="dialog-hint">
-                The new variant starts with the current portfolio's design and targeted content. You can customize both afterward.
-              </p>
-            </>
-          )}
-        </div>
-
-        {error && (
-          <p className="create-dialog-error" role="alert">
-            {error}
-          </p>
-        )}
-
-        <div className="create-dialog-actions">
-          <button type="button" className="ghost-button" onClick={onClose}>
-            Cancel
-          </button>
-          <button className="primary-button" type="submit">
-            {submitLabel}
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-}
-
-function DialogField({
-  label,
-  value,
-  onChange,
-  multiline = false,
-  placeholder,
-  required = false,
-  type = "text",
-  autoFocus = false,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  multiline?: boolean;
-  placeholder?: string;
-  required?: boolean;
-  type?: string;
-  autoFocus?: boolean;
-}) {
-  return (
-    <label className="field dialog-field">
-      <span>{label}</span>
-      {multiline ? (
-        <textarea
-          autoFocus={autoFocus}
-          value={value}
-          placeholder={placeholder}
-          required={required}
-          rows={4}
-          onChange={(event) => onChange(event.target.value)}
-        />
-      ) : (
-        <input
-          autoFocus={autoFocus}
-          type={type}
-          value={value}
-          placeholder={placeholder}
-          required={required}
-          onChange={(event) => onChange(event.target.value)}
-        />
-      )}
-    </label>
-  );
-}
-
-function ImageUploadField({
-  label,
-  value,
-  onChange,
-  help,
-  uploadScope = { scope: "shared" },
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  help?: string;
-  uploadScope?: CloudinaryUploadScope;
-}) {
-  const [status, setStatus] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  async function upload(file?: File) {
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      setStatus("Choose an image file.");
-      return;
-    }
-
-    setBusy(true);
-    setStatus("Uploading…");
-
-    try {
-      const result = await uploadImageToCloudinary(file, uploadScope);
-      onChange(result.secure_url);
-      setStatus("Uploaded");
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Upload failed");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="field image-upload-field">
-      <span>{label}</span>
-      {value ? (
-        <div className="image-upload-preview">
-          <img src={value} alt="" />
-          <button type="button" className="danger-link" onClick={() => onChange("")}>
-            Remove
-          </button>
-        </div>
-      ) : null}
-      <label className={`image-upload-button ${busy ? "disabled" : ""}`}>
-        <input
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-          disabled={busy}
-          onChange={(event) => upload(event.target.files?.[0])}
-        />
-        {busy ? "Uploading…" : value ? "Replace image" : "Upload image"}
-      </label>
-      {help && <small className="field-help">{help}</small>}
-      {status && <small className="upload-status">{status}</small>}
-    </div>
-  );
-}
-
-function ResumeUploadField({
-  value,
-  variantKey,
-  onChange,
-}: {
-  value: { url: string; publicId: string; fileName: string };
-  variantKey: string;
-  onChange: (value: { url: string; publicId: string; fileName: string }) => void;
-}) {
-  const [status, setStatus] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  async function upload(file?: File) {
-    if (!file) return;
-
-    setBusy(true);
-    setStatus("Uploading…");
-
-    try {
-      const result = await uploadResumeToCloudinary(file, variantKey);
-      onChange({
-        url: result.secure_url,
-        publicId: result.public_id,
-        fileName: file.name,
-      });
-      setStatus("Resume uploaded");
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Upload failed");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="field resume-upload-field">
-      <span>Public resume PDF</span>
-      {value.url ? (
-        <div className="resume-upload-current">
-          <div>
-            <strong>{value.fileName || "Resume.pdf"}</strong>
-            <a href={value.url} target="_blank" rel="noreferrer">
-              Open PDF ↗
-            </a>
-          </div>
-          <button
-            type="button"
-            className="danger-link"
-            onClick={() =>
-              onChange({ url: "", publicId: "", fileName: "" })
-            }
-          >
-            Remove
-          </button>
-        </div>
-      ) : null}
-      <label className={`image-upload-button ${busy ? "disabled" : ""}`}>
-        <input
-          type="file"
-          accept="application/pdf,.pdf"
-          disabled={busy}
-          onChange={(event) => upload(event.target.files?.[0])}
-        />
-        {busy ? "Uploading…" : value.url ? "Replace resume" : "Upload PDF"}
-      </label>
-      <small className="field-help">
-        PDF only, up to 5 MB. Visitors can view it inside the portfolio or open it in a new tab.
-      </small>
-      {status ? <small className="upload-status">{status}</small> : null}
-    </div>
-  );
-}
-
-function EditorSection({
-  title,
-  subtitle,
-  actionLabel,
-  onAction,
-  defaultOpen = false,
-  children,
-}: {
-  title: string;
-  subtitle: string;
-  actionLabel?: string;
-  onAction?: () => void;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-}) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  return (
-    <section className={`editor-section ${isOpen ? "open" : ""}`}>
-      <div className="editor-section-heading">
-        <button
-          type="button"
-          className="editor-section-toggle"
-          onClick={() => setIsOpen((current) => !current)}
-          aria-expanded={isOpen}
-        >
-          <div>
-            <strong>{title}</strong>
-            <span>{subtitle}</span>
-          </div>
-          <span className="editor-chevron">⌄</span>
-        </button>
-
-        {actionLabel && onAction && (
-          <button
-            type="button"
-            className="editor-section-action"
-            onClick={onAction}
-          >
-            {actionLabel}
-          </button>
-        )}
-      </div>
-
-      {isOpen && <div className="editor-section-body">{children}</div>}
-    </section>
-  );
-}
-
-function EditorCard({
-  title,
-  onDelete,
-  children,
-}: {
-  title: string;
-  onDelete: () => void;
-  children: React.ReactNode;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <section className={`editor-card ${isOpen ? "open" : ""}`}>
-      <div className="editor-card-heading">
-        <button
-          type="button"
-          className="editor-card-toggle"
-          onClick={() => setIsOpen((current) => !current)}
-          aria-expanded={isOpen}
-        >
-          <strong>{title}</strong>
-          <span>{isOpen ? "−" : "+"}</span>
-        </button>
-        <button type="button" className="danger-link" onClick={onDelete}>
-          Remove
-        </button>
-      </div>
-
-      {isOpen && <div className="editor-card-body">{children}</div>}
-    </section>
-  );
-}
-
-function TargetingSection({
-  title,
-  selectedCount,
-  totalCount,
-  onSelectAll,
-  onClear,
-  children,
-}: {
-  title: string;
-  selectedCount: number;
-  totalCount: number;
-  onSelectAll: () => void;
-  onClear: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="targeting-section">
-      <div className="targeting-section-head">
-        <div>
-          <strong>{title}</strong>
-          <span>
-            {selectedCount} of {totalCount} shown
-          </span>
-        </div>
-        <div>
-          <button onClick={onSelectAll}>All</button>
-          <button onClick={onClear}>None</button>
-        </div>
-      </div>
-      <div className="targeting-list">{children}</div>
-    </section>
-  );
-}
-
-function TargetRow({
-  label,
-  detail,
-  selected,
-  onToggle,
-  onMoveUp,
-  onMoveDown,
-  canMoveUp,
-  canMoveDown,
-}: {
-  label: string;
-  detail?: string;
-  selected: boolean;
-  onToggle: () => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
-  canMoveUp: boolean;
-  canMoveDown: boolean;
-}) {
-  return (
-    <div className={`target-row ${selected ? "selected" : ""}`}>
-      <label>
-        <input type="checkbox" checked={selected} onChange={onToggle} />
-        <span>
-          <strong>{label}</strong>
-          {detail && <small>{detail}</small>}
-        </span>
-      </label>
-      <div className="target-order-actions">
-        <button onClick={onMoveUp} disabled={!canMoveUp} aria-label={`Move ${label} up`}>
-          ↑
-        </button>
-        <button
-          onClick={onMoveDown}
-          disabled={!canMoveDown}
-          aria-label={`Move ${label} down`}
-        >
-          ↓
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  multiline = false,
-  hint,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  multiline?: boolean;
-  hint?: string;
-}) {
-  return (
-    <label className="field">
-      <span>
-        {label}
-        {hint && <small>{hint}</small>}
-      </span>
-      {multiline ? (
-        <textarea
-          value={value}
-          rows={4}
-          onChange={(event) => onChange(event.target.value)}
-        />
-      ) : (
-        <input value={value} onChange={(event) => onChange(event.target.value)} />
-      )}
-    </label>
-  );
-}

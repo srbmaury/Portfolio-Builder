@@ -12,10 +12,18 @@ type EventRow = {
 
 type PortfolioRow = {
   id: string;
+  user_id: string;
   name: string;
   variant_key: string;
   public_path: string | null;
   is_published: boolean;
+  created_at: string;
+};
+
+type ProductEventRow = {
+  user_id: string;
+  event_type: string;
+  variant_key: string | null;
   created_at: string;
 };
 
@@ -78,11 +86,17 @@ Deno.serve(async (request: Request) => {
   const start = new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000);
   start.setUTCHours(0, 0, 0, 0);
 
-  const [usersResult, portfoliosResult, eventsResult] = await Promise.all([
+  const [
+    usersResult,
+    portfoliosResult,
+    eventsResult,
+    productEventsResult,
+    publishHistoryResult,
+  ] = await Promise.all([
     listAllUsers(admin),
     admin
       .from("portfolios")
-      .select("id, name, variant_key, public_path, is_published, created_at"),
+      .select("id, user_id, name, variant_key, public_path, is_published, created_at"),
     admin
       .from("analytics_events")
       .select(
@@ -90,9 +104,24 @@ Deno.serve(async (request: Request) => {
       )
       .gte("created_at", start.toISOString())
       .order("created_at", { ascending: true }),
+    admin
+      .from("product_events")
+      .select("user_id, event_type, variant_key, created_at")
+      .gte("created_at", start.toISOString())
+      .order("created_at", { ascending: true }),
+    admin
+      .from("product_events")
+      .select("user_id, event_type, variant_key, created_at")
+      .eq("event_type", "portfolio_published")
+      .order("created_at", { ascending: true }),
   ]);
 
-  if (portfoliosResult.error || eventsResult.error) {
+  if (
+    portfoliosResult.error ||
+    eventsResult.error ||
+    productEventsResult.error ||
+    publishHistoryResult.error
+  ) {
     return Response.json(
       { error: "Admin analytics query failed." },
       { status: 500 }
@@ -102,6 +131,8 @@ Deno.serve(async (request: Request) => {
   const users = usersResult;
   const portfolios = (portfoliosResult.data || []) as PortfolioRow[];
   const events = (eventsResult.data || []) as EventRow[];
+  const productEventsInWindow = (productEventsResult.data || []) as ProductEventRow[];
+  const publishHistory = (publishHistoryResult.data || []) as ProductEventRow[];
   const viewEvents = events.filter((event) => event.event_type === "portfolio_view");
   const engagementEvents = events.filter(
     (event) => event.event_type !== "portfolio_view"
@@ -113,6 +144,79 @@ Deno.serve(async (request: Request) => {
       .filter((visitorId) => uniqueVisitors.has(visitorId))
   );
   const activePortfolios = new Set(viewEvents.map((event) => event.portfolio_id));
+
+  const creatorDates = new Map<string, Set<string>>();
+  for (const event of productEventsInWindow) {
+    const dates = creatorDates.get(event.user_id) || new Set<string>();
+    dates.add(event.created_at.slice(0, 10));
+    creatorDates.set(event.user_id, dates);
+  }
+
+  const activeCreators = new Set(
+    productEventsInWindow.map((event) => event.user_id)
+  );
+  const returningCreators = [...creatorDates.values()].filter(
+    (dates) => dates.size >= 2
+  ).length;
+  const builders = uniqueProductUsers(productEventsInWindow, "builder_opened");
+  const savers = uniqueProductUsers(productEventsInWindow, "workspace_saved");
+  const publishers = uniqueProductUsers(
+    productEventsInWindow,
+    "portfolio_published"
+  );
+  const publishedUsers = new Set(
+    portfolios
+      .filter((portfolio) => portfolio.is_published)
+      .map((portfolio) => portfolio.user_id)
+  );
+
+  const firstPublishByUser = new Map<string, string>();
+  for (const event of publishHistory) {
+    if (
+      event.event_type === "portfolio_published" &&
+      !firstPublishByUser.has(event.user_id)
+    ) {
+      firstPublishByUser.set(event.user_id, event.created_at);
+    }
+  }
+
+  const userCreatedAt = new Map(
+    users
+      .filter((account) => Boolean(account.created_at))
+      .map((account) => [account.id, account.created_at!])
+  );
+  const firstPublishMinutes = [...firstPublishByUser.entries()]
+    .map(([userId, publishedAt]) => {
+      const createdAt = userCreatedAt.get(userId);
+      if (!createdAt) return null;
+      return Math.max(
+        0,
+        (new Date(publishedAt).getTime() - new Date(createdAt).getTime()) /
+          60000
+      );
+    })
+    .filter((value): value is number => value !== null);
+  const avgMinutesToFirstPublish =
+    firstPublishMinutes.length === 0
+      ? 0
+      : Math.round(
+          firstPublishMinutes.reduce((sum, value) => sum + value, 0) /
+            firstPublishMinutes.length
+        );
+
+  const resumeImportSucceeded = countProductEvent(
+    productEventsInWindow,
+    "resume_import_succeeded"
+  );
+  const resumeImportFailed = countProductEvent(
+    productEventsInWindow,
+    "resume_import_failed"
+  );
+  const resumeImportAttempts = resumeImportSucceeded + resumeImportFailed;
+
+  const accountsInWindow = users.filter(
+    (account) => account.created_at && account.created_at >= start.toISOString()
+  ).length;
 
   const dailyMap = new Map<
     string,
@@ -204,6 +308,21 @@ Deno.serve(async (request: Request) => {
       contactClicks: countEvent(events, "contact_clicked"),
       projectClicks: countEvent(events, "project_clicked"),
       socialClicks: countEvent(events, "social_clicked"),
+      activeCreators: activeCreators.size,
+      returningCreators,
+      publishRate:
+        users.length === 0
+          ? 0
+          : Math.round((publishedUsers.size / users.length) * 1000) / 10,
+      averageVariantsPerUser:
+        users.length === 0
+          ? 0
+          : Math.round((portfolios.length / users.length) * 10) / 10,
+      avgMinutesToFirstPublish,
+      resumeImportSuccessRate:
+        resumeImportAttempts === 0
+          ? 0
+          : Math.round((resumeImportSucceeded / resumeImportAttempts) * 1000) / 10,
     },
     daily: [...dailyMap.entries()]
       .sort(([left], [right]) => left.localeCompare(right))
@@ -219,6 +338,32 @@ Deno.serve(async (request: Request) => {
     devices: breakdown(
       viewEvents.map((event) => event.device_type || "unknown")
     ),
+    productFunnel: [
+      { label: "New accounts", count: accountsInWindow },
+      { label: "Opened builder", count: builders.size },
+      { label: "Saved workspace", count: savers.size },
+      { label: "Published portfolio", count: publishers.size },
+    ],
+    creatorActions: [
+      {
+        label: "Builder opens",
+        count: countProductEvent(productEventsInWindow, "builder_opened"),
+      },
+      {
+        label: "Portfolio creates",
+        count: countProductEvent(productEventsInWindow, "portfolio_created"),
+      },
+      {
+        label: "Workspace saves",
+        count: countProductEvent(productEventsInWindow, "workspace_saved"),
+      },
+      {
+        label: "Portfolio publishes",
+        count: countProductEvent(productEventsInWindow, "portfolio_published"),
+      },
+      { label: "Resume imports", count: resumeImportSucceeded },
+      { label: "Resume import failures", count: resumeImportFailed },
+    ].filter((item) => item.count > 0),
     actions: [
       { label: "Project clicks", count: countEvent(events, "project_clicked") },
       { label: "Resume opens", count: countEvent(events, "resume_opened") },
@@ -272,4 +417,17 @@ function breakdown(values: string[]) {
     .map(([label, count]) => ({ label, count }))
     .sort((left, right) => right.count - left.count)
     .slice(0, 10);
+}
+
+
+function uniqueProductUsers(events: ProductEventRow[], eventType: string) {
+  return new Set(
+    events
+      .filter((event) => event.event_type === eventType)
+      .map((event) => event.user_id)
+  );
+}
+
+function countProductEvent(events: ProductEventRow[], eventType: string) {
+  return events.filter((event) => event.event_type === eventType).length;
 }
