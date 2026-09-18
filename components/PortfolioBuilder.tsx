@@ -1440,25 +1440,22 @@ function CreateItemDialog({
   onCreateVariant: (input: { name: string; targetRole: string }) => void;
 }) {
   const [error, setError] = useState("");
-  const [values, setValues] = useState<Record<string, string>>(() => {
-    if (kind === "experience") {
-      return { company: "", role: "", period: "", summary: "" };
-    }
-    if (kind === "project") {
-      return {
-        title: "",
-        description: "",
-        stack: "",
-        imageUrl: "",
-        githubUrl: "",
-        liveUrl: "",
-      };
-    }
-    if (kind === "link") {
-      return { label: "", url: "" };
-    }
-    return { name: "", targetRole: defaultTargetRole };
-  });
+  const [values, setValues] = useState<Record<string, string>>(() => ({
+    company: "",
+    role: "",
+    period: "",
+    summary: "",
+    title: "",
+    description: "",
+    stack: "",
+    imageUrl: "",
+    githubUrl: "",
+    liveUrl: "",
+    label: "",
+    url: "",
+    name: "",
+    targetRole: kind === "variant" ? defaultTargetRole : "",
+  }));
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
