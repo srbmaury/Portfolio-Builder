@@ -43,7 +43,7 @@ export function PortfolioBuilder() {
     [snapshot.config.sections]
   );
 
-  function updateProfile(field: keyof PortfolioSnapshot["data"]["profile"], value: string) {
+  function updateProfile(\n    field: "name" | "role" | "tagline" | "about" | "email" | "location" | "availability",\n    value: string\n  ) {
     setSnapshot((current) => ({
       ...current,
       data: {
