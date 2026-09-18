@@ -43,9 +43,7 @@ export async function POST(request: Request) {
 
   if (
     scope === "portfolio" &&
-    (!body.variantKey ||
-      body.variantKey.length > 120 ||
-      !/^[a-zA-Z0-9&._ -]+$/.test(body.variantKey))
+    (!body.variantKey || body.variantKey.trim().length === 0 || body.variantKey.length > 160)
   ) {
     return NextResponse.json(
       { error: "A valid portfolio identifier is required." },
