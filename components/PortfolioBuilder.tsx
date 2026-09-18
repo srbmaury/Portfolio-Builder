@@ -2,6 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { PortfolioRenderer } from "@/components/PortfolioRenderer";
+import { createClient } from "@/lib/supabase/client";
+import {
+  loadBuilderState,
+  publishVariant,
+  saveBuilderState,
+} from "@/lib/supabase/portfolio-store";
 import {
   builderStateFromSnapshot,
   cloneConfig,
@@ -36,6 +42,9 @@ export function PortfolioBuilder() {
   const [previewMode, setPreviewMode] = useState<PreviewMode>("desktop");
   const [hydrated, setHydrated] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
+  const [cloudUserId, setCloudUserId] = useState<string | null>(null);
+  const [cloudStatus, setCloudStatus] = useState<"local" | "loading" | "saved" | "error">("local");
+  const [cloudMessage, setCloudMessage] = useState("");
 
   useEffect(() => {
     const saved = window.localStorage.getItem(STORAGE_KEY);
@@ -70,6 +79,54 @@ export function PortfolioBuilder() {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }
   }, [hydrated, state]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+
+    let cancelled = false;
+
+    async function loadCloudWorkspace() {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.getUser();
+
+      if (cancelled) return;
+
+      if (error || !data.user) {
+        setCloudUserId(null);
+        setCloudStatus("local");
+        return;
+      }
+
+      setCloudUserId(data.user.id);
+      setCloudStatus("loading");
+
+      try {
+        const remote = await loadBuilderState(supabase, data.user);
+        if (cancelled) return;
+
+        if (remote) {
+          setState(remote);
+          setCloudMessage("Loaded from cloud");
+          setCloudStatus("saved");
+        } else {
+          setCloudMessage("Signed in · local draft not saved yet");
+          setCloudStatus("local");
+        }
+      } catch (loadError) {
+        if (cancelled) return;
+        setCloudMessage(
+          loadError instanceof Error ? loadError.message : "Could not load cloud workspace"
+        );
+        setCloudStatus("error");
+      }
+    }
+
+    loadCloudWorkspace();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrated]);
 
   const activeVariant =
     state.variants.find((variant) => variant.id === state.activeVariantId) ??
@@ -530,12 +587,70 @@ export function PortfolioBuilder() {
     }));
   }
 
+  async function saveToCloud() {
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.getUser();
+
+    if (error || !data.user) {
+      window.location.href = "/login";
+      return;
+    }
+
+    setCloudStatus("loading");
+    setCloudMessage("Saving…");
+
+    try {
+      await saveBuilderState(supabase, data.user, state);
+      setCloudUserId(data.user.id);
+      setCloudStatus("saved");
+      setCloudMessage("Saved to cloud");
+    } catch (saveError) {
+      setCloudStatus("error");
+      setCloudMessage(
+        saveError instanceof Error ? saveError.message : "Cloud save failed"
+      );
+    }
+  }
+
+  async function signOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    setCloudUserId(null);
+    setCloudStatus("local");
+    setCloudMessage("Signed out · local draft preserved");
+  }
+
   async function publish() {
-    const encoded = encodeSnapshot(snapshot);
-    const variantSlug = slugify(snapshot.meta?.name || "portfolio");
-    const url = `${window.location.origin}/p/${slugify(
-      snapshot.data.profile.name
-    )}-${variantSlug}?data=${encoded}`;
+    const supabase = createClient();
+    const { data } = await supabase.auth.getUser();
+
+    let url: string;
+
+    if (data.user) {
+      setCloudStatus("loading");
+      setCloudMessage("Publishing…");
+
+      try {
+        await saveBuilderState(supabase, data.user, state);
+        const publicPath = await publishVariant(supabase, data.user, state);
+        url = `${window.location.origin}/u/${publicPath}`;
+        setCloudUserId(data.user.id);
+        setCloudStatus("saved");
+        setCloudMessage("Published from cloud");
+      } catch (publishError) {
+        setCloudStatus("error");
+        setCloudMessage(
+          publishError instanceof Error ? publishError.message : "Publish failed"
+        );
+        return;
+      }
+    } else {
+      const encoded = encodeSnapshot(snapshot);
+      const variantSlug = slugify(snapshot.meta?.name || "portfolio");
+      url = `${window.location.origin}/p/${slugify(
+        snapshot.data.profile.name
+      )}-${variantSlug}?data=${encoded}`;
+    }
 
     setShareUrl(url);
 
@@ -561,13 +676,35 @@ export function PortfolioBuilder() {
           folio<span>blocks</span>
         </a>
 
-        <div className="builder-status">
-          <span className="save-dot" />
-          Saved locally
+        <div className="builder-status" title={cloudMessage || undefined}>
+          <span className={`save-dot cloud-${cloudStatus}`} />
+          {cloudUserId
+            ? cloudStatus === "loading"
+              ? "Syncing cloud…"
+              : cloudStatus === "error"
+                ? "Cloud error"
+                : cloudStatus === "saved"
+                  ? "Saved to cloud"
+                  : "Cloud ready"
+            : "Saved locally"}
         </div>
 
         <div className="topbar-actions">
-          <button className="ghost-button" onClick={reset}>
+          {cloudUserId ? (
+            <>
+              <button className="ghost-button" onClick={saveToCloud}>
+                Save cloud
+              </button>
+              <button className="ghost-button" onClick={signOut}>
+                Sign out
+              </button>
+            </>
+          ) : (
+            <a className="ghost-button cloud-login-link" href="/login">
+              Sign in
+            </a>
+          )}
+          <button className="ghost-button reset-button" onClick={reset}>
             Reset demo
           </button>
           <button className="primary-button" onClick={publish}>
