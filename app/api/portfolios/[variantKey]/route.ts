@@ -10,6 +10,7 @@ import {
   destroyCloudinaryUrls,
   listCloudinaryUrlsByTag,
 } from "@/lib/cloudinary-server";
+import { selectOrphanedTargetContent } from "@/lib/portfolio-cleanup";
 import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -41,7 +42,7 @@ export async function DELETE(
 
   const { data: target, error: targetError } = await supabase
     .from("portfolios")
-    .select("variant_key, branding_config, resume_config, published_snapshot")
+    .select("variant_key, branding_config, resume_config, published_snapshot, content_config")
     .eq("user_id", user.id)
     .eq("variant_key", variantKey)
     .maybeSingle();
@@ -56,7 +57,7 @@ export async function DELETE(
 
   const { data: remaining, error: remainingError } = await supabase
     .from("portfolios")
-    .select("variant_key, branding_config, resume_config, published_snapshot")
+    .select("variant_key, branding_config, resume_config, published_snapshot, content_config")
     .eq("user_id", user.id)
     .neq("variant_key", variantKey);
 
@@ -116,8 +117,41 @@ export async function DELETE(
       cloudName
     );
 
+    const targetContent =
+      target.content_config && typeof target.content_config === "object"
+        ? target.content_config
+        : { experienceIds: [], projectIds: [], skills: [] };
+    const remainingContents = (remaining || []).map((portfolio) =>
+      portfolio.content_config && typeof portfolio.content_config === "object"
+        ? portfolio.content_config
+        : { experienceIds: [], projectIds: [], skills: [] }
+    );
+    const orphanedContent = selectOrphanedTargetContent(
+      targetContent,
+      remainingContents
+    );
+
+    const orphanedProjectResult = orphanedContent.projectIds.length
+      ? await supabase
+          .from("projects")
+          .select("id, image_url")
+          .eq("user_id", user.id)
+          .in("id", orphanedContent.projectIds)
+      : { data: [], error: null };
+
+    if (orphanedProjectResult.error) throw orphanedProjectResult.error;
+
+    const orphanedProjectAssets = collectCloudinaryUrls(
+      orphanedProjectResult.data || [],
+      cloudName
+    );
+
     const isLastPortfolio = (remaining || []).length === 0;
-    let candidates = [...targetReferences, ...taggedPortfolioAssets];
+    let candidates = [
+      ...targetReferences,
+      ...taggedPortfolioAssets,
+      ...orphanedProjectAssets,
+    ];
 
     if (isLastPortfolio) {
       const taggedUserAssets = await listCloudinaryUrlsByTag(
@@ -151,6 +185,41 @@ export async function DELETE(
         supabase.from("skills").delete().eq("user_id", user.id),
         supabase.from("profiles").delete().eq("user_id", user.id),
       ]);
+      const cleanupError = cleanupResults.find((result) => result.error)?.error;
+      if (cleanupError) throw cleanupError;
+    } else {
+      const cleanupResults = [];
+
+      if (orphanedContent.experienceIds.length) {
+        cleanupResults.push(
+          await supabase
+            .from("experiences")
+            .delete()
+            .eq("user_id", user.id)
+            .in("id", orphanedContent.experienceIds)
+        );
+      }
+
+      if (orphanedContent.projectIds.length) {
+        cleanupResults.push(
+          await supabase
+            .from("projects")
+            .delete()
+            .eq("user_id", user.id)
+            .in("id", orphanedContent.projectIds)
+        );
+      }
+
+      if (orphanedContent.skills.length) {
+        cleanupResults.push(
+          await supabase
+            .from("skills")
+            .delete()
+            .eq("user_id", user.id)
+            .in("name", orphanedContent.skills)
+        );
+      }
+
       const cleanupError = cleanupResults.find((result) => result.error)?.error;
       if (cleanupError) throw cleanupError;
     }
