@@ -32,6 +32,7 @@ const STORAGE_KEY = "folioblocks:workspace";
 const EDITOR_WIDTH_KEY = "folioblocks:editor-width";
 
 type PreviewMode = "desktop" | "tablet" | "mobile";
+type CreateDialogKind = "experience" | "project" | "link" | "variant" | null;
 
 export function PortfolioBuilder() {
   const [state, setState] = useState<BuilderState>(sampleBuilderState);
@@ -43,6 +44,7 @@ export function PortfolioBuilder() {
   const [cloudStatus, setCloudStatus] = useState<"local" | "loading" | "saved" | "error">("local");
   const [cloudMessage, setCloudMessage] = useState("");
   const [editorWidth, setEditorWidth] = useState(420);
+  const [createDialog, setCreateDialog] = useState<CreateDialogKind>(null);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(STORAGE_KEY);
@@ -323,22 +325,18 @@ export function PortfolioBuilder() {
     }));
   }
 
-  function addExperience() {
+  function addExperience(input: {
+    company: string;
+    role: string;
+    period: string;
+    summary: string;
+  }) {
     const id = createEntityId("experience");
     setState((current) => ({
       ...current,
       data: {
         ...current.data,
-        experience: [
-          ...current.data.experience,
-          {
-            id,
-            company: "Company",
-            role: "Role",
-            period: "2026 — Present",
-            summary: "Describe what you owned, what changed, and the outcome.",
-          },
-        ],
+        experience: [...current.data.experience, { id, ...input }],
       },
       variants: current.variants.map((variant) =>
         variant.id === current.activeVariantId
@@ -402,22 +400,18 @@ export function PortfolioBuilder() {
     }));
   }
 
-  function addProject() {
+  function addProject(input: {
+    title: string;
+    description: string;
+    stack: string[];
+    url?: string;
+  }) {
     const id = createEntityId("project");
     setState((current) => ({
       ...current,
       data: {
         ...current.data,
-        projects: [
-          ...current.data.projects,
-          {
-            id,
-            title: "New project",
-            description: "Describe the problem, what you built, and the outcome.",
-            stack: ["React", "API"],
-            url: "",
-          },
-        ],
+        projects: [...current.data.projects, { id, ...input }],
       },
       variants: current.variants.map((variant) =>
         variant.id === current.activeVariantId
@@ -498,12 +492,12 @@ export function PortfolioBuilder() {
     }));
   }
 
-  function addSocial() {
+  function addSocial(input: { label: string; url: string }) {
     updateData((data) => ({
       ...data,
       profile: {
         ...data.profile,
-        socials: [...data.profile.socials, { label: "Website", url: "https://" }],
+        socials: [...data.profile.socials, input],
       },
     }));
   }
@@ -518,7 +512,7 @@ export function PortfolioBuilder() {
     }));
   }
 
-  function createVariant() {
+  function createVariant(input: { name: string; targetRole: string }) {
     const currentConfig = activeVariant?.config ?? defaultConfig;
     const number = state.variants.length + 1;
     const id = `portfolio-${number}-${Date.now().toString(36)}`;
@@ -530,8 +524,8 @@ export function PortfolioBuilder() {
         ...current.variants,
         {
           id,
-          name: `Portfolio ${number}`,
-          targetRole: current.data.profile.role,
+          name: input.name,
+          targetRole: input.targetRole,
           config: cloneConfig(currentConfig),
           content: cloneContentConfig(
             activeVariant?.content ?? fullContentConfig(current.data)
@@ -817,7 +811,7 @@ export function PortfolioBuilder() {
                 <span>Portfolio variants</span>
                 <small>One profile, multiple presentations</small>
               </div>
-              <button onClick={createVariant}>+ New</button>
+              <button onClick={() => setCreateDialog("variant")}>+ New</button>
             </div>
 
             <div className="variant-pills">
@@ -920,7 +914,7 @@ export function PortfolioBuilder() {
                 title="Experience"
                 subtitle={`${state.data.experience.length} roles`}
                 actionLabel="+ Add"
-                onAction={addExperience}
+                onAction={() => setCreateDialog("experience")}
               >
                 {state.data.experience.map((item, index) => (
                   <EditorCard
@@ -957,7 +951,7 @@ export function PortfolioBuilder() {
                 title="Projects"
                 subtitle={`${state.data.projects.length} projects`}
                 actionLabel="+ Add"
-                onAction={addProject}
+                onAction={() => setCreateDialog("project")}
               >
                 {state.data.projects.map((project, index) => (
                   <EditorCard
@@ -1005,7 +999,7 @@ export function PortfolioBuilder() {
                 title="Links"
                 subtitle={`${state.data.profile.socials.length} links`}
                 actionLabel="+ Add"
-                onAction={addSocial}
+                onAction={() => setCreateDialog("link")}
               >
                 {state.data.profile.socials.map((social, index) => (
                   <EditorCard
@@ -1283,7 +1277,253 @@ export function PortfolioBuilder() {
           </div>
         </section>
       </div>
+
+      {createDialog && (
+        <CreateItemDialog
+          kind={createDialog}
+          defaultTargetRole={activeVariant?.targetRole || state.data.profile.role}
+          onClose={() => setCreateDialog(null)}
+          onCreateExperience={(input) => {
+            addExperience(input);
+            setCreateDialog(null);
+          }}
+          onCreateProject={(input) => {
+            addProject(input);
+            setCreateDialog(null);
+          }}
+          onCreateLink={(input) => {
+            addSocial(input);
+            setCreateDialog(null);
+          }}
+          onCreateVariant={(input) => {
+            createVariant(input);
+            setCreateDialog(null);
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+function CreateItemDialog({
+  kind,
+  defaultTargetRole,
+  onClose,
+  onCreateExperience,
+  onCreateProject,
+  onCreateLink,
+  onCreateVariant,
+}: {
+  kind: Exclude<CreateDialogKind, null>;
+  defaultTargetRole: string;
+  onClose: () => void;
+  onCreateExperience: (input: {
+    company: string;
+    role: string;
+    period: string;
+    summary: string;
+  }) => void;
+  onCreateProject: (input: {
+    title: string;
+    description: string;
+    stack: string[];
+    url?: string;
+  }) => void;
+  onCreateLink: (input: { label: string; url: string }) => void;
+  onCreateVariant: (input: { name: string; targetRole: string }) => void;
+}) {
+  const [values, setValues] = useState<Record<string, string>>(() => {
+    if (kind === "experience") {
+      return { company: "", role: "", period: "", summary: "" };
+    }
+    if (kind === "project") {
+      return { title: "", description: "", stack: "", url: "" };
+    }
+    if (kind === "link") {
+      return { label: "", url: "" };
+    }
+    return { name: "", targetRole: defaultTargetRole };
+  });
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
+  function update(key: string, value: string) {
+    setValues((current) => ({ ...current, [key]: value }));
+  }
+
+  function submit(event: React.FormEvent) {
+    event.preventDefault();
+
+    if (kind === "experience") {
+      onCreateExperience({
+        company: values.company.trim(),
+        role: values.role.trim(),
+        period: values.period.trim(),
+        summary: values.summary.trim(),
+      });
+      return;
+    }
+
+    if (kind === "project") {
+      onCreateProject({
+        title: values.title.trim(),
+        description: values.description.trim(),
+        stack: values.stack
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean),
+        url: values.url.trim() || undefined,
+      });
+      return;
+    }
+
+    if (kind === "link") {
+      onCreateLink({
+        label: values.label.trim(),
+        url: values.url.trim(),
+      });
+      return;
+    }
+
+    onCreateVariant({
+      name: values.name.trim(),
+      targetRole: values.targetRole.trim(),
+    });
+  }
+
+  const title =
+    kind === "experience"
+      ? "Add experience"
+      : kind === "project"
+        ? "Add project"
+        : kind === "link"
+          ? "Add link"
+          : "Create portfolio variant";
+
+  return (
+    <div
+      className="create-dialog-backdrop"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <form
+        className="create-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-dialog-title"
+        onSubmit={submit}
+      >
+        <div className="create-dialog-head">
+          <div>
+            <p className="panel-kicker">Add details</p>
+            <h2 id="create-dialog-title">{title}</h2>
+          </div>
+          <button type="button" className="dialog-close" onClick={onClose} aria-label="Close">
+            ×
+          </button>
+        </div>
+
+        <div className="create-dialog-body">
+          {kind === "experience" && (
+            <>
+              <DialogField label="Company" value={values.company} onChange={(value) => update("company", value)} autoFocus required />
+              <DialogField label="Role" value={values.role} onChange={(value) => update("role", value)} required />
+              <DialogField label="Period" placeholder="e.g. 2024 — Present" value={values.period} onChange={(value) => update("period", value)} required />
+              <DialogField label="Summary" multiline value={values.summary} onChange={(value) => update("summary", value)} required />
+            </>
+          )}
+
+          {kind === "project" && (
+            <>
+              <DialogField label="Project title" value={values.title} onChange={(value) => update("title", value)} autoFocus required />
+              <DialogField label="Description" multiline value={values.description} onChange={(value) => update("description", value)} required />
+              <DialogField label="Tech stack" placeholder="Java, Redis, PostgreSQL" value={values.stack} onChange={(value) => update("stack", value)} required />
+              <DialogField label="Project URL" placeholder="https://..." value={values.url} onChange={(value) => update("url", value)} type="url" />
+            </>
+          )}
+
+          {kind === "link" && (
+            <>
+              <DialogField label="Label" placeholder="GitHub, LinkedIn, Website..." value={values.label} onChange={(value) => update("label", value)} autoFocus required />
+              <DialogField label="URL" placeholder="https://..." value={values.url} onChange={(value) => update("url", value)} type="url" required />
+            </>
+          )}
+
+          {kind === "variant" && (
+            <>
+              <DialogField label="Portfolio name" placeholder="Backend, AI, General..." value={values.name} onChange={(value) => update("name", value)} autoFocus required />
+              <DialogField label="Target role" placeholder="Backend Engineer" value={values.targetRole} onChange={(value) => update("targetRole", value)} required />
+              <p className="dialog-hint">
+                The new variant starts with the current portfolio's design and targeted content. You can customize both afterward.
+              </p>
+            </>
+          )}
+        </div>
+
+        <div className="create-dialog-actions">
+          <button type="button" className="ghost-button" onClick={onClose}>
+            Cancel
+          </button>
+          <button className="primary-button" type="submit">
+            {kind === "variant" ? "Create portfolio" : "Add"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function DialogField({
+  label,
+  value,
+  onChange,
+  multiline = false,
+  placeholder,
+  required = false,
+  type = "text",
+  autoFocus = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  multiline?: boolean;
+  placeholder?: string;
+  required?: boolean;
+  type?: string;
+  autoFocus?: boolean;
+}) {
+  return (
+    <label className="field dialog-field">
+      <span>{label}</span>
+      {multiline ? (
+        <textarea
+          autoFocus={autoFocus}
+          value={value}
+          placeholder={placeholder}
+          required={required}
+          rows={4}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      ) : (
+        <input
+          autoFocus={autoFocus}
+          type={type}
+          value={value}
+          placeholder={placeholder}
+          required={required}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      )}
+    </label>
   );
 }
 
