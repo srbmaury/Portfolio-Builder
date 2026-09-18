@@ -87,3 +87,15 @@ test("muted and accent text maintain readable contrast in every theme", () => {
 test("about fact labels and values have an explicit layout gap", () => {
   assert.match(css, /\.about-facts\s*>?\s*div[^{]*\{[^}]*display:\s*grid;[^}]*gap:/s);
 });
+
+
+test("minimal contact does not recolor the primary email button with the accent", () => {
+  assert.doesNotMatch(
+    css,
+    /\.contact-v-minimal\s+a\s*\{[^}]*color:\s*var\(--p-accent\)/s
+  );
+  assert.match(
+    css,
+    /\.contact-v-minimal\s+\.social-row\s+a\s*\{[^}]*color:\s*var\(--p-accent\)/s
+  );
+});
