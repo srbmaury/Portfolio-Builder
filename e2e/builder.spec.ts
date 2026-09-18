@@ -107,7 +107,7 @@ test("tablet and mobile preview use real isolated viewport widths", async ({
   )).toBeVisible();
 });
 
-test("tablet and mobile keep photo hero hierarchy consistent", async ({ page }) => {
+test("tablet and mobile preserve photo hero hierarchy by layout", async ({ page }) => {
   await page.goto("/builder");
 
   await expect
@@ -116,39 +116,68 @@ test("tablet and mobile keep photo hero hierarchy consistent", async ({ page }) 
     )
     .toBe(true);
 
-  await page.evaluate(() => {
-    const key = "folioblocks:workspace";
-    const raw = window.localStorage.getItem(key);
-    if (!raw) throw new Error("Builder state was not persisted.");
+  async function useHeroLayout(layout: "image-split" | "portrait") {
+    await page.evaluate((variant) => {
+      const key = "folioblocks:workspace";
+      const raw = window.localStorage.getItem(key);
+      if (!raw) throw new Error("Builder state was not persisted.");
 
-    const state = JSON.parse(raw);
-    const active = state.variants.find(
-      (variant: { id: string }) => variant.id === state.activeVariantId
-    );
-    const hero = active.config.sections.find(
-      (section: { id: string }) => section.id === "hero"
-    );
-    hero.variant = "portrait";
-    window.localStorage.setItem(key, JSON.stringify(state));
-  });
+      const state = JSON.parse(raw);
+      const active = state.variants.find(
+        (portfolio: { id: string }) => portfolio.id === state.activeVariantId
+      );
+      const hero = active.config.sections.find(
+        (section: { id: string }) => section.id === "hero"
+      );
+      hero.variant = variant;
+      window.localStorage.setItem(key, JSON.stringify(state));
+    }, layout);
 
-  await page.reload();
+    await page.reload();
+  }
 
-  const preview = page.frameLocator(".preview-device-frame");
-  const copy = preview.locator(".hero-photo-copy");
-  const photo = preview.locator(".hero-photo-frame");
+  async function verticalOrder() {
+    const preview = page.frameLocator(".preview-device-frame");
+    const copy = preview.locator(".hero-photo-copy");
+    const photo = preview.locator(".hero-photo-frame");
+    await expect(copy).toBeVisible();
+    await expect(photo).toBeVisible();
 
+    const copyBox = await copy.boundingBox();
+    const photoBox = await photo.boundingBox();
+    expect(copyBox).not.toBeNull();
+    expect(photoBox).not.toBeNull();
+
+    return {
+      copyY: copyBox!.y,
+      photoY: photoBox!.y,
+    };
+  }
+
+  await useHeroLayout("image-split");
   await page.getByRole("button", { name: "tablet" }).click();
   await expect(page.locator(".preview-window.preview-tablet")).toBeVisible();
-  await expect(copy).toBeVisible();
-  await expect(photo).toBeVisible();
+  const tabletImageSplit = await verticalOrder();
+  expect(tabletImageSplit.copyY).toBeLessThan(tabletImageSplit.photoY);
 
-  const tabletCopy = await copy.boundingBox();
-  const tabletPhoto = await photo.boundingBox();
-  expect(tabletCopy).not.toBeNull();
-  expect(tabletPhoto).not.toBeNull();
-  expect(tabletCopy!.y).toBeLessThan(tabletPhoto!.y);
+  await page.getByRole("button", { name: "mobile" }).click();
+  await expect(page.locator(".preview-window.preview-mobile")).toBeVisible();
+  const mobileImageSplit = await verticalOrder();
+  expect(mobileImageSplit.copyY).toBeLessThan(mobileImageSplit.photoY);
 
+  await useHeroLayout("portrait");
+  await page.getByRole("button", { name: "tablet" }).click();
+  await expect(page.locator(".preview-window.preview-tablet")).toBeVisible();
+  const tabletPortrait = await verticalOrder();
+  expect(tabletPortrait.photoY).toBeLessThan(tabletPortrait.copyY);
+
+  await page.getByRole("button", { name: "mobile" }).click();
+  await expect(page.locator(".preview-window.preview-mobile")).toBeVisible();
+  const mobilePortrait = await verticalOrder();
+  expect(mobilePortrait.photoY).toBeLessThan(mobilePortrait.copyY);
+
+  const preview = page.frameLocator(".preview-device-frame");
+  await page.getByRole("button", { name: "tablet" }).click();
   const tabletExperienceColumns = await preview
     .locator(".experience-v-ledger .experience-layout-item")
     .first()
@@ -161,14 +190,6 @@ test("tablet and mobile keep photo hero hierarchy consistent", async ({ page }) 
   expect(tabletProjectColumns.trim().split(/\s+/)).toHaveLength(2);
 
   await page.getByRole("button", { name: "mobile" }).click();
-  await expect(page.locator(".preview-window.preview-mobile")).toBeVisible();
-
-  const mobileCopy = await copy.boundingBox();
-  const mobilePhoto = await photo.boundingBox();
-  expect(mobileCopy).not.toBeNull();
-  expect(mobilePhoto).not.toBeNull();
-  expect(mobileCopy!.y).toBeLessThan(mobilePhoto!.y);
-
   const mobileProjectColumns = await preview
     .locator(".github-project-grid")
     .evaluate((element) => getComputedStyle(element).gridTemplateColumns);
