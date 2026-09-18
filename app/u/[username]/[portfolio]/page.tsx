@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { PortfolioRenderer } from "@/components/PortfolioRenderer";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import type { PortfolioSnapshot } from "@/lib/portfolio";
 
 type Props = {
@@ -9,7 +9,7 @@ type Props = {
 
 export default async function PublicPortfolioPage({ params }: Props) {
   const { username, portfolio } = await params;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data, error } = await supabase
     .from("portfolios")
