@@ -8,6 +8,7 @@ import {
   sectionHasContent,
   snapshotForVariant,
 } from "../lib/portfolio.ts";
+import { cloudinaryUploadEndpoint } from "../lib/cloudinary.ts";
 
 const cloudinarySource = await readFile(
   new URL("../lib/cloudinary.ts", import.meta.url),
@@ -86,8 +87,12 @@ test("resume section renders only when the active portfolio has a resume URL", (
   );
 });
 
-test("public resume uploads use raw Cloudinary delivery", () => {
-  assert.match(cloudinarySource, /\/raw\/upload/);
+test("Cloudinary upload endpoint supports raw resume delivery", () => {
+  assert.equal(
+    cloudinaryUploadEndpoint("demo", "raw"),
+    "https://api.cloudinary.com/v1_1/demo/raw/upload"
+  );
+  assert.match(cloudinarySource, /uploadToCloudinary[\s\S]*"raw"/);
 });
 
 test("public portfolio routes resume rendering through a published-only proxy", () => {
