@@ -572,6 +572,7 @@ export function PortfolioBuilder({
                 <ResumeUploadField
                   value={activeVariant?.resume || cloneResume()}
                   variantKey={activeVariant?.id || state.activeVariantId}
+                  openUrl={builderResumeUrl}
                   onChange={updateResume}
                 />
                 <label className="resume-hero-toggle">
