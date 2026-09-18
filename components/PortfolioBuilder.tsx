@@ -2,7 +2,22 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PortfolioRenderer } from "@/components/PortfolioRenderer";
-import { uploadImageToCloudinary } from "@/lib/cloudinary";
+import { ResumeImportDialog } from "@/components/ResumeImportDialog";
+import { WorkspaceJsonDialog } from "@/components/WorkspaceJsonDialog";
+import {
+  addCustomSection as addCustomSectionToState,
+  addCustomSectionItem as addCustomSectionItemToState,
+  removeCustomSection as removeCustomSectionFromState,
+  removeCustomSectionItem as removeCustomSectionItemFromState,
+  updateCustomSectionItem as updateCustomSectionItemInState,
+  updateCustomSectionTitle as updateCustomSectionTitleInState,
+} from "@/lib/custom-sections";
+import { mergeResumeImport } from "@/lib/resume-import";
+import {
+  uploadImageToCloudinary,
+  uploadResumeToCloudinary,
+  type CloudinaryUploadScope,
+} from "@/lib/cloudinary";
 import { createClient } from "@/lib/supabase/client";
 import {
   deletePortfolio,
@@ -14,6 +29,7 @@ import {
   cloneBranding,
   cloneConfig,
   cloneContentConfig,
+  cloneResume,
   createEntityId,
   defaultConfig,
   emptyBuilderState,
@@ -21,6 +37,7 @@ import {
   normalizeBuilderState,
   sampleBuilderState,
   sectionHasContent,
+  sectionType,
   slugify,
   snapshotForVariant,
   templateCatalog,
@@ -37,7 +54,13 @@ const STORAGE_KEY = "folioblocks:workspace";
 const EDITOR_WIDTH_KEY = "folioblocks:editor-width";
 
 type PreviewMode = "desktop" | "tablet" | "mobile";
-type CreateDialogKind = "experience" | "project" | "link" | "variant" | null;
+type CreateDialogKind =
+  | "experience"
+  | "project"
+  | "link"
+  | "variant"
+  | "custom-section"
+  | null;
 
 export function PortfolioBuilder({
   startFresh = false,
@@ -60,6 +83,8 @@ export function PortfolioBuilder({
   const [editorWidth, setEditorWidth] = useState(420);
   const [createDialog, setCreateDialog] = useState<CreateDialogKind>(null);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [resumeImportOpen, setResumeImportOpen] = useState(false);
+  const [jsonEditorOpen, setJsonEditorOpen] = useState(false);
   const createVariantOpenedRef = useRef(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
@@ -226,7 +251,8 @@ export function PortfolioBuilder({
 
   const snapshot = useMemo(() => snapshotForVariant(state), [state]);
   const visibleSections = snapshot.config.sections.filter(
-    (section) => section.visible && sectionHasContent(section.id, snapshot.data)
+    (section) => section.visible &&
+      sectionHasContent(section, snapshot.data, snapshot.meta?.resume)
   ).length;
 
   const targetedExperience = useMemo(() => {
@@ -382,29 +408,45 @@ export function PortfolioBuilder({
     }));
   }
 
-  function setVariant(id: SectionType, variantName: string) {
+  function updateResume(
+    resume: { url: string; publicId: string; fileName: string }
+  ) {
+    setState((current) => ({
+      ...current,
+      variants: current.variants.map((variant) =>
+        variant.id === current.activeVariantId
+          ? { ...variant, resume }
+          : variant
+      ),
+    }));
+    setShareUrl("");
+  }
+
+  function setVariant(configId: string, variantName: string) {
     updateActiveConfig((config) => ({
       ...config,
       sections: config.sections.map((section) =>
-        section.id === id ? { ...section, variant: variantName } : section
+        section.id === configId ? { ...section, variant: variantName } : section
       ),
     }));
   }
 
-  function setSectionTitle(id: SectionType, title: string) {
+  function setSectionTitle(configId: string, title: string) {
     updateActiveConfig((config) => ({
       ...config,
       sections: config.sections.map((section) =>
-        section.id === id ? { ...section, title } : section
+        section.id === configId ? { ...section, title } : section
       ),
     }));
   }
 
-  function toggleSection(id: SectionType) {
+  function toggleSection(configId: string) {
     updateActiveConfig((config) => ({
       ...config,
       sections: config.sections.map((section) =>
-        section.id === id ? { ...section, visible: !section.visible } : section
+        section.id === configId
+          ? { ...section, visible: !section.visible }
+          : section
       ),
     }));
   }
@@ -436,7 +478,7 @@ export function PortfolioBuilder({
       ...config,
       theme: themes[Math.floor(Math.random() * themes.length)],
       sections: config.sections.map((section) => {
-        const options = templateCatalog[section.id];
+        const options = templateCatalog[sectionType(section)];
         return {
           ...section,
           variant: options[Math.floor(Math.random() * options.length)].id,
@@ -647,6 +689,76 @@ export function PortfolioBuilder({
     }));
   }
 
+  function applyResumeImport(
+    draft: Parameters<typeof mergeResumeImport>[1]
+  ) {
+    setState((current) => mergeResumeImport(current, draft));
+    setResumeImportOpen(false);
+    setShareUrl("");
+  }
+
+  function applyWorkspaceJson(next: BuilderState) {
+    setState(normalizeBuilderState(next));
+    setJsonEditorOpen(false);
+    setShareUrl("");
+  }
+
+  function createCustomSection(title: string) {
+    setState((current) => addCustomSectionToState(current, title));
+    setShareUrl("");
+  }
+
+  function renameCustomSection(customSectionId: string, title: string) {
+    setState((current) =>
+      updateCustomSectionTitleInState(current, customSectionId, title)
+    );
+  }
+
+  function addCustomItem(customSectionId: string) {
+    setState((current) =>
+      addCustomSectionItemToState(current, customSectionId)
+    );
+  }
+
+  function updateCustomItem(
+    customSectionId: string,
+    itemId: string,
+    field:
+      | "heading"
+      | "subheading"
+      | "meta"
+      | "description"
+      | "linkLabel"
+      | "linkUrl",
+    value: string
+  ) {
+    setState((current) =>
+      updateCustomSectionItemInState(
+        current,
+        customSectionId,
+        itemId,
+        field,
+        value
+      )
+    );
+  }
+
+  function removeCustomItem(customSectionId: string, itemId: string) {
+    setState((current) =>
+      removeCustomSectionItemFromState(current, customSectionId, itemId)
+    );
+  }
+
+  function removeCustomSection(customSectionId: string) {
+    if (!window.confirm("Delete this custom section from every portfolio variant?")) {
+      return;
+    }
+    setState((current) =>
+      removeCustomSectionFromState(current, customSectionId)
+    );
+    setShareUrl("");
+  }
+
   function createVariant(input: { name: string; targetRole: string }) {
     const currentConfig = activeVariant?.config ?? defaultConfig;
     const number = state.variants.length + 1;
@@ -666,6 +778,7 @@ export function PortfolioBuilder({
             activeVariant?.content ?? fullContentConfig(current.data)
           ),
           branding: cloneBranding(activeVariant?.branding),
+          resume: cloneResume(activeVariant?.resume),
         },
       ],
     }));
@@ -689,6 +802,7 @@ export function PortfolioBuilder({
           config: cloneConfig(activeVariant.config),
           content: cloneContentConfig(activeVariant.content),
           branding: cloneBranding(activeVariant.branding),
+          resume: cloneResume(activeVariant.resume),
         },
       ],
     }));
@@ -701,7 +815,7 @@ export function PortfolioBuilder({
 
     if (
       !window.confirm(
-        `Delete “${activeVariant.name || "Untitled"}”? This removes the saved portfolio and its published page.`
+        `Delete “${activeVariant.name || "Untitled"}”? This removes its saved/published data and uploaded assets no longer used by another portfolio.`
       )
     ) {
       return;
@@ -1131,6 +1245,22 @@ export function PortfolioBuilder({
                   Content is shared across every portfolio variant. Change it here and
                   each version stays up to date.
                 </p>
+                <div className="panel-intro-actions">
+                  <button
+                    type="button"
+                    className="primary-button"
+                    onClick={() => setResumeImportOpen(true)}
+                  >
+                    Import resume
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    onClick={() => setJsonEditorOpen(true)}
+                  >
+                    Edit as JSON
+                  </button>
+                </div>
               </div>
 
               <EditorSection title="Profile" subtitle="Identity and positioning" defaultOpen>
@@ -1177,6 +1307,21 @@ export function PortfolioBuilder({
                   value={state.data.profile.heroImageUrl || ""}
                   onChange={(value) => updateProfile("heroImageUrl", value)}
                   help="Used by image-based hero layouts."
+                />
+              </EditorSection>
+
+              <EditorSection
+                title="Resume"
+                subtitle={activeVariant?.resume.url ? "PDF attached" : "Optional PDF"}
+              >
+                <p className="editor-empty-note">
+                  This resume belongs to <strong>{activeVariant?.name || "this portfolio"}</strong>,
+                  so different role-specific portfolios can show different resumes.
+                </p>
+                <ResumeUploadField
+                  value={activeVariant?.resume || cloneResume()}
+                  variantKey={activeVariant?.id || state.activeVariantId}
+                  onChange={updateResume}
                 />
               </EditorSection>
 
@@ -1274,6 +1419,150 @@ export function PortfolioBuilder({
                   onChange={updateSkills}
                   hint="Comma separated"
                 />
+              </EditorSection>
+
+              <EditorSection
+                title="Custom sections"
+                subtitle={`${state.data.customSections.length} sections`}
+                actionLabel="+ Add"
+                onAction={() => setCreateDialog("custom-section")}
+              >
+                {state.data.customSections.length === 0 ? (
+                  <p className="editor-empty-note">
+                    Add Education, Certifications, Awards, Publications, Talks,
+                    Open Source, Testimonials, or any section you need.
+                  </p>
+                ) : null}
+
+                {state.data.customSections.map((customSection) => (
+                  <EditorCard
+                    key={customSection.id}
+                    title={customSection.title || "Custom section"}
+                    onDelete={() => removeCustomSection(customSection.id)}
+                  >
+                    <Field
+                      label="Section title"
+                      value={customSection.title}
+                      onChange={(value) =>
+                        renameCustomSection(customSection.id, value)
+                      }
+                    />
+
+                    <div className="custom-editor-items-head">
+                      <div>
+                        <strong>Items</strong>
+                        <span>{customSection.items.length} entries</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => addCustomItem(customSection.id)}
+                      >
+                        + Item
+                      </button>
+                    </div>
+
+                    {customSection.items.length === 0 ? (
+                      <p className="editor-empty-note">
+                        Add an item, then use only the fields that make sense for
+                        this section.
+                      </p>
+                    ) : null}
+
+                    <div className="custom-editor-items">
+                      {customSection.items.map((item, itemIndex) => (
+                        <div className="custom-editor-item" key={item.id}>
+                          <div className="custom-editor-item-head">
+                            <strong>
+                              {item.heading || `Item ${itemIndex + 1}`}
+                            </strong>
+                            <button
+                              type="button"
+                              className="danger-link"
+                              onClick={() =>
+                                removeCustomItem(customSection.id, item.id)
+                              }
+                            >
+                              Remove
+                            </button>
+                          </div>
+                          <Field
+                            label="Heading"
+                            value={item.heading}
+                            onChange={(value) =>
+                              updateCustomItem(
+                                customSection.id,
+                                item.id,
+                                "heading",
+                                value
+                              )
+                            }
+                          />
+                          <Field
+                            label="Subheading"
+                            value={item.subheading}
+                            onChange={(value) =>
+                              updateCustomItem(
+                                customSection.id,
+                                item.id,
+                                "subheading",
+                                value
+                              )
+                            }
+                          />
+                          <Field
+                            label="Period / meta"
+                            value={item.meta}
+                            onChange={(value) =>
+                              updateCustomItem(
+                                customSection.id,
+                                item.id,
+                                "meta",
+                                value
+                              )
+                            }
+                          />
+                          <Field
+                            label="Description"
+                            multiline
+                            value={item.description}
+                            onChange={(value) =>
+                              updateCustomItem(
+                                customSection.id,
+                                item.id,
+                                "description",
+                                value
+                              )
+                            }
+                          />
+                          <Field
+                            label="Link label"
+                            value={item.linkLabel}
+                            onChange={(value) =>
+                              updateCustomItem(
+                                customSection.id,
+                                item.id,
+                                "linkLabel",
+                                value
+                              )
+                            }
+                          />
+                          <Field
+                            label="Link URL"
+                            value={item.linkUrl}
+                            onChange={(value) =>
+                              updateCustomItem(
+                                customSection.id,
+                                item.id,
+                                "linkUrl",
+                                value
+                              )
+                            }
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </EditorCard>
+                ))}
               </EditorSection>
 
               <EditorSection
@@ -1433,6 +1722,10 @@ export function PortfolioBuilder({
                   label="Favicon"
                   value={activeVariant?.branding.faviconUrl || ""}
                   onChange={(value) => updateBranding("faviconUrl", value)}
+                  uploadScope={{
+                    scope: "portfolio",
+                    variantKey: activeVariant?.id || state.activeVariantId,
+                  }}
                   help="Optional. Use a square PNG or WebP; this icon appears in the browser tab for this portfolio."
                 />
                 <Field
@@ -1452,6 +1745,10 @@ export function PortfolioBuilder({
                   label="Social share card"
                   value={activeVariant?.branding.shareImageUrl || ""}
                   onChange={(value) => updateBranding("shareImageUrl", value)}
+                  uploadScope={{
+                    scope: "portfolio",
+                    variantKey: activeVariant?.id || state.activeVariantId,
+                  }}
                   help="Optional. Recommended 1200 × 630. Leave blank to use an automatically generated card personalized to this portfolio."
                 />
                 <div className="sharing-preview-note">
@@ -1507,7 +1804,11 @@ export function PortfolioBuilder({
                           aria-label={`Edit ${section.id} section name`}
                         />
                         <small>
-                          {section.id} · {section.visible ? section.variant : "hidden"}
+                          {sectionType(section) === "custom"
+                            ? state.data.customSections.find(
+                                (item) => item.id === section.customSectionId
+                              )?.title || "custom"
+                            : section.id} · {section.visible ? section.variant : "hidden"}
                         </small>
                       </div>
 
@@ -1535,7 +1836,7 @@ export function PortfolioBuilder({
                     {section.visible && (
                       <>
                         <div className="variant-grid">
-                        {templateCatalog[section.id].map((variant) => (
+                        {templateCatalog[sectionType(section)].map((variant) => (
                           <button
                             key={variant.id}
                             className={
@@ -1642,8 +1943,27 @@ export function PortfolioBuilder({
             createVariant(input);
             setCreateDialog(null);
           }}
+          onCreateCustomSection={(title) => {
+            createCustomSection(title);
+            setCreateDialog(null);
+          }}
         />
       )}
+
+      {resumeImportOpen ? (
+        <ResumeImportDialog
+          onClose={() => setResumeImportOpen(false)}
+          onApply={applyResumeImport}
+        />
+      ) : null}
+
+      {jsonEditorOpen ? (
+        <WorkspaceJsonDialog
+          state={state}
+          onClose={() => setJsonEditorOpen(false)}
+          onApply={applyWorkspaceJson}
+        />
+      ) : null}
     </div>
   );
 }
@@ -1656,6 +1976,7 @@ function CreateItemDialog({
   onCreateProject,
   onCreateLink,
   onCreateVariant,
+  onCreateCustomSection,
 }: {
   kind: Exclude<CreateDialogKind, null>;
   defaultTargetRole: string;
@@ -1676,6 +1997,7 @@ function CreateItemDialog({
   }) => void;
   onCreateLink: (input: { label: string; url: string }) => void;
   onCreateVariant: (input: { name: string; targetRole: string }) => void;
+  onCreateCustomSection: (title: string) => void;
 }) {
   const [error, setError] = useState("");
   const [values, setValues] = useState<Record<string, string>>(() => ({
@@ -1692,6 +2014,7 @@ function CreateItemDialog({
     label: "",
     url: "",
     name: "",
+    sectionTitle: "",
     targetRole: kind === "variant" ? defaultTargetRole : "",
   }));
 
@@ -1769,6 +2092,16 @@ function CreateItemDialog({
       return;
     }
 
+    if (kind === "custom-section") {
+      const sectionTitle = values.sectionTitle.trim();
+      if (!sectionTitle) {
+        setError("Add a section title before creating it.");
+        return;
+      }
+      onCreateCustomSection(sectionTitle);
+      return;
+    }
+
     const name = values.name.trim();
     const targetRole = values.targetRole.trim();
 
@@ -1787,7 +2120,9 @@ function CreateItemDialog({
         ? "Add project"
         : kind === "link"
           ? "Add link"
-          : "Create portfolio variant";
+          : kind === "custom-section"
+            ? "Add custom section"
+            : "Create portfolio variant";
 
   const submitLabel =
     kind === "experience"
@@ -1796,7 +2131,9 @@ function CreateItemDialog({
         ? "Add project"
         : kind === "link"
           ? "Add link"
-          : "Create portfolio";
+          : kind === "custom-section"
+            ? "Add section"
+            : "Create portfolio";
 
   return (
     <div
@@ -1853,6 +2190,23 @@ function CreateItemDialog({
             <>
               <DialogField label="Label" placeholder="GitHub, LinkedIn, Website..." value={values.label} onChange={(value) => update("label", value)} autoFocus required />
               <DialogField label="URL" placeholder="https://..." value={values.url} onChange={(value) => update("url", value)} type="url" required />
+            </>
+          )}
+
+          {kind === "custom-section" && (
+            <>
+              <DialogField
+                label="Section title"
+                placeholder="Education, Certifications, Awards..."
+                value={values.sectionTitle}
+                onChange={(value) => update("sectionTitle", value)}
+                autoFocus
+                required
+              />
+              <p className="dialog-hint">
+                Add flexible items afterward. The section is visible in this
+                portfolio and available, hidden, in your other variants.
+              </p>
             </>
           )}
 
@@ -1936,11 +2290,13 @@ function ImageUploadField({
   value,
   onChange,
   help,
+  uploadScope = { scope: "shared" },
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   help?: string;
+  uploadScope?: CloudinaryUploadScope;
 }) {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
@@ -1957,7 +2313,7 @@ function ImageUploadField({
     setStatus("Uploading…");
 
     try {
-      const result = await uploadImageToCloudinary(file);
+      const result = await uploadImageToCloudinary(file, uploadScope);
       onChange(result.secure_url);
       setStatus("Uploaded");
     } catch (error) {
@@ -1989,6 +2345,78 @@ function ImageUploadField({
       </label>
       {help && <small className="field-help">{help}</small>}
       {status && <small className="upload-status">{status}</small>}
+    </div>
+  );
+}
+
+function ResumeUploadField({
+  value,
+  variantKey,
+  onChange,
+}: {
+  value: { url: string; publicId: string; fileName: string };
+  variantKey: string;
+  onChange: (value: { url: string; publicId: string; fileName: string }) => void;
+}) {
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function upload(file?: File) {
+    if (!file) return;
+
+    setBusy(true);
+    setStatus("Uploading…");
+
+    try {
+      const result = await uploadResumeToCloudinary(file, variantKey);
+      onChange({
+        url: result.secure_url,
+        publicId: result.public_id,
+        fileName: file.name,
+      });
+      setStatus("Resume uploaded");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Upload failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="field resume-upload-field">
+      <span>Public resume PDF</span>
+      {value.url ? (
+        <div className="resume-upload-current">
+          <div>
+            <strong>{value.fileName || "Resume.pdf"}</strong>
+            <a href={value.url} target="_blank" rel="noreferrer">
+              Open PDF ↗
+            </a>
+          </div>
+          <button
+            type="button"
+            className="danger-link"
+            onClick={() =>
+              onChange({ url: "", publicId: "", fileName: "" })
+            }
+          >
+            Remove
+          </button>
+        </div>
+      ) : null}
+      <label className={`image-upload-button ${busy ? "disabled" : ""}`}>
+        <input
+          type="file"
+          accept="application/pdf,.pdf"
+          disabled={busy}
+          onChange={(event) => upload(event.target.files?.[0])}
+        />
+        {busy ? "Uploading…" : value.url ? "Replace resume" : "Upload PDF"}
+      </label>
+      <small className="field-help">
+        PDF only, up to 5 MB. Visitors can view it inside the portfolio or open it in a new tab.
+      </small>
+      {status ? <small className="upload-status">{status}</small> : null}
     </div>
   );
 }

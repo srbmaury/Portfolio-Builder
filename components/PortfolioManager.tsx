@@ -22,6 +22,7 @@ export function PortfolioManager({
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [accountBusy, setAccountBusy] = useState(false);
   const [message, setMessage] = useState("");
 
   async function withUser<T>(
@@ -124,20 +125,68 @@ export function PortfolioManager({
   }
 
   async function remove(item: PortfolioSummary) {
-    if (!window.confirm(`Delete “${item.name}”? This removes the saved portfolio and its published page.`)) {
+    if (
+      !window.confirm(
+        `Delete “${item.name}”? This removes its saved/published data, target-only content, resume, and uploaded assets no longer used by another portfolio. If it is your last portfolio, the shared workspace data is removed too.`
+      )
+    ) {
       return;
     }
 
     try {
-      await withUser(item.variantKey, (supabase, user) =>
+      const result = await withUser(item.variantKey, (supabase, user) =>
         deletePortfolio(supabase, user, item.variantKey)
       );
       setPortfolios((current) =>
         current.filter((portfolio) => portfolio.variantKey !== item.variantKey)
       );
-      setMessage("Portfolio deleted.");
+
+      if (result?.deletedSharedWorkspace) {
+        window.localStorage.removeItem("folioblocks:workspace");
+        setMessage("Portfolio and its shared workspace data were deleted.");
+      } else {
+        setMessage("Portfolio and its unreferenced uploaded assets were deleted.");
+      }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Delete failed.");
+    }
+  }
+
+  async function deleteAccount() {
+    const confirmation = window.prompt(
+      "This permanently deletes your account, every portfolio, all saved data, and uploaded Cloudinary assets. Type DELETE to continue."
+    );
+
+    if (confirmation !== "DELETE") return;
+
+    setAccountBusy(true);
+    setMessage("");
+
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.functions.invoke("delete-account", {
+        body: {},
+      });
+
+      if (error) {
+        throw new Error(error.message || "Could not delete account.");
+      }
+
+      window.localStorage.removeItem("folioblocks:workspace");
+      window.localStorage.removeItem("folioblocks:editor-width");
+
+      try {
+        await supabase.auth.signOut({ scope: "local" });
+      } catch {
+        // The auth user is already deleted. Local storage is cleared above.
+      }
+
+      window.location.href = "/";
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Account deletion failed."
+      );
+      setAccountBusy(false);
     }
   }
 
@@ -249,6 +298,25 @@ export function PortfolioManager({
             <a className="primary-button" href="/builder?create=1">Create portfolio</a>
           </div>
         )}
+      </section>
+
+      <section className="portfolio-manager-danger-zone">
+        <div>
+          <p className="panel-kicker">Danger zone</p>
+          <h2>Delete account</h2>
+          <p>
+            Permanently removes every portfolio, shared workspace data, published
+            pages, uploaded Cloudinary assets, and your sign-in account.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="danger-button"
+          disabled={accountBusy}
+          onClick={deleteAccount}
+        >
+          {accountBusy ? "Deleting account…" : "Delete account"}
+        </button>
       </section>
     </main>
   );

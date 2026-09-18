@@ -1,10 +1,13 @@
-export type SectionType =
+export type BuiltInSectionType =
   | "hero"
   | "about"
   | "experience"
   | "projects"
   | "skills"
+  | "resume"
   | "contact";
+
+export type SectionType = BuiltInSectionType | "custom";
 
 export type ThemeName =
   | "ink"
@@ -48,15 +51,34 @@ export type Project = {
   liveUrl?: string;
 };
 
+export type CustomSectionItem = {
+  id: string;
+  heading: string;
+  subheading: string;
+  meta: string;
+  description: string;
+  linkLabel: string;
+  linkUrl: string;
+};
+
+export type CustomSection = {
+  id: string;
+  title: string;
+  items: CustomSectionItem[];
+};
+
 export type PortfolioData = {
   profile: Profile;
   experience: Experience[];
   projects: Project[];
   skills: string[];
+  customSections: CustomSection[];
 };
 
 export type SectionConfig = {
-  id: SectionType;
+  id: string;
+  type?: SectionType;
+  customSectionId?: string;
   variant: string;
   visible: boolean;
   title?: string;
@@ -80,6 +102,12 @@ export type PortfolioBranding = {
   shareImageUrl: string;
 };
 
+export type PortfolioResume = {
+  url: string;
+  publicId: string;
+  fileName: string;
+};
+
 export type PortfolioVariant = {
   id: string;
   name: string;
@@ -87,6 +115,7 @@ export type PortfolioVariant = {
   config: PortfolioConfig;
   content: VariantContentConfig;
   branding: PortfolioBranding;
+  resume: PortfolioResume;
 };
 
 export type BuilderState = {
@@ -102,6 +131,7 @@ export type PortfolioSnapshot = {
     name: string;
     targetRole: string;
     branding?: PortfolioBranding;
+    resume?: PortfolioResume;
   };
 };
 
@@ -169,6 +199,10 @@ export const templateCatalog: Record<
     { id: "compact", label: "Compact", description: "Dense inline technology list" },
     { id: "spotlight", label: "Spotlight", description: "Oversized highlighted skill names" },
   ],
+  resume: [
+    { id: "embed", label: "Embedded", description: "Show the PDF directly in the portfolio" },
+    { id: "card", label: "Card", description: "Compact resume card with an open action" },
+  ],
   contact: [
     { id: "panel", label: "Panel", description: "Strong final call to action" },
     { id: "minimal", label: "Minimal", description: "Simple contact footer" },
@@ -181,6 +215,11 @@ export const templateCatalog: Record<
     { id: "compact", label: "Compact", description: "Small practical contact footer" },
     { id: "spotlight", label: "Spotlight", description: "Luminous full-width closing CTA" },
   ],
+  custom: [
+    { id: "list", label: "List", description: "Dense rows for structured details" },
+    { id: "cards", label: "Cards", description: "Responsive cards for flexible content" },
+    { id: "timeline", label: "Timeline", description: "Meta-led vertical timeline" },
+  ],
 };
 
 export const defaultBranding: PortfolioBranding = {
@@ -189,6 +228,18 @@ export const defaultBranding: PortfolioBranding = {
   shareDescription: "",
   shareImageUrl: "",
 };
+
+export const defaultResume: PortfolioResume = {
+  url: "",
+  publicId: "",
+  fileName: "",
+};
+
+export function cloneResume(
+  resume: PortfolioResume = defaultResume
+): PortfolioResume {
+  return { ...resume };
+}
 
 export function cloneBranding(
   branding: PortfolioBranding = defaultBranding
@@ -199,22 +250,43 @@ export function cloneBranding(
 export const defaultConfig: PortfolioConfig = {
   theme: "ink",
   sections: [
-    { id: "hero", variant: "split", visible: true, title: "Portfolio" },
-    { id: "about", variant: "editorial", visible: true, title: "About" },
-    { id: "experience", variant: "timeline", visible: true, title: "Experience" },
-    { id: "projects", variant: "bento", visible: true, title: "Selected work" },
-    { id: "skills", variant: "cloud", visible: true, title: "Capabilities" },
-    { id: "contact", variant: "panel", visible: true, title: "Contact" },
+    { id: "hero", type: "hero", variant: "split", visible: true, title: "Portfolio" },
+    { id: "about", type: "about", variant: "editorial", visible: true, title: "About" },
+    { id: "experience", type: "experience", variant: "timeline", visible: true, title: "Experience" },
+    { id: "projects", type: "projects", variant: "bento", visible: true, title: "Selected work" },
+    { id: "skills", type: "skills", variant: "cloud", visible: true, title: "Capabilities" },
+    { id: "resume", type: "resume", variant: "embed", visible: true, title: "Resume" },
+    { id: "contact", type: "contact", variant: "panel", visible: true, title: "Contact" },
   ],
 };
+
+export function sectionType(section?: SectionConfig | null): SectionType {
+  if (!section) return "custom";
+  if (section.type) return section.type;
+
+  const builtIns: BuiltInSectionType[] = [
+    "hero",
+    "about",
+    "experience",
+    "projects",
+    "skills",
+    "resume",
+    "contact",
+  ];
+  return builtIns.includes(section.id as BuiltInSectionType)
+    ? (section.id as BuiltInSectionType)
+    : "custom";
+}
 
 export function sectionDisplayTitle(
   id: SectionType,
   value?: string
 ) {
   const fallback =
-    defaultConfig.sections.find((section) => section.id === id)?.title ||
-    id.charAt(0).toUpperCase() + id.slice(1);
+    defaultConfig.sections.find((section) => sectionType(section) === id)?.title ||
+    (id === "custom"
+      ? "Custom section"
+      : id.charAt(0).toUpperCase() + id.slice(1));
 
   return value?.trim() || fallback;
 }
@@ -295,6 +367,7 @@ export const sampleData: PortfolioData = {
     "Observability",
     "System Design",
   ],
+  customSections: [],
 };
 
 export function cloneConfig(config: PortfolioConfig): PortfolioConfig {
@@ -332,6 +405,7 @@ export const sampleBuilderState: BuilderState = {
       config: cloneConfig(defaultConfig),
       content: fullContentConfig(sampleData),
       branding: cloneBranding(),
+      resume: cloneResume(),
     },
   ],
   activeVariantId: "general",
@@ -352,6 +426,7 @@ export const emptyData: PortfolioData = {
   experience: [],
   projects: [],
   skills: [],
+  customSections: [],
 };
 
 export const emptyBuilderState: BuilderState = {
@@ -364,6 +439,7 @@ export const emptyBuilderState: BuilderState = {
       config: cloneConfig(defaultConfig),
       content: fullContentConfig(emptyData),
       branding: cloneBranding(),
+      resume: cloneResume(),
     },
   ],
   activeVariantId: "portfolio",
@@ -376,6 +452,7 @@ export const sampleSnapshot: PortfolioSnapshot = {
     name: "General",
     targetRole: "Software Engineer",
     branding: cloneBranding(),
+    resume: cloneResume(),
   },
 };
 
@@ -394,6 +471,7 @@ export function snapshotForVariant(state: BuilderState): PortfolioSnapshot {
         name: "Portfolio",
         targetRole: normalized.data.profile.role,
         branding: cloneBranding(),
+        resume: cloneResume(),
       },
     };
   }
@@ -405,6 +483,12 @@ export function snapshotForVariant(state: BuilderState): PortfolioSnapshot {
     normalized.data.projects.map((item) => [item.id, item])
   );
   const validSkills = new Set(normalized.data.skills);
+  const customIds = new Set(
+    active.config.sections
+      .filter((section) => sectionType(section) === "custom")
+      .map((section) => section.customSectionId)
+      .filter((id): id is string => Boolean(id))
+  );
 
   return {
     data: {
@@ -420,24 +504,29 @@ export function snapshotForVariant(state: BuilderState): PortfolioSnapshot {
         .map((id) => projectById.get(id))
         .filter((item): item is Project => Boolean(item)),
       skills: active.content.skills.filter((skill) => validSkills.has(skill)),
+      customSections: normalized.data.customSections.filter((section) =>
+        customIds.has(section.id)
+      ),
     },
-    config: active.config,
+    config: cloneConfig(active.config),
     meta: {
       name: active.name,
       targetRole: active.targetRole,
       branding: cloneBranding(active.branding),
+      resume: cloneResume(active.resume),
     },
   };
 }
 
 export function normalizeBuilderState(input: BuilderState): BuilderState {
-  const data = normalizeData(input.data);
+  const data = normalizeData(input?.data || ({} as PortfolioData));
   const fallbackContent = fullContentConfig(data);
   const validExperience = new Set(data.experience.map((item) => item.id));
   const validProjects = new Set(data.projects.map((item) => item.id));
   const validSkills = new Set(data.skills);
 
-  const variants = (input.variants || []).map((variant, index) => {
+  const rawVariants = Array.isArray(input?.variants) ? input.variants : [];
+  const variants = rawVariants.map((variant, index) => {
     const rawContent = variant.content as VariantContentConfig | undefined;
 
     const experienceIds = rawContent?.experienceIds?.filter((id) =>
@@ -459,27 +548,7 @@ export function normalizeBuilderState(input: BuilderState): BuilderState {
         typeof variant.targetRole === "string"
           ? variant.targetRole
           : data.profile.role,
-      config: variant.config
-        ? {
-            theme: variant.config.theme,
-            sections: defaultConfig.sections.map((fallbackSection) => {
-              const saved = variant.config.sections?.find(
-                (section) => section.id === fallbackSection.id
-              );
-
-              return saved
-                ? {
-                    ...fallbackSection,
-                    ...saved,
-                    title:
-                      typeof saved.title === "string" && saved.title.trim()
-                        ? saved.title
-                        : fallbackSection.title,
-                  }
-                : { ...fallbackSection };
-            }),
-          }
-        : cloneConfig(defaultConfig),
+      config: normalizePortfolioConfig(variant.config, data.customSections),
       branding: {
         faviconUrl:
           typeof variant.branding?.faviconUrl === "string"
@@ -496,6 +565,20 @@ export function normalizeBuilderState(input: BuilderState): BuilderState {
         shareImageUrl:
           typeof variant.branding?.shareImageUrl === "string"
             ? variant.branding.shareImageUrl
+            : "",
+      },
+      resume: {
+        url:
+          typeof variant.resume?.url === "string"
+            ? variant.resume.url
+            : "",
+        publicId:
+          typeof variant.resume?.publicId === "string"
+            ? variant.resume.publicId
+            : "",
+        fileName:
+          typeof variant.resume?.fileName === "string"
+            ? variant.resume.fileName
             : "",
       },
       content: {
@@ -518,14 +601,15 @@ export function normalizeBuilderState(input: BuilderState): BuilderState {
       id: "general",
       name: "General",
       targetRole: data.profile.role,
-      config: cloneConfig(defaultConfig),
+      config: normalizePortfolioConfig(defaultConfig, data.customSections),
       content: fallbackContent,
       branding: cloneBranding(),
+      resume: cloneResume(),
     });
   }
 
   const activeVariantId = variants.some(
-    (variant) => variant.id === input.activeVariantId
+    (variant) => variant.id === input?.activeVariantId
   )
     ? input.activeVariantId
     : variants[0].id;
@@ -537,26 +621,188 @@ export function normalizeBuilderState(input: BuilderState): BuilderState {
   };
 }
 
-export function normalizeData(input: PortfolioData): PortfolioData {
+function normalizePortfolioConfig(
+  input: PortfolioConfig | undefined,
+  customSections: CustomSection[]
+): PortfolioConfig {
+  const rawSections = Array.isArray(input?.sections) ? input.sections : [];
+  const defaultByType = new Map(
+    defaultConfig.sections.map((section) => [sectionType(section), section])
+  );
+  const validCustom = new Map(customSections.map((section) => [section.id, section]));
+  const seenBuiltIns = new Set<BuiltInSectionType>();
+  const seenCustom = new Set<string>();
+  const sections: SectionConfig[] = [];
+
+  for (const raw of rawSections) {
+    if (!raw || typeof raw !== "object") continue;
+    const type = sectionType(raw);
+
+    if (type === "custom") {
+      const customId = raw.customSectionId;
+      const custom = customId ? validCustom.get(customId) : undefined;
+      if (!custom || seenCustom.has(custom.id)) continue;
+
+      seenCustom.add(custom.id);
+      sections.push({
+        id: raw.id || `custom-${custom.id}`,
+        type: "custom",
+        customSectionId: custom.id,
+        variant: ["list", "cards", "timeline"].includes(raw.variant)
+          ? raw.variant
+          : "list",
+        visible: Boolean(raw.visible),
+        title:
+          typeof raw.title === "string" && raw.title.trim()
+            ? raw.title
+            : custom.title,
+      });
+      continue;
+    }
+
+    const builtIn = type as BuiltInSectionType;
+    if (seenBuiltIns.has(builtIn)) continue;
+    const fallback = defaultByType.get(builtIn);
+    if (!fallback) continue;
+
+    seenBuiltIns.add(builtIn);
+    sections.push({
+      ...fallback,
+      ...raw,
+      id: builtIn,
+      type: builtIn,
+      variant:
+        typeof raw.variant === "string" &&
+        templateCatalog[builtIn].some((option) => option.id === raw.variant)
+          ? raw.variant
+          : fallback.variant,
+      visible:
+        typeof raw.visible === "boolean" ? raw.visible : fallback.visible,
+      title:
+        typeof raw.title === "string" && raw.title.trim()
+          ? raw.title
+          : fallback.title,
+    });
+  }
+
+  for (const fallback of defaultConfig.sections) {
+    const type = sectionType(fallback) as BuiltInSectionType;
+    if (!seenBuiltIns.has(type)) {
+      sections.push({ ...fallback, id: type, type });
+    }
+  }
+
+  for (const custom of customSections) {
+    if (!seenCustom.has(custom.id)) {
+      sections.push({
+        id: `custom-${custom.id}`,
+        type: "custom",
+        customSectionId: custom.id,
+        variant: "list",
+        visible: false,
+        title: custom.title,
+      });
+    }
+  }
+
+  const themes: ThemeName[] = [
+    "ink",
+    "sand",
+    "moss",
+    "aurora",
+    "cobalt",
+    "rose",
+    "mono",
+    "sunset",
+    "ice",
+    "noir",
+  ];
+
   return {
-    ...input,
-    experience: (input.experience || []).map((item, index) => ({
+    theme:
+      input?.theme && themes.includes(input.theme)
+        ? input.theme
+        : defaultConfig.theme,
+    sections,
+  };
+}
+
+export function normalizeData(input: PortfolioData): PortfolioData {
+  const profileInput = input?.profile || ({} as Profile);
+  const profile: Profile = {
+    name: typeof profileInput.name === "string" ? profileInput.name : "",
+    role: typeof profileInput.role === "string" ? profileInput.role : "",
+    tagline: typeof profileInput.tagline === "string" ? profileInput.tagline : "",
+    about: typeof profileInput.about === "string" ? profileInput.about : "",
+    email: typeof profileInput.email === "string" ? profileInput.email : "",
+    location: typeof profileInput.location === "string" ? profileInput.location : "",
+    availability:
+      typeof profileInput.availability === "string" ? profileInput.availability : "",
+    heroImageUrl:
+      typeof profileInput.heroImageUrl === "string" ? profileInput.heroImageUrl : "",
+    socials: Array.isArray(profileInput.socials)
+      ? profileInput.socials
+          .filter((social) => social && typeof social === "object")
+          .map((social) => ({
+            label: typeof social.label === "string" ? social.label : "",
+            url: typeof social.url === "string" ? social.url : "",
+          }))
+      : [],
+  };
+
+  return {
+    profile,
+    experience: (input?.experience || []).map((item, index) => ({
       ...item,
       id:
         (item as Experience).id ||
         stableEntityId("experience", `${item.company}-${item.role}`, index),
     })),
-    projects: (input.projects || []).map((item, index) => ({
+    projects: (input?.projects || []).map((item, index) => ({
       ...item,
       id:
         (item as Project).id ||
         stableEntityId("project", item.title, index),
+      stack: Array.isArray(item.stack) ? item.stack.filter(Boolean) : [],
     })),
-    skills: Array.from(new Set((input.skills || []).filter(Boolean))),
+    skills: Array.from(new Set((input?.skills || []).filter(Boolean))),
+    customSections: (input?.customSections || [])
+      .filter((section) => section && typeof section === "object")
+      .map((section, sectionIndex) => ({
+        id:
+          section.id ||
+          stableEntityId("custom-section", section.title || "section", sectionIndex),
+        title:
+          typeof section.title === "string" && section.title.trim()
+            ? section.title
+            : "Custom section",
+        items: (section.items || [])
+          .filter((item) => item && typeof item === "object")
+          .map((item, itemIndex) => ({
+            id:
+              item.id ||
+              stableEntityId(
+                "custom-item",
+                item.heading || `item-${itemIndex + 1}`,
+                itemIndex
+              ),
+            heading: typeof item.heading === "string" ? item.heading : "",
+            subheading:
+              typeof item.subheading === "string" ? item.subheading : "",
+            meta: typeof item.meta === "string" ? item.meta : "",
+            description:
+              typeof item.description === "string" ? item.description : "",
+            linkLabel:
+              typeof item.linkLabel === "string" ? item.linkLabel : "",
+            linkUrl: typeof item.linkUrl === "string" ? item.linkUrl : "",
+          })),
+      })),
   };
 }
 
-export function createEntityId(prefix: "experience" | "project") {
+export function createEntityId(
+  prefix: "experience" | "project" | "custom-section" | "custom-item"
+) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random()
     .toString(36)
     .slice(2, 8)}`;
@@ -601,12 +847,20 @@ export function publicUsernameForProfile(
 
 
 export function sectionHasContent(
-  section: SectionType,
-  data: PortfolioData
+  section: SectionConfig | SectionType | undefined,
+  data: PortfolioData,
+  resume: PortfolioResume = defaultResume
 ) {
+  if (!section) return false;
+
+  const config =
+    typeof section === "string"
+      ? ({ id: section, type: section } as SectionConfig)
+      : section;
+  const type = sectionType(config);
   const profile = data.profile;
 
-  switch (section) {
+  switch (type) {
     case "hero":
       return Boolean(
         profile.name.trim() ||
@@ -628,6 +882,8 @@ export function sectionHasContent(
       return data.projects.length > 0;
     case "skills":
       return data.skills.length > 0;
+    case "resume":
+      return Boolean(resume.url.trim());
     case "contact":
       return Boolean(
         profile.email.trim() ||
@@ -636,5 +892,22 @@ export function sectionHasContent(
             (social) => social.label.trim() || social.url.trim()
           )
       );
+    case "custom": {
+      const custom = data.customSections.find(
+        (item) => item.id === config.customSectionId
+      );
+      return Boolean(
+        custom?.items.some((item) =>
+          [
+            item.heading,
+            item.subheading,
+            item.meta,
+            item.description,
+            item.linkLabel,
+            item.linkUrl,
+          ].some((value) => value.trim())
+        )
+      );
+    }
   }
 }

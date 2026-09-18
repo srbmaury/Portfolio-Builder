@@ -1,10 +1,19 @@
 import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
+import {
+  cloudinaryPortfolioTag,
+  cloudinaryUserTag,
+} from "@/lib/cloudinary-assets";
 import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
-export async function POST() {
+type UploadScopeRequest = {
+  scope?: "shared" | "portfolio";
+  variantKey?: string;
+};
+
+export async function POST(request: Request) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -24,8 +33,21 @@ export async function POST() {
 
   if (!cloudName || !apiKey || !apiSecret) {
     return NextResponse.json(
-      { error: "Image uploads are not configured." },
+      { error: "Uploads are not configured." },
       { status: 503 }
+    );
+  }
+
+  const body = (await request.json().catch(() => ({}))) as UploadScopeRequest;
+  const scope = body.scope === "portfolio" ? "portfolio" : "shared";
+
+  if (
+    scope === "portfolio" &&
+    (!body.variantKey || body.variantKey.trim().length === 0 || body.variantKey.length > 160)
+  ) {
+    return NextResponse.json(
+      { error: "A valid portfolio identifier is required." },
+      { status: 400 }
     );
   }
 
@@ -38,11 +60,18 @@ export async function POST() {
 
   const timestamp = Math.floor(Date.now() / 1000);
   const folder = "folioblocks/uploads";
+  const tags = [
+    cloudinaryUserTag(user.id),
+    ...(scope === "portfolio" && body.variantKey
+      ? [cloudinaryPortfolioTag(user.id, body.variantKey)]
+      : []),
+  ].join(",");
 
   const signature = cloudinary.utils.api_sign_request(
     {
       timestamp,
       folder,
+      tags,
     },
     apiSecret
   );
@@ -53,5 +82,6 @@ export async function POST() {
     cloudName,
     apiKey,
     folder,
+    tags,
   });
 }

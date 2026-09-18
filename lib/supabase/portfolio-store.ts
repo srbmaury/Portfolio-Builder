@@ -31,6 +31,7 @@ type ProfileRow = {
   availability: string;
   hero_image_url: string;
   social_links: Array<{ label: string; url: string }>;
+  custom_sections: BuilderState["data"]["customSections"];
 };
 
 export async function loadBuilderState(
@@ -100,6 +101,9 @@ export async function loadBuilderState(
       liveUrl: row.live_url || undefined,
     })),
     skills: (skillResult.data || []).map((row) => row.name),
+    customSections: Array.isArray(profile.custom_sections)
+      ? profile.custom_sections
+      : [],
   };
 
   const variants: PortfolioVariant[] = (portfolioResult.data || []).map((row) => ({
@@ -122,6 +126,14 @@ export async function loadBuilderState(
             shareTitle: "",
             shareDescription: "",
             shareImageUrl: "",
+          },
+    resume:
+      row.resume_config && typeof row.resume_config === "object"
+        ? row.resume_config
+        : {
+            url: "",
+            publicId: "",
+            fileName: "",
           },
   }));
 
@@ -226,6 +238,7 @@ export async function saveBuilderState(
       section_config: variant.config.sections,
       content_config: variant.content,
       branding_config: variant.branding,
+      resume_config: variant.resume,
     })),
     { onConflict: "user_id,variant_key" }
   );
@@ -271,6 +284,7 @@ export async function publishVariant(
       section_config: cloneConfig(active.config).sections,
       content_config: active.content,
       branding_config: active.branding,
+      resume_config: active.resume,
       is_published: true,
       published_at: new Date().toISOString(),
       public_path: publicPath,
@@ -329,17 +343,25 @@ export async function renamePortfolio(
 }
 
 export async function deletePortfolio(
-  supabase: SupabaseClient,
-  user: User,
+  _supabase: SupabaseClient,
+  _user: User,
   variantKey: string
 ) {
-  const { error } = await supabase
-    .from("portfolios")
-    .delete()
-    .eq("user_id", user.id)
-    .eq("variant_key", variantKey);
+  const response = await fetch(
+    `/api/portfolios/${encodeURIComponent(variantKey)}`,
+    { method: "DELETE" }
+  );
 
-  if (error) throw error;
+  const payload = (await response.json().catch(() => ({}))) as {
+    error?: string;
+    deletedSharedWorkspace?: boolean;
+  };
+
+  if (!response.ok) {
+    throw new Error(payload.error || "Portfolio deletion failed.");
+  }
+
+  return payload;
 }
 
 export async function unpublishPortfolio(
@@ -387,7 +409,7 @@ export async function duplicatePortfolio(
     await Promise.all([
       supabase
         .from("portfolios")
-        .select("name, target_role, theme, section_config, content_config, branding_config")
+        .select("name, target_role, theme, section_config, content_config, branding_config, resume_config")
         .eq("user_id", user.id)
         .eq("variant_key", variantKey)
         .single(),
@@ -425,6 +447,7 @@ export async function duplicatePortfolio(
     section_config: source.section_config,
     content_config: source.content_config,
     branding_config: source.branding_config || {},
+    resume_config: source.resume_config || {},
     is_published: false,
   });
 
@@ -466,6 +489,7 @@ async function ensureProfile(
     availability: state.data.profile.availability,
     hero_image_url: state.data.profile.heroImageUrl || "",
     social_links: state.data.profile.socials,
+    custom_sections: state.data.customSections,
   });
 
   if (error) throw error;
