@@ -65,7 +65,7 @@ export async function POST(request: Request) {
   const tags = [
     cloudinaryUserTag(user.id),
     ...(scope === "portfolio" && body.variantKey
-      ? [cloudinaryPortfolioTag(body.variantKey)]
+      ? [cloudinaryPortfolioTag(user.id, body.variantKey)]
       : []),
   ].join(",");
 
