@@ -154,13 +154,17 @@ function sectionHeading(line: string): ResumeSection | null {
 }
 
 function parseExperience(lines: string[]): Experience[] {
+  const clean = nonEmpty(lines).map(stripBullet);
+  const periodIndexes = clean
+    .map((line, index) => (PERIOD_RE.test(line) ? index : -1))
+    .filter((index) => index >= 0);
+
+  if (!periodIndexes.length) return [];
+
   const entries: Experience[] = [];
 
-  for (const [index, block] of blocks(lines).entries()) {
-    const clean = block.map(stripBullet).filter(Boolean);
-    const periodIndex = clean.findIndex((line) => PERIOD_RE.test(line));
-    if (periodIndex < 0) continue;
-
+  for (let markerIndex = 0; markerIndex < periodIndexes.length; markerIndex += 1) {
+    const periodIndex = periodIndexes[markerIndex];
     const periodLine = clean[periodIndex];
     const period = periodLine.match(PERIOD_RE)?.[0] || "";
     const beforePeriod = periodLine
@@ -168,28 +172,48 @@ function parseExperience(lines: string[]): Experience[] {
       .replace(/[|·,:-]+\s*$/, "")
       .trim();
 
+    let companyIndex = -1;
     let company = "";
     let role = "";
 
     if (beforePeriod) {
       role = beforePeriod;
-      company = clean[Math.max(0, periodIndex - 1)] || "";
+      companyIndex = periodIndex - 1;
+      company = clean[companyIndex] || "";
     } else if (periodIndex >= 2) {
-      company = clean[periodIndex - 2];
-      role = clean[periodIndex - 1];
+      companyIndex = periodIndex - 2;
+      company = clean[companyIndex] || "";
+      role = clean[periodIndex - 1] || "";
     } else if (periodIndex === 1) {
-      company = clean[0];
+      companyIndex = 0;
+      company = clean[0] || "";
     }
 
     if (!company && !role) continue;
+
+    const nextPeriodIndex = periodIndexes[markerIndex + 1];
+    let summaryEnd = clean.length;
+
+    if (nextPeriodIndex !== undefined) {
+      const nextPeriodLine = clean[nextPeriodIndex];
+      const nextBeforePeriod = nextPeriodLine
+        .replace(PERIOD_RE, "")
+        .replace(/[|·,:-]+\s*$/, "")
+        .trim();
+      const nextCompanyIndex = nextBeforePeriod
+        ? nextPeriodIndex - 1
+        : Math.max(0, nextPeriodIndex - 2);
+      summaryEnd = Math.max(periodIndex + 1, nextCompanyIndex);
+    }
+
     const summary = clean
-      .slice(periodIndex + 1)
+      .slice(periodIndex + 1, summaryEnd)
       .filter((line) => !line.match(/^https?:\/\//i))
       .join(" ")
       .trim();
 
     entries.push({
-      id: `resume-experience-${slugify(`${company}-${role}-${period}`)}-${index + 1}`,
+      id: `resume-experience-${slugify(`${company}-${role}-${period}`)}-${entries.length + 1}`,
       company,
       role,
       period,
