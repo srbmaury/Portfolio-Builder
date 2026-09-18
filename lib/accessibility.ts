@@ -19,9 +19,10 @@ export function useDialogFocusTrap<T extends HTMLElement>(
     const dialog = ref.current;
     if (!dialog) return;
 
+    const activeDialog = dialog;
     const previous = document.activeElement as HTMLElement | null;
     const focusables = () =>
-      Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+      Array.from(activeDialog.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
         (element) => !element.hasAttribute("aria-hidden")
       );
 
@@ -40,7 +41,7 @@ export function useDialogFocusTrap<T extends HTMLElement>(
       const items = focusables();
       if (!items.length) {
         event.preventDefault();
-        dialog.focus();
+        activeDialog.focus();
         return;
       }
 
