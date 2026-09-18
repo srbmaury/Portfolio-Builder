@@ -83,6 +83,14 @@ export function PortfolioBuilder({
     publish,
     signOut,
   } = useBuilderWorkspace({ startFresh, initialVariantId });
+  const [tab, setTab] = useState<"content" | "targeting" | "design">("content");
+  const [previewMode, setPreviewMode] = useState<PreviewMode>("desktop");
+  const {
+    editorWidth,
+    startResize,
+    handleResizerKeyDown,
+    resetEditorWidth,
+  } = useEditorResize();
   const [createDialog, setCreateDialog] = useState<CreateDialogKind>(null);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [resumeImportOpen, setResumeImportOpen] = useState(false);
