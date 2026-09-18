@@ -1,7 +1,7 @@
 import {
   normalizeBuilderState,
   type BuilderState,
-} from "@/lib/portfolio";
+} from "./portfolio.ts";
 
 export type WorkspaceJsonResult =
   | { ok: true; state: BuilderState }
