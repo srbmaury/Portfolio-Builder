@@ -5,6 +5,11 @@ import { createPublicClient } from "@/lib/supabase/public";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  const contentLength = Number(request.headers.get("content-length") || "0");
+  if (Number.isFinite(contentLength) && contentLength > 8192) {
+    return NextResponse.json({ error: "Analytics event is too large." }, { status: 413 });
+  }
+
   let body: unknown;
 
   try {
