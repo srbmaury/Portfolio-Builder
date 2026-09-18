@@ -25,6 +25,7 @@ import {
   updateCustomSectionTitle as updateCustomSectionTitleInState,
 } from "@/lib/custom-sections";
 import { mergeResumeImport } from "@/lib/resume-import";
+import { trackProductEvent } from "@/lib/product-analytics";
 import { createClient } from "@/lib/supabase/client";
 import {
   deletePortfolio,
@@ -226,6 +227,20 @@ export function PortfolioBuilder({
     createVariantOpenedRef.current = true;
     setCreateDialog("variant");
   }, [cloudResolved, hydrated, openCreateVariant]);
+
+  useEffect(() => {
+    if (!cloudResolved || !cloudUserId) return;
+
+    const key = `folioblocks:product:builder-opened:${cloudUserId}`;
+    try {
+      if (window.sessionStorage.getItem(key)) return;
+      window.sessionStorage.setItem(key, "1");
+    } catch {
+      // Tracking remains best-effort if storage is unavailable.
+    }
+
+    trackProductEvent("builder_opened");
+  }, [cloudResolved, cloudUserId]);
 
   const activeVariant =
     state.variants.find((variant) => variant.id === state.activeVariantId) ??
@@ -765,6 +780,7 @@ export function PortfolioBuilder({
       ],
     }));
 
+    trackProductEvent("portfolio_created", id);
     setShareUrl("");
   }
 
@@ -867,6 +883,7 @@ export function PortfolioBuilder({
       setCloudUserId(data.user.id);
       setCloudStatus("saved");
       setCloudMessage("Saved to cloud");
+      trackProductEvent("workspace_saved", state.activeVariantId);
     } catch (saveError) {
       setCloudStatus("error");
       setCloudMessage(
@@ -904,6 +921,7 @@ export function PortfolioBuilder({
       setCloudUserId(data.user.id);
       setCloudStatus("saved");
       setCloudMessage("Published from cloud");
+      trackProductEvent("portfolio_published", state.activeVariantId);
 
       try {
         await navigator.clipboard.writeText(url);
@@ -947,7 +965,7 @@ export function PortfolioBuilder({
         </a>
 
         <div className="builder-topbar-controls">
-          <div className="builder-status" title={cloudMessage || undefined}>
+          <div className="builder-status" title={cloudMessage || undefined} aria-live="polite">
             <span className={`save-dot cloud-${cloudStatus}`} />
             <span>
               {cloudUserId
