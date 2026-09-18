@@ -2,6 +2,17 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PortfolioRenderer } from "@/components/PortfolioRenderer";
+import { ResumeImportDialog } from "@/components/ResumeImportDialog";
+import { WorkspaceJsonDialog } from "@/components/WorkspaceJsonDialog";
+import {
+  addCustomSection as addCustomSectionToState,
+  addCustomSectionItem as addCustomSectionItemToState,
+  removeCustomSection as removeCustomSectionFromState,
+  removeCustomSectionItem as removeCustomSectionItemFromState,
+  updateCustomSectionItem as updateCustomSectionItemInState,
+  updateCustomSectionTitle as updateCustomSectionTitleInState,
+} from "@/lib/custom-sections";
+import { mergeResumeImport } from "@/lib/resume-import";
 import { uploadImageToCloudinary } from "@/lib/cloudinary";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -21,6 +32,7 @@ import {
   normalizeBuilderState,
   sampleBuilderState,
   sectionHasContent,
+  sectionType,
   slugify,
   snapshotForVariant,
   templateCatalog,
@@ -37,7 +49,13 @@ const STORAGE_KEY = "folioblocks:workspace";
 const EDITOR_WIDTH_KEY = "folioblocks:editor-width";
 
 type PreviewMode = "desktop" | "tablet" | "mobile";
-type CreateDialogKind = "experience" | "project" | "link" | "variant" | null;
+type CreateDialogKind =
+  | "experience"
+  | "project"
+  | "link"
+  | "variant"
+  | "custom-section"
+  | null;
 
 export function PortfolioBuilder({
   startFresh = false,
@@ -60,6 +78,8 @@ export function PortfolioBuilder({
   const [editorWidth, setEditorWidth] = useState(420);
   const [createDialog, setCreateDialog] = useState<CreateDialogKind>(null);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [resumeImportOpen, setResumeImportOpen] = useState(false);
+  const [jsonEditorOpen, setJsonEditorOpen] = useState(false);
   const createVariantOpenedRef = useRef(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
@@ -226,7 +246,7 @@ export function PortfolioBuilder({
 
   const snapshot = useMemo(() => snapshotForVariant(state), [state]);
   const visibleSections = snapshot.config.sections.filter(
-    (section) => section.visible && sectionHasContent(section.id, snapshot.data)
+    (section) => section.visible && sectionHasContent(section, snapshot.data)
   ).length;
 
   const targetedExperience = useMemo(() => {
@@ -382,29 +402,31 @@ export function PortfolioBuilder({
     }));
   }
 
-  function setVariant(id: SectionType, variantName: string) {
+  function setVariant(configId: string, variantName: string) {
     updateActiveConfig((config) => ({
       ...config,
       sections: config.sections.map((section) =>
-        section.id === id ? { ...section, variant: variantName } : section
+        section.id === configId ? { ...section, variant: variantName } : section
       ),
     }));
   }
 
-  function setSectionTitle(id: SectionType, title: string) {
+  function setSectionTitle(configId: string, title: string) {
     updateActiveConfig((config) => ({
       ...config,
       sections: config.sections.map((section) =>
-        section.id === id ? { ...section, title } : section
+        section.id === configId ? { ...section, title } : section
       ),
     }));
   }
 
-  function toggleSection(id: SectionType) {
+  function toggleSection(configId: string) {
     updateActiveConfig((config) => ({
       ...config,
       sections: config.sections.map((section) =>
-        section.id === id ? { ...section, visible: !section.visible } : section
+        section.id === configId
+          ? { ...section, visible: !section.visible }
+          : section
       ),
     }));
   }
@@ -436,7 +458,7 @@ export function PortfolioBuilder({
       ...config,
       theme: themes[Math.floor(Math.random() * themes.length)],
       sections: config.sections.map((section) => {
-        const options = templateCatalog[section.id];
+        const options = templateCatalog[sectionType(section)];
         return {
           ...section,
           variant: options[Math.floor(Math.random() * options.length)].id,
@@ -645,6 +667,76 @@ export function PortfolioBuilder({
         socials: data.profile.socials.filter((_, socialIndex) => socialIndex !== index),
       },
     }));
+  }
+
+  function applyResumeImport(
+    draft: Parameters<typeof mergeResumeImport>[1]
+  ) {
+    setState((current) => mergeResumeImport(current, draft));
+    setResumeImportOpen(false);
+    setShareUrl("");
+  }
+
+  function applyWorkspaceJson(next: BuilderState) {
+    setState(normalizeBuilderState(next));
+    setJsonEditorOpen(false);
+    setShareUrl("");
+  }
+
+  function createCustomSection(title: string) {
+    setState((current) => addCustomSectionToState(current, title));
+    setShareUrl("");
+  }
+
+  function renameCustomSection(customSectionId: string, title: string) {
+    setState((current) =>
+      updateCustomSectionTitleInState(current, customSectionId, title)
+    );
+  }
+
+  function addCustomItem(customSectionId: string) {
+    setState((current) =>
+      addCustomSectionItemToState(current, customSectionId)
+    );
+  }
+
+  function updateCustomItem(
+    customSectionId: string,
+    itemId: string,
+    field:
+      | "heading"
+      | "subheading"
+      | "meta"
+      | "description"
+      | "linkLabel"
+      | "linkUrl",
+    value: string
+  ) {
+    setState((current) =>
+      updateCustomSectionItemInState(
+        current,
+        customSectionId,
+        itemId,
+        field,
+        value
+      )
+    );
+  }
+
+  function removeCustomItem(customSectionId: string, itemId: string) {
+    setState((current) =>
+      removeCustomSectionItemFromState(current, customSectionId, itemId)
+    );
+  }
+
+  function removeCustomSection(customSectionId: string) {
+    if (!window.confirm("Delete this custom section from every portfolio variant?")) {
+      return;
+    }
+    setState((current) =>
+      removeCustomSectionFromState(current, customSectionId)
+    );
+    setShareUrl("");
   }
 
   function createVariant(input: { name: string; targetRole: string }) {
