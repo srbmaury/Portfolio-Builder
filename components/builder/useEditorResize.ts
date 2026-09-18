@@ -1,6 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 
 const EDITOR_WIDTH_KEY = "folioblocks:editor-width";
 const MIN_EDITOR_WIDTH = 320;
@@ -51,7 +56,7 @@ export function useEditorResize() {
   }
 
   function handleResizerKeyDown(
-    event: React.KeyboardEvent<HTMLButtonElement>
+    event: ReactKeyboardEvent<HTMLButtonElement>
   ) {
     if (event.key === "ArrowLeft") {
       event.preventDefault();
@@ -68,7 +73,7 @@ export function useEditorResize() {
     }
   }
 
-  function startResize(event: React.PointerEvent<HTMLButtonElement>) {
+  function startResize(event: ReactPointerEvent<HTMLButtonElement>) {
     if (window.innerWidth <= 760) return;
 
     event.preventDefault();
