@@ -2,16 +2,30 @@ import type { MetadataRoute } from "next";
 import { createPublicClient } from "@/lib/supabase/public";
 import { siteOrigin } from "@/lib/site-url";
 
+type PublicPortfolioRow = {
+  public_path: string | null;
+  updated_at: string | null;
+};
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const origin = siteOrigin();
-  const supabase = createPublicClient();
+  let rows: PublicPortfolioRow[] = [];
 
-  const { data } = await supabase
-    .from("portfolios")
-    .select("public_path, updated_at")
-    .eq("is_published", true)
-    .not("public_path", "is", null)
-    .order("updated_at", { ascending: false });
+  try {
+    const supabase = createPublicClient();
+    const { data, error } = await supabase
+      .from("portfolios")
+      .select("public_path, updated_at")
+      .eq("is_published", true)
+      .not("public_path", "is", null)
+      .order("updated_at", { ascending: false });
+
+    if (!error && data) {
+      rows = data as PublicPortfolioRow[];
+    }
+  } catch {
+    // Static routes should remain discoverable if the data API is unavailable.
+  }
 
   const staticPages: MetadataRoute.Sitemap = [
     {
@@ -26,7 +40,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  const portfolioPages: MetadataRoute.Sitemap = (data || [])
+  const portfolioPages: MetadataRoute.Sitemap = rows
     .filter((row) => Boolean(row.public_path))
     .map((row) => ({
       url: `${origin}/${row.public_path}`,
