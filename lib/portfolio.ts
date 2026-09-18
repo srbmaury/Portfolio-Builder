@@ -6,7 +6,14 @@ export type SectionType =
   | "skills"
   | "contact";
 
-export type ThemeName = "ink" | "sand" | "moss";
+export type ThemeName =
+  | "ink"
+  | "sand"
+  | "moss"
+  | "aurora"
+  | "cobalt"
+  | "rose"
+  | "mono";
 
 export type Profile = {
   name: string;
@@ -90,27 +97,35 @@ export const templateCatalog: Record<
     { id: "split", label: "Split", description: "Big intro with profile panel" },
     { id: "minimal", label: "Minimal", description: "Editorial, text-first hero" },
     { id: "terminal", label: "Terminal", description: "Developer-inspired intro" },
+    { id: "poster", label: "Poster", description: "Oversized type with bold metadata" },
+    { id: "spotlight", label: "Spotlight", description: "Centered intro with luminous focal card" },
   ],
   about: [
     { id: "editorial", label: "Editorial", description: "Readable long-form story" },
     { id: "stats", label: "Snapshot", description: "Bio plus profile highlights" },
+    { id: "manifesto", label: "Manifesto", description: "Big statement with compact profile notes" },
   ],
   experience: [
     { id: "timeline", label: "Timeline", description: "Chronological career path" },
     { id: "cards", label: "Cards", description: "Compact role cards" },
+    { id: "stacked", label: "Stacked", description: "Full-width editorial role rows" },
   ],
   projects: [
     { id: "bento", label: "Bento", description: "Feature-led project grid" },
     { id: "grid", label: "Grid", description: "Balanced project cards" },
     { id: "list", label: "List", description: "Dense, recruiter-friendly list" },
+    { id: "showcase", label: "Showcase", description: "Large numbered feature stories" },
+    { id: "mosaic", label: "Mosaic", description: "Asymmetric magazine-style project wall" },
   ],
   skills: [
     { id: "cloud", label: "Cloud", description: "Scannable skill chips" },
     { id: "columns", label: "Columns", description: "Clean technical inventory" },
+    { id: "matrix", label: "Matrix", description: "Bold capability tiles" },
   ],
   contact: [
     { id: "panel", label: "Panel", description: "Strong final call to action" },
     { id: "minimal", label: "Minimal", description: "Simple contact footer" },
+    { id: "banner", label: "Banner", description: "High-impact closing statement" },
   ],
 };
 
