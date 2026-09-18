@@ -327,7 +327,13 @@ export const emptyBuilderState: BuilderState = {
       id: "portfolio",
       name: "",
       targetRole: "",
-      config: cloneConfig(defaultConfig),
+      config: {
+        theme: defaultConfig.theme,
+        sections: defaultConfig.sections.map((section) => ({
+          ...section,
+          title: "",
+        })),
+      },
       content: fullContentConfig(emptyData),
     },
   ],
@@ -536,7 +542,9 @@ export function sectionHasContent(
           profile.availability.trim() ||
           profile.email.trim() ||
           profile.heroImageUrl?.trim() ||
-          profile.socials.length
+          profile.socials.some(
+            (social) => social.label.trim() || social.url.trim()
+          )
       );
     case "about":
       return Boolean(profile.about.trim());
@@ -550,7 +558,9 @@ export function sectionHasContent(
       return Boolean(
         profile.email.trim() ||
           profile.availability.trim() ||
-          profile.socials.length
+          profile.socials.some(
+            (social) => social.label.trim() || social.url.trim()
+          )
       );
   }
 }
