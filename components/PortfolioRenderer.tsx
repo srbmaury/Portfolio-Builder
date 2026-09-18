@@ -100,11 +100,16 @@ function Hero({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: str
 function Socials({ snapshot }: { snapshot: PortfolioSnapshot }) {
   return (
     <div className="social-row">
-      {snapshot.data.profile.socials.map((social) => (
-        <a key={social.label} href={social.url} target="_blank" rel="noreferrer">
-          {social.label} ↗
-        </a>
-      ))}
+      {snapshot.data.profile.socials.map((social, index) => {
+        const href = safeExternalUrl(social.url);
+        if (!href) return null;
+
+        return (
+          <a key={`${social.label}-${index}`} href={href} target="_blank" rel="noreferrer">
+            {social.label} ↗
+          </a>
+        );
+      })}
     </div>
   );
 }
@@ -180,13 +185,32 @@ function Projects({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant:
       <section className="p-section">
         <SectionHeading index="03" title="Selected work" />
         <div className="project-list">
-          {projects.map((project, index) => (
-            <a key={project.title} className="project-list-row" href={project.url || "#"} target="_blank" rel="noreferrer">
-              <span className="project-number">0{index + 1}</span>
-              <div><h3>{project.title}</h3><p>{project.description}</p></div>
-              <span>↗</span>
-            </a>
-          ))}
+          {projects.map((project, index) => {
+            const href = safeExternalUrl(project.url);
+            const content = (
+              <>
+                <span className="project-number">0{index + 1}</span>
+                <div><h3>{project.title}</h3><p>{project.description}</p></div>
+                <span>{href ? "↗" : "—"}</span>
+              </>
+            );
+
+            return href ? (
+              <a
+                key={`${project.title}-${index}`}
+                className="project-list-row"
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {content}
+              </a>
+            ) : (
+              <div key={`${project.title}-${index}`} className="project-list-row project-list-row-static">
+                {content}
+              </div>
+            );
+          })}
         </div>
       </section>
     );
@@ -207,7 +231,11 @@ function Projects({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant:
               <div className="tag-row">
                 {project.stack.map((item) => <span key={item}>{item}</span>)}
               </div>
-              {project.url && <a href={project.url} target="_blank" rel="noreferrer">View ↗</a>}
+              {safeExternalUrl(project.url) && (
+                <a href={safeExternalUrl(project.url) || undefined} target="_blank" rel="noreferrer">
+                  View ↗
+                </a>
+              )}
             </div>
           </article>
         ))}
@@ -266,4 +294,16 @@ function SectionHeading({ index, title }: { index: string; title: string }) {
       <h2>{title}</h2>
     </div>
   );
+}
+
+
+function safeExternalUrl(value?: string) {
+  if (!value) return null;
+
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
 }
