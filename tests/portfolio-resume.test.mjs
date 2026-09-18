@@ -133,6 +133,8 @@ test("builder preview proxies legacy saved resumes for the authenticated owner",
   assert.match(ownerRouteSource, /variant_key/);
   assert.match(builderSource, /builderResumeUrl/);
   assert.match(builderSource, /\/api\/resume\//);
+  assert.match(rendererSource, /value\.startsWith\("\/api\/resume\/"\)/);
+  assert.match(builderSource, /openUrl=\{builderResumeUrl\}/);
 });
 
 test("resume delivery rejects non-PDF upstream payloads", () => {
