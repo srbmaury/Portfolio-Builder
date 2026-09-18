@@ -389,10 +389,12 @@ export function ImageUploadField({
 export function ResumeUploadField({
   value,
   variantKey,
+  openUrl,
   onChange,
 }: {
   value: { url: string; publicId: string; fileName: string; showInHero: boolean };
   variantKey: string;
+  openUrl?: string;
   onChange: (value: {
     url: string;
     publicId: string;
@@ -432,7 +434,7 @@ export function ResumeUploadField({
         <div className="resume-upload-current">
           <div>
             <strong>{value.fileName || "Resume.pdf"}</strong>
-            <a href={value.url} target="_blank" rel="noreferrer">
+            <a href={openUrl || value.url} target="_blank" rel="noreferrer">
               Open PDF ↗
             </a>
           </div>
