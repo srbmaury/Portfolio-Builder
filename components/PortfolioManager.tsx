@@ -125,7 +125,11 @@ export function PortfolioManager({
   }
 
   async function remove(item: PortfolioSummary) {
-    if (!window.confirm(`Delete “${item.name}”? This removes the saved portfolio and its published page.`)) {
+    if (
+      !window.confirm(
+        `Delete “${item.name}”? This removes its saved/published data, target-only content, resume, and uploaded assets no longer used by another portfolio. If it is your last portfolio, the shared workspace data is removed too.`
+      )
+    ) {
       return;
     }
 
