@@ -57,6 +57,7 @@ export function PortfolioBuilder({
   const [cloudUserId, setCloudUserId] = useState<string | null>(null);
   const [cloudStatus, setCloudStatus] = useState<"local" | "loading" | "saved" | "error">("local");
   const [cloudMessage, setCloudMessage] = useState("");
+  const [cloudResolved, setCloudResolved] = useState(false);
   const [editorWidth, setEditorWidth] = useState(420);
   const [createDialog, setCreateDialog] = useState<CreateDialogKind>(null);
   const createVariantOpenedRef = useRef(false);
@@ -127,6 +128,7 @@ export function PortfolioBuilder({
       if (error || !data.user) {
         setCloudUserId(null);
         setCloudStatus("local");
+        setCloudResolved(true);
         return;
       }
 
@@ -135,6 +137,7 @@ export function PortfolioBuilder({
       if (startFresh) {
         setCloudStatus("local");
         setCloudMessage("Fresh workspace · not saved yet");
+        setCloudResolved(true);
         return;
       }
 
@@ -163,6 +166,8 @@ export function PortfolioBuilder({
           loadError instanceof Error ? loadError.message : "Could not load cloud workspace"
         );
         setCloudStatus("error");
+      } finally {
+        if (!cancelled) setCloudResolved(true);
       }
     }
 
@@ -174,12 +179,18 @@ export function PortfolioBuilder({
   }, [hydrated, initialVariantId, startFresh]);
 
   useEffect(() => {
-    if (!hydrated || !openCreateVariant || createVariantOpenedRef.current) return;
-    if (cloudStatus === "loading") return;
+    if (
+      !hydrated ||
+      !cloudResolved ||
+      !openCreateVariant ||
+      createVariantOpenedRef.current
+    ) {
+      return;
+    }
 
     createVariantOpenedRef.current = true;
     setCreateDialog("variant");
-  }, [cloudStatus, hydrated, openCreateVariant]);
+  }, [cloudResolved, hydrated, openCreateVariant]);
 
   const activeVariant =
     state.variants.find((variant) => variant.id === state.activeVariantId) ??
