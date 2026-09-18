@@ -80,12 +80,16 @@ function recordEvent(input: {
 }
 
 function getOrCreateId(storage: Storage, key: string) {
-  const existing = storage.getItem(key);
-  if (existing) return existing;
+  try {
+    const existing = storage.getItem(key);
+    if (existing) return existing;
 
-  const id = crypto.randomUUID();
-  storage.setItem(key, id);
-  return id;
+    const id = crypto.randomUUID();
+    storage.setItem(key, id);
+    return id;
+  } catch {
+    return crypto.randomUUID();
+  }
 }
 
 function safeReferrerHost(value: string) {
