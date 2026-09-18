@@ -1699,6 +1699,12 @@ function ImageUploadField({
           </button>
         </div>
       ) : null}
+      <input
+        className="image-url-input"
+        value={value}
+        placeholder="Cloudinary image URL"
+        onChange={(event) => onChange(event.target.value)}
+      />
       <label className={`image-upload-button ${busy ? "disabled" : ""}`}>
         <input
           type="file"
