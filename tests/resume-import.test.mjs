@@ -178,3 +178,28 @@ test("resume upload accepts PDF/DOCX and rejects unsupported or oversized files"
   assert.equal(oversized.ok, false);
   assert.match(oversized.error, /5 MB/i);
 });
+
+
+test("resume parser separates consecutive experience entries without blank lines", () => {
+  const draft = parseResumeText(`
+Saurabh Maurya
+Backend Engineer
+saurabh@example.com
+EXPERIENCE
+Salesforce
+Associate Member of Technical Staff | Jun 2024 - Present
+Built metadata dependency extraction.
+Improved deployment reliability.
+Razorpay
+Software Engineer Intern | May 2023 - Jul 2023
+Built payment observability.
+SKILLS
+Java, Redis
+`);
+
+  assert.equal(draft.experience.length, 2);
+  assert.equal(draft.experience[0].company, "Salesforce");
+  assert.match(draft.experience[0].summary, /deployment reliability/i);
+  assert.equal(draft.experience[1].company, "Razorpay");
+  assert.match(draft.experience[1].summary, /payment observability/i);
+});
