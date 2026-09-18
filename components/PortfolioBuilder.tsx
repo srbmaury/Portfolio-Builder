@@ -5,6 +5,7 @@ import { PortfolioRenderer } from "@/components/PortfolioRenderer";
 import { uploadImageToCloudinary } from "@/lib/cloudinary";
 import { createClient } from "@/lib/supabase/client";
 import {
+  deletePortfolio,
   loadBuilderState,
   publishVariant,
   saveBuilderState,
@@ -623,8 +624,37 @@ export function PortfolioBuilder({
     setShareUrl("");
   }
 
-  function removeActiveVariant() {
-    if (state.variants.length <= 1) return;
+  async function removeActiveVariant() {
+    if (state.variants.length <= 1 || !activeVariant) return;
+
+    if (
+      !window.confirm(
+        `Delete “${activeVariant.name || "Untitled"}”? This removes the saved portfolio and its published page.`
+      )
+    ) {
+      return;
+    }
+
+    if (cloudUserId) {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.auth.getUser();
+
+        if (error || !data.user) {
+          throw new Error("Sign in again to delete this portfolio.");
+        }
+
+        await deletePortfolio(supabase, data.user, activeVariant.id);
+        setCloudMessage("Portfolio deleted from cloud");
+        setCloudStatus("saved");
+      } catch (deleteError) {
+        setCloudMessage(
+          deleteError instanceof Error ? deleteError.message : "Could not delete portfolio"
+        );
+        setCloudStatus("error");
+        return;
+      }
+    }
 
     setState((current) => {
       const remaining = current.variants.filter(
