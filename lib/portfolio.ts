@@ -46,11 +46,30 @@ export type SectionConfig = {
   visible: boolean;
 };
 
+export type PortfolioConfig = {
+  theme: ThemeName;
+  sections: SectionConfig[];
+};
+
+export type PortfolioVariant = {
+  id: string;
+  name: string;
+  targetRole: string;
+  config: PortfolioConfig;
+};
+
+export type BuilderState = {
+  data: PortfolioData;
+  variants: PortfolioVariant[];
+  activeVariantId: string;
+};
+
 export type PortfolioSnapshot = {
   data: PortfolioData;
-  config: {
-    theme: ThemeName;
-    sections: SectionConfig[];
+  config: PortfolioConfig;
+  meta?: {
+    name: string;
+    targetRole: string;
   };
 };
 
@@ -86,84 +105,141 @@ export const templateCatalog: Record<
   ],
 };
 
-export const sampleSnapshot: PortfolioSnapshot = {
-  data: {
-    profile: {
-      name: "Alex Morgan",
-      role: "Software Engineer",
-      tagline: "I build reliable products that turn complex systems into simple experiences.",
-      about:
-        "I am a product-minded software engineer focused on backend systems, developer tooling, and thoughtful user experiences. I enjoy taking ambiguous problems from architecture to production.",
-      email: "alex@example.com",
-      location: "Bengaluru, India",
-      availability: "Open to interesting product and platform roles",
-      socials: [
-        { label: "GitHub", url: "https://github.com" },
-        { label: "LinkedIn", url: "https://linkedin.com" },
-      ],
-    },
-    experience: [
-      {
-        company: "Northstar Labs",
-        role: "Software Engineer",
-        period: "2024 — Present",
-        summary:
-          "Built platform capabilities used by multiple product teams, improving reliability, observability, and developer velocity.",
-      },
-      {
-        company: "Atlas Systems",
-        role: "Engineering Intern",
-        period: "2023 — 2024",
-        summary:
-          "Shipped internal tooling and production monitoring that shortened incident investigation time.",
-      },
-    ],
-    projects: [
-      {
-        title: "Search Engine",
-        description:
-          "A personalized product search experience with ranked retrieval, caching, and experimentation support.",
-        stack: ["Next.js", "PostgreSQL", "Redis"],
-        url: "https://github.com",
-      },
-      {
-        title: "Developer Agent",
-        description:
-          "An agentic debugging workflow that combines code, logs, and issue context to accelerate investigation.",
-        stack: ["LLM", "RAG", "MCP"],
-        url: "https://github.com",
-      },
-      {
-        title: "Realtime Visualizer",
-        description:
-          "A collaborative visualization tool built for large structured documents and realtime editing.",
-        stack: ["React", "WebSockets", "D3"],
-        url: "https://github.com",
-      },
-    ],
-    skills: [
-      "Java",
-      "TypeScript",
-      "Distributed Systems",
-      "PostgreSQL",
-      "Redis",
-      "React",
-      "Observability",
-      "System Design",
+export const defaultConfig: PortfolioConfig = {
+  theme: "ink",
+  sections: [
+    { id: "hero", variant: "split", visible: true },
+    { id: "about", variant: "editorial", visible: true },
+    { id: "experience", variant: "timeline", visible: true },
+    { id: "projects", variant: "bento", visible: true },
+    { id: "skills", variant: "cloud", visible: true },
+    { id: "contact", variant: "panel", visible: true },
+  ],
+};
+
+export const sampleData: PortfolioData = {
+  profile: {
+    name: "Alex Morgan",
+    role: "Software Engineer",
+    tagline: "I build reliable products that turn complex systems into simple experiences.",
+    about:
+      "I am a product-minded software engineer focused on backend systems, developer tooling, and thoughtful user experiences. I enjoy taking ambiguous problems from architecture to production.",
+    email: "alex@example.com",
+    location: "Bengaluru, India",
+    availability: "Open to interesting product and platform roles",
+    socials: [
+      { label: "GitHub", url: "https://github.com" },
+      { label: "LinkedIn", url: "https://linkedin.com" },
     ],
   },
-  config: {
-    theme: "ink",
-    sections: [
-      { id: "hero", variant: "split", visible: true },
-      { id: "about", variant: "editorial", visible: true },
-      { id: "experience", variant: "timeline", visible: true },
-      { id: "projects", variant: "bento", visible: true },
-      { id: "skills", variant: "cloud", visible: true },
-      { id: "contact", variant: "panel", visible: true },
-    ],
+  experience: [
+    {
+      company: "Northstar Labs",
+      role: "Software Engineer",
+      period: "2024 — Present",
+      summary:
+        "Built platform capabilities used by multiple product teams, improving reliability, observability, and developer velocity.",
+    },
+    {
+      company: "Atlas Systems",
+      role: "Engineering Intern",
+      period: "2023 — 2024",
+      summary:
+        "Shipped internal tooling and production monitoring that shortened incident investigation time.",
+    },
+  ],
+  projects: [
+    {
+      title: "Search Engine",
+      description:
+        "A personalized product search experience with ranked retrieval, caching, and experimentation support.",
+      stack: ["Next.js", "PostgreSQL", "Redis"],
+      url: "https://github.com",
+    },
+    {
+      title: "Developer Agent",
+      description:
+        "An agentic debugging workflow that combines code, logs, and issue context to accelerate investigation.",
+      stack: ["LLM", "RAG", "MCP"],
+      url: "https://github.com",
+    },
+    {
+      title: "Realtime Visualizer",
+      description:
+        "A collaborative visualization tool built for large structured documents and realtime editing.",
+      stack: ["React", "WebSockets", "D3"],
+      url: "https://github.com",
+    },
+  ],
+  skills: [
+    "Java",
+    "TypeScript",
+    "Distributed Systems",
+    "PostgreSQL",
+    "Redis",
+    "React",
+    "Observability",
+    "System Design",
+  ],
+};
+
+export function cloneConfig(config: PortfolioConfig): PortfolioConfig {
+  return {
+    theme: config.theme,
+    sections: config.sections.map((section) => ({ ...section })),
+  };
+}
+
+export const sampleBuilderState: BuilderState = {
+  data: sampleData,
+  variants: [
+    {
+      id: "general",
+      name: "General",
+      targetRole: "Software Engineer",
+      config: cloneConfig(defaultConfig),
+    },
+  ],
+  activeVariantId: "general",
+};
+
+export const sampleSnapshot: PortfolioSnapshot = {
+  data: sampleData,
+  config: cloneConfig(defaultConfig),
+  meta: {
+    name: "General",
+    targetRole: "Software Engineer",
   },
 };
+
+export function snapshotForVariant(state: BuilderState): PortfolioSnapshot {
+  const active =
+    state.variants.find((variant) => variant.id === state.activeVariantId) ??
+    state.variants[0];
+
+  return {
+    data: state.data,
+    config: active ? active.config : cloneConfig(defaultConfig),
+    meta: active
+      ? { name: active.name, targetRole: active.targetRole }
+      : { name: "Portfolio", targetRole: state.data.profile.role },
+  };
+}
+
+export function builderStateFromSnapshot(snapshot: PortfolioSnapshot): BuilderState {
+  const variant: PortfolioVariant = {
+    id: "general",
+    name: snapshot.meta?.name || "General",
+    targetRole: snapshot.meta?.targetRole || snapshot.data.profile.role,
+    config: cloneConfig(snapshot.config),
+  };
+
+  return {
+    data: snapshot.data,
+    variants: [variant],
+    activeVariantId: variant.id,
+  };
+}
 
 export function slugify(value: string) {
   return (
