@@ -3053,8 +3053,8 @@ body.dialog-open {
     overflow-wrap: anywhere;
   }
 
-  .topbar-actions .portfolio-manager-link {
-    display: inline-flex;
+  .builder-topbar .topbar-link {
+    display: none;
   }
 }
 
