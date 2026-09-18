@@ -2367,3 +2367,13 @@ body.dialog-open {
   .browser-project-copy { display: grid; }
   .contact-v-card { margin: 20px; }
 }
+
+/* Final layout namespace guards */
+.about-layout,
+.experience-layout,
+.skills-layout {
+  display: block;
+}
+.contact-layout {
+  display: grid;
+}
