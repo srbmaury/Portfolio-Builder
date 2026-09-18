@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { ResumeModalLauncher } from "@/components/ResumeModalLauncher";
 import { analyticsSocialTarget } from "@/lib/analytics";
 import { skillIconUrl, skillInitials } from "@/lib/skill-icons";
 import {
@@ -11,9 +12,14 @@ import type { PortfolioSnapshot, Project, SectionConfig } from "@/lib/portfolio"
 type Props = {
   snapshot: PortfolioSnapshot;
   compact?: boolean;
+  publicResumeUrl?: string;
 };
 
-export function PortfolioRenderer({ snapshot, compact = false }: Props) {
+export function PortfolioRenderer({
+  snapshot,
+  compact = false,
+  publicResumeUrl,
+}: Props) {
   const { config } = snapshot;
 
   return (
@@ -35,7 +41,12 @@ export function PortfolioRenderer({ snapshot, compact = false }: Props) {
               sectionHasContent(section, snapshot.data, snapshot.meta?.resume)
           )
           .map((section) => (
-            <PortfolioSection key={section.id} section={section} snapshot={snapshot} />
+            <PortfolioSection
+              key={section.id}
+              section={section}
+              snapshot={snapshot}
+              publicResumeUrl={publicResumeUrl}
+            />
           ))}
       </div>
     </main>
@@ -46,13 +57,22 @@ export function PortfolioRenderer({ snapshot, compact = false }: Props) {
 function PortfolioSection({
   section,
   snapshot,
+  publicResumeUrl,
 }: {
   section: SectionConfig;
   snapshot: PortfolioSnapshot;
+  publicResumeUrl?: string;
 }) {
   switch (sectionType(section)) {
     case "hero":
-      return <Hero snapshot={snapshot} variant={section.variant} title={section.title} />;
+      return (
+        <Hero
+          snapshot={snapshot}
+          variant={section.variant}
+          title={section.title}
+          publicResumeUrl={publicResumeUrl}
+        />
+      );
     case "about":
       return <About snapshot={snapshot} variant={section.variant} title={section.title} />;
     case "experience":
@@ -62,7 +82,14 @@ function PortfolioSection({
     case "skills":
       return <Skills snapshot={snapshot} variant={section.variant} title={section.title} />;
     case "resume":
-      return <Resume snapshot={snapshot} variant={section.variant} title={section.title} />;
+      return (
+        <Resume
+          snapshot={snapshot}
+          variant={section.variant}
+          title={section.title}
+          publicResumeUrl={publicResumeUrl}
+        />
+      );
     case "contact":
       return <Contact snapshot={snapshot} variant={section.variant} title={section.title} />;
     case "custom":
@@ -74,10 +101,12 @@ function Hero({
   snapshot,
   variant,
   title,
+  publicResumeUrl,
 }: {
   snapshot: PortfolioSnapshot;
   variant: string;
   title?: string;
+  publicResumeUrl?: string;
 }) {
   const { profile } = snapshot.data;
   const hasImage = Boolean(safeCloudinaryUrl(profile.heroImageUrl));
@@ -95,6 +124,7 @@ function Hero({
           <p className="terminal-role">{display(profile.role, "Your role")}</p>
           <p><span className="terminal-prompt">$</span> cat mission.txt</p>
           <p className="terminal-tagline">{display(profile.tagline, "Tell people what you build and why it matters.")}</p>
+          <HeroActions snapshot={snapshot} publicResumeUrl={publicResumeUrl} />
         </div>
       </section>
     );
@@ -109,7 +139,7 @@ function Hero({
           <p className="eyebrow">{heroLabel(title, profile.role)}</p>
           <h1>{display(profile.name, "Your name")}</h1>
           <p className="hero-copy">{display(profile.tagline, "A concise statement about the work you want to be known for.")}</p>
-          <Socials snapshot={snapshot} />
+          <HeroActions snapshot={snapshot} publicResumeUrl={publicResumeUrl} />
           <div className="hero-media-meta">
             <span>{display(profile.location, "Your location")}</span>
             <span>{display(profile.availability, "Open to opportunities")}</span>
@@ -126,7 +156,7 @@ function Hero({
           <p className="eyebrow">{heroLabel(title, profile.role)}</p>
           <h1>{display(profile.name, "Your name")}</h1>
           <p className="hero-copy">{display(profile.tagline, "A concise statement about the work you want to be known for.")}</p>
-          <Socials snapshot={snapshot} />
+          <HeroActions snapshot={snapshot} publicResumeUrl={publicResumeUrl} />
           <div className="hero-photo-meta">
             <span>{display(profile.location, "Your location")}</span>
             <span>{display(profile.availability, "Open to opportunities")}</span>
@@ -156,7 +186,7 @@ function Hero({
           <p>{display(profile.tagline, "A concise statement about your work.")}</p>
           <div>
             <span>{display(profile.location, "Your location")}</span>
-            <Socials snapshot={snapshot} />
+            <HeroActions snapshot={snapshot} publicResumeUrl={publicResumeUrl} />
           </div>
         </div>
       </section>
@@ -171,7 +201,7 @@ function Hero({
           <p className="eyebrow">{heroLabel(title, profile.role)}</p>
           <h1>{display(profile.name, "Your name")}</h1>
           <p className="hero-copy">{display(profile.tagline, "A concise statement about your work.")}</p>
-          <Socials snapshot={snapshot} />
+          <HeroActions snapshot={snapshot} publicResumeUrl={publicResumeUrl} />
           <div className="spotlight-meta">
             <span>{display(profile.location, "Your location")}</span>
             <span>{display(profile.availability, "Open to opportunities")}</span>
@@ -187,7 +217,7 @@ function Hero({
         <p className="eyebrow">{heroLabel(title, profile.role)}</p>
         <h1>{display(profile.name, "Your name")}</h1>
         <p className="hero-copy">{display(profile.tagline, "A concise statement about your work.")}</p>
-        <Socials snapshot={snapshot} />
+        <HeroActions snapshot={snapshot} publicResumeUrl={publicResumeUrl} />
       </section>
     );
   }
@@ -200,7 +230,7 @@ function Hero({
         </p>
         <h1>{display(profile.name, "Your name")}</h1>
         <p className="hero-copy">{display(profile.tagline, "A concise statement about your work.")}</p>
-        <Socials snapshot={snapshot} />
+        <HeroActions snapshot={snapshot} publicResumeUrl={publicResumeUrl} />
       </div>
       <aside className="hero-card">
         <span className="status-dot" />
@@ -221,6 +251,31 @@ function Hero({
         </div>
       </aside>
     </section>
+  );
+}
+
+
+function HeroActions({
+  snapshot,
+  publicResumeUrl,
+}: {
+  snapshot: PortfolioSnapshot;
+  publicResumeUrl?: string;
+}) {
+  const resume = snapshot.meta?.resume;
+  const resumeUrl = safeResumeUrl(publicResumeUrl || resume?.url);
+  const showResume = Boolean(resume?.showInHero && resume?.url && resumeUrl);
+
+  return (
+    <div className="hero-actions">
+      <Socials snapshot={snapshot} />
+      {showResume && resumeUrl ? (
+        <ResumeModalLauncher
+          url={resumeUrl}
+          fileName={resume?.fileName || "Resume.pdf"}
+        />
+      ) : null}
+    </div>
   );
 }
 
@@ -614,13 +669,15 @@ function Resume({
   snapshot,
   variant,
   title,
+  publicResumeUrl,
 }: {
   snapshot: PortfolioSnapshot;
   variant: string;
   title?: string;
+  publicResumeUrl?: string;
 }) {
   const resume = snapshot.meta?.resume;
-  const url = safeCloudinaryUrl(resume?.url);
+  const url = safeResumeUrl(publicResumeUrl || resume?.url);
   if (!resume || !url) return null;
 
   const fileName = resume.fileName.trim() || "Resume.pdf";
@@ -792,6 +849,120 @@ function CustomSectionBlock({
     );
   }
 
+  if (section.variant === "grid") {
+    return (
+      <section className="p-section custom-section custom-v-grid">
+        <SectionHeading index="+" title={title} />
+        <div className="custom-grid">
+          {items.map((item) => (
+            <article className="custom-grid-item" key={item.id}>
+              {item.meta ? <span className="custom-meta">{item.meta}</span> : null}
+              {item.heading ? <h3>{item.heading}</h3> : null}
+              {item.subheading ? <h4>{item.subheading}</h4> : null}
+              {item.description ? <p>{item.description}</p> : null}
+              <CustomItemLink item={item} />
+            </article>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (section.variant === "compact") {
+    return (
+      <section className="p-section custom-section custom-v-compact">
+        <SectionHeading index="+" title={title} />
+        <div className="custom-compact">
+          {items.map((item) => (
+            <article className="custom-compact-row" key={item.id}>
+              <span>{item.meta}</span>
+              <div>
+                {item.heading ? <h3>{item.heading}</h3> : null}
+                {item.subheading ? <h4>{item.subheading}</h4> : null}
+              </div>
+              {item.description ? <p>{item.description}</p> : null}
+              <CustomItemLink item={item} />
+            </article>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (section.variant === "split") {
+    return (
+      <section className="p-section custom-section custom-v-split">
+        <SectionHeading index="+" title={title} />
+        <div className="custom-split">
+          {items.map((item, index) => (
+            <article className="custom-split-item" key={item.id}>
+              <div className="custom-split-meta">
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                {item.meta ? <strong>{item.meta}</strong> : null}
+              </div>
+              <div className="custom-split-copy">
+                {item.heading ? <h3>{item.heading}</h3> : null}
+                {item.subheading ? <h4>{item.subheading}</h4> : null}
+                {item.description ? <p>{item.description}</p> : null}
+                <CustomItemLink item={item} />
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (section.variant === "spotlight") {
+    const [featured, ...rest] = items;
+    return (
+      <section className="p-section custom-section custom-v-spotlight">
+        <SectionHeading index="+" title={title} />
+        <article className="custom-spotlight-feature">
+          {featured.meta ? <span className="custom-meta">{featured.meta}</span> : null}
+          {featured.heading ? <h3>{featured.heading}</h3> : null}
+          {featured.subheading ? <h4>{featured.subheading}</h4> : null}
+          {featured.description ? <p>{featured.description}</p> : null}
+          <CustomItemLink item={featured} />
+        </article>
+        {rest.length ? (
+          <div className="custom-spotlight-list">
+            {rest.map((item) => (
+              <article key={item.id}>
+                <div>
+                  {item.heading ? <h3>{item.heading}</h3> : null}
+                  {item.subheading ? <h4>{item.subheading}</h4> : null}
+                </div>
+                {item.meta ? <span>{item.meta}</span> : null}
+                <CustomItemLink item={item} />
+              </article>
+            ))}
+          </div>
+        ) : null}
+      </section>
+    );
+  }
+
+  if (section.variant === "badges") {
+    return (
+      <section className="p-section custom-section custom-v-badges">
+        <SectionHeading index="+" title={title} />
+        <div className="custom-badges">
+          {items.map((item) => (
+            <article className="custom-badge" key={item.id}>
+              <div>
+                {item.heading ? <strong>{item.heading}</strong> : null}
+                {item.subheading ? <span>{item.subheading}</span> : null}
+              </div>
+              {item.meta ? <small>{item.meta}</small> : null}
+              <CustomItemLink item={item} />
+            </article>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="p-section custom-section custom-v-list">
       <SectionHeading index="+" title={title} />
@@ -856,6 +1027,12 @@ function heroLabel(title: string | undefined, role: string) {
   const cleanTitle = sectionDisplayTitle("hero", title);
   const cleanRole = display(role, "Your role");
   return `${cleanTitle} / ${cleanRole}`;
+}
+
+function safeResumeUrl(value?: string) {
+  if (!value) return null;
+  if (value.startsWith("/api/public-resume/")) return value;
+  return safeCloudinaryUrl(value);
 }
 
 function safeCloudinaryUrl(value?: string) {
