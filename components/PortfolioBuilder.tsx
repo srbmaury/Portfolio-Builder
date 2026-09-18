@@ -1332,6 +1332,7 @@ function CreateItemDialog({
   onCreateLink: (input: { label: string; url: string }) => void;
   onCreateVariant: (input: { name: string; targetRole: string }) => void;
 }) {
+  const [error, setError] = useState("");
   const [values, setValues] = useState<Record<string, string>>(() => {
     if (kind === "experience") {
       return { company: "", role: "", period: "", summary: "" };
@@ -1350,11 +1351,17 @@ function CreateItemDialog({
       if (event.key === "Escape") onClose();
     }
 
+    document.body.classList.add("dialog-open");
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.classList.remove("dialog-open");
+      window.removeEventListener("keydown", onKeyDown);
+    };
   }, [onClose]);
 
   function update(key: string, value: string) {
+    setError("");
     setValues((current) => ({ ...current, [key]: value }));
   }
 
@@ -1362,40 +1369,64 @@ function CreateItemDialog({
     event.preventDefault();
 
     if (kind === "experience") {
-      onCreateExperience({
-        company: values.company.trim(),
-        role: values.role.trim(),
-        period: values.period.trim(),
-        summary: values.summary.trim(),
-      });
+      const company = values.company.trim();
+      const role = values.role.trim();
+      const period = values.period.trim();
+      const summary = values.summary.trim();
+
+      if (!company || !role || !period || !summary) {
+        setError("Complete all experience fields before adding it.");
+        return;
+      }
+
+      onCreateExperience({ company, role, period, summary });
       return;
     }
 
     if (kind === "project") {
+      const title = values.title.trim();
+      const description = values.description.trim();
+      const stack = values.stack
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+
+      if (!title || !description || stack.length === 0) {
+        setError("Add a title, description, and at least one technology.");
+        return;
+      }
+
       onCreateProject({
-        title: values.title.trim(),
-        description: values.description.trim(),
-        stack: values.stack
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean),
+        title,
+        description,
+        stack,
         url: values.url.trim() || undefined,
       });
       return;
     }
 
     if (kind === "link") {
-      onCreateLink({
-        label: values.label.trim(),
-        url: values.url.trim(),
-      });
+      const label = values.label.trim();
+      const url = values.url.trim();
+
+      if (!label || !url) {
+        setError("Add both a label and URL.");
+        return;
+      }
+
+      onCreateLink({ label, url });
       return;
     }
 
-    onCreateVariant({
-      name: values.name.trim(),
-      targetRole: values.targetRole.trim(),
-    });
+    const name = values.name.trim();
+    const targetRole = values.targetRole.trim();
+
+    if (!name || !targetRole) {
+      setError("Add both a portfolio name and target role.");
+      return;
+    }
+
+    onCreateVariant({ name, targetRole });
   }
 
   const title =
@@ -1406,6 +1437,15 @@ function CreateItemDialog({
         : kind === "link"
           ? "Add link"
           : "Create portfolio variant";
+
+  const submitLabel =
+    kind === "experience"
+      ? "Add experience"
+      : kind === "project"
+        ? "Add project"
+        : kind === "link"
+          ? "Add link"
+          : "Create portfolio";
 
   return (
     <div
@@ -1469,12 +1509,18 @@ function CreateItemDialog({
           )}
         </div>
 
+        {error && (
+          <p className="create-dialog-error" role="alert">
+            {error}
+          </p>
+        )}
+
         <div className="create-dialog-actions">
           <button type="button" className="ghost-button" onClick={onClose}>
             Cancel
           </button>
           <button className="primary-button" type="submit">
-            {kind === "variant" ? "Create portfolio" : "Add"}
+            {submitLabel}
           </button>
         </div>
       </form>
