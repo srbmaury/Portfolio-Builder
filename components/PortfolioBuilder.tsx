@@ -5,40 +5,54 @@ import { PortfolioRenderer } from "@/components/PortfolioRenderer";
 import {
   builderStateFromSnapshot,
   cloneConfig,
+  cloneContentConfig,
+  createEntityId,
   defaultConfig,
   encodeSnapshot,
+  fullContentConfig,
+  normalizeBuilderState,
   sampleBuilderState,
   slugify,
   snapshotForVariant,
   templateCatalog,
   type BuilderState,
+  type Experience,
   type PortfolioConfig,
   type PortfolioData,
+  type Project,
   type SectionType,
   type ThemeName,
 } from "@/lib/portfolio";
 
-const STORAGE_KEY = "portfolio-builder:v2";
+const STORAGE_KEY = "portfolio-builder:v3";
+const V2_STORAGE_KEY = "portfolio-builder:v2";
 const LEGACY_STORAGE_KEY = "portfolio-builder:v1";
 
 type PreviewMode = "desktop" | "tablet" | "mobile";
 
 export function PortfolioBuilder() {
   const [state, setState] = useState<BuilderState>(sampleBuilderState);
-  const [tab, setTab] = useState<"content" | "design">("content");
+  const [tab, setTab] = useState<"content" | "targeting" | "design">("content");
   const [previewMode, setPreviewMode] = useState<PreviewMode>("desktop");
   const [hydrated, setHydrated] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
 
   useEffect(() => {
     const saved = window.localStorage.getItem(STORAGE_KEY);
+    const v2 = window.localStorage.getItem(V2_STORAGE_KEY);
     const legacy = window.localStorage.getItem(LEGACY_STORAGE_KEY);
 
     if (saved) {
       try {
-        setState(JSON.parse(saved) as BuilderState);
+        setState(normalizeBuilderState(JSON.parse(saved) as BuilderState));
       } catch {
         window.localStorage.removeItem(STORAGE_KEY);
+      }
+    } else if (v2) {
+      try {
+        setState(normalizeBuilderState(JSON.parse(v2) as BuilderState));
+      } catch {
+        window.localStorage.removeItem(V2_STORAGE_KEY);
       }
     } else if (legacy) {
       try {
@@ -64,6 +78,39 @@ export function PortfolioBuilder() {
   const snapshot = useMemo(() => snapshotForVariant(state), [state]);
   const visibleSections = snapshot.config.sections.filter((section) => section.visible).length;
 
+  const targetedExperience = useMemo(() => {
+    if (!activeVariant) return state.data.experience;
+    const selected = new Set(activeVariant.content.experienceIds);
+    const byId = new Map(state.data.experience.map((item) => [item.id, item]));
+    return [
+      ...activeVariant.content.experienceIds
+        .map((id) => byId.get(id))
+        .filter((item): item is Experience => Boolean(item)),
+      ...state.data.experience.filter((item) => !selected.has(item.id)),
+    ];
+  }, [activeVariant, state.data.experience]);
+
+  const targetedProjects = useMemo(() => {
+    if (!activeVariant) return state.data.projects;
+    const selected = new Set(activeVariant.content.projectIds);
+    const byId = new Map(state.data.projects.map((item) => [item.id, item]));
+    return [
+      ...activeVariant.content.projectIds
+        .map((id) => byId.get(id))
+        .filter((item): item is Project => Boolean(item)),
+      ...state.data.projects.filter((item) => !selected.has(item.id)),
+    ];
+  }, [activeVariant, state.data.projects]);
+
+  const targetedSkills = useMemo(() => {
+    if (!activeVariant) return state.data.skills;
+    const selected = new Set(activeVariant.content.skills);
+    return [
+      ...activeVariant.content.skills.filter((skill) => state.data.skills.includes(skill)),
+      ...state.data.skills.filter((skill) => !selected.has(skill)),
+    ];
+  }, [activeVariant, state.data.skills]);
+
   function updateData(updater: (data: PortfolioData) => PortfolioData) {
     setState((current) => ({ ...current, data: updater(current.data) }));
   }
@@ -77,6 +124,69 @@ export function PortfolioBuilder() {
           : variant
       ),
     }));
+  }
+
+  function updateActiveContent(
+    field: "experienceIds" | "projectIds" | "skills",
+    updater: (items: string[]) => string[]
+  ) {
+    setState((current) => ({
+      ...current,
+      variants: current.variants.map((variant) =>
+        variant.id === current.activeVariantId
+          ? {
+              ...variant,
+              content: {
+                ...variant.content,
+                [field]: updater(variant.content[field]),
+              },
+            }
+          : variant
+      ),
+    }));
+  }
+
+  function toggleTarget(
+    field: "experienceIds" | "projectIds" | "skills",
+    value: string
+  ) {
+    updateActiveContent(field, (items) =>
+      items.includes(value)
+        ? items.filter((item) => item !== value)
+        : [...items, value]
+    );
+  }
+
+  function moveTarget(
+    field: "experienceIds" | "projectIds" | "skills",
+    value: string,
+    direction: -1 | 1
+  ) {
+    updateActiveContent(field, (items) => {
+      const index = items.indexOf(value);
+      if (index < 0) return items;
+      const nextIndex = index + direction;
+      if (nextIndex < 0 || nextIndex >= items.length) return items;
+      const next = [...items];
+      [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
+      return next;
+    });
+  }
+
+  function selectAllTargets(
+    field: "experienceIds" | "projectIds" | "skills"
+  ) {
+    const all =
+      field === "experienceIds"
+        ? state.data.experience.map((item) => item.id)
+        : field === "projectIds"
+          ? state.data.projects.map((item) => item.id)
+          : state.data.skills;
+    updateActiveContent(field, () => [...all]);
+  }
+
+  function clearTargets(field: "experienceIds" | "projectIds" | "skills") {
+    updateActiveContent(field, () => []);
   }
 
   function updateProfile(
@@ -150,24 +260,54 @@ export function PortfolioBuilder() {
   }
 
   function addExperience() {
-    updateData((data) => ({
-      ...data,
-      experience: [
-        ...data.experience,
-        {
-          company: "Company",
-          role: "Role",
-          period: "2026 — Present",
-          summary: "Describe what you owned, what changed, and the outcome.",
-        },
-      ],
+    const id = createEntityId("experience");
+    setState((current) => ({
+      ...current,
+      data: {
+        ...current.data,
+        experience: [
+          ...current.data.experience,
+          {
+            id,
+            company: "Company",
+            role: "Role",
+            period: "2026 — Present",
+            summary: "Describe what you owned, what changed, and the outcome.",
+          },
+        ],
+      },
+      variants: current.variants.map((variant) =>
+        variant.id === current.activeVariantId
+          ? {
+              ...variant,
+              content: {
+                ...variant.content,
+                experienceIds: [...variant.content.experienceIds, id],
+              },
+            }
+          : variant
+      ),
     }));
   }
 
   function removeExperience(index: number) {
-    updateData((data) => ({
-      ...data,
-      experience: data.experience.filter((_, itemIndex) => itemIndex !== index),
+    const id = state.data.experience[index]?.id;
+    if (!id) return;
+    setState((current) => ({
+      ...current,
+      data: {
+        ...current.data,
+        experience: current.data.experience.filter((item) => item.id !== id),
+      },
+      variants: current.variants.map((variant) => ({
+        ...variant,
+        content: {
+          ...variant.content,
+          experienceIds: variant.content.experienceIds.filter(
+            (experienceId) => experienceId !== id
+          ),
+        },
+      })),
     }));
   }
 
@@ -199,34 +339,87 @@ export function PortfolioBuilder() {
   }
 
   function addProject() {
-    updateData((data) => ({
-      ...data,
-      projects: [
-        ...data.projects,
-        {
-          title: "New project",
-          description: "Describe the problem, what you built, and the outcome.",
-          stack: ["React", "API"],
-          url: "",
-        },
-      ],
+    const id = createEntityId("project");
+    setState((current) => ({
+      ...current,
+      data: {
+        ...current.data,
+        projects: [
+          ...current.data.projects,
+          {
+            id,
+            title: "New project",
+            description: "Describe the problem, what you built, and the outcome.",
+            stack: ["React", "API"],
+            url: "",
+          },
+        ],
+      },
+      variants: current.variants.map((variant) =>
+        variant.id === current.activeVariantId
+          ? {
+              ...variant,
+              content: {
+                ...variant.content,
+                projectIds: [...variant.content.projectIds, id],
+              },
+            }
+          : variant
+      ),
     }));
   }
 
   function removeProject(index: number) {
-    updateData((data) => ({
-      ...data,
-      projects: data.projects.filter((_, projectIndex) => projectIndex !== index),
+    const id = state.data.projects[index]?.id;
+    if (!id) return;
+    setState((current) => ({
+      ...current,
+      data: {
+        ...current.data,
+        projects: current.data.projects.filter((item) => item.id !== id),
+      },
+      variants: current.variants.map((variant) => ({
+        ...variant,
+        content: {
+          ...variant.content,
+          projectIds: variant.content.projectIds.filter(
+            (projectId) => projectId !== id
+          ),
+        },
+      })),
     }));
   }
 
   function updateSkills(value: string) {
-    const skills = value
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
+    const skills = Array.from(
+      new Set(
+        value
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+      )
+    );
 
-    updateData((data) => ({ ...data, skills }));
+    setState((current) => {
+      const previous = new Set(current.data.skills);
+      const next = new Set(skills);
+      const added = skills.filter((skill) => !previous.has(skill));
+
+      return {
+        ...current,
+        data: { ...current.data, skills },
+        variants: current.variants.map((variant) => ({
+          ...variant,
+          content: {
+            ...variant.content,
+            skills: [
+              ...variant.content.skills.filter((skill) => next.has(skill)),
+              ...(variant.id === current.activeVariantId ? added : []),
+            ],
+          },
+        })),
+      };
+    });
   }
 
   function updateSocial(index: number, field: "label" | "url", value: string) {
@@ -276,6 +469,9 @@ export function PortfolioBuilder() {
           name: `Portfolio ${number}`,
           targetRole: current.data.profile.role,
           config: cloneConfig(currentConfig),
+          content: cloneContentConfig(
+            activeVariant?.content ?? fullContentConfig(current.data)
+          ),
         },
       ],
     }));
@@ -297,6 +493,7 @@ export function PortfolioBuilder() {
           name: `${activeVariant.name} Copy`,
           targetRole: activeVariant.targetRole,
           config: cloneConfig(activeVariant.config),
+          content: cloneContentConfig(activeVariant.content),
         },
       ],
     }));
@@ -353,6 +550,7 @@ export function PortfolioBuilder() {
     setState(sampleBuilderState);
     setShareUrl("");
     window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(V2_STORAGE_KEY);
     window.localStorage.removeItem(LEGACY_STORAGE_KEY);
   }
 
@@ -380,12 +578,18 @@ export function PortfolioBuilder() {
 
       <div className="builder-grid">
         <aside className="builder-panel">
-          <div className="panel-tabs">
+          <div className="panel-tabs panel-tabs-three">
             <button
               className={tab === "content" ? "active" : ""}
               onClick={() => setTab("content")}
             >
               Content
+            </button>
+            <button
+              className={tab === "targeting" ? "active" : ""}
+              onClick={() => setTab("targeting")}
+            >
+              Targeting
             </button>
             <button
               className={tab === "design" ? "active" : ""}
@@ -611,6 +815,112 @@ export function PortfolioBuilder() {
                 ))}
               </EditorSection>
             </div>
+          ) : tab === "targeting" ? (
+            <div className="panel-body">
+              <div className="panel-intro">
+                <p className="panel-kicker">Role targeting</p>
+                <h2>Show the strongest evidence.</h2>
+                <p>
+                  Choose exactly what {activeVariant?.name || "this portfolio"} shows.
+                  Selected items can be reordered independently from the shared profile.
+                </p>
+              </div>
+
+              <TargetingSection
+                title="Experience"
+                selectedCount={activeVariant?.content.experienceIds.length || 0}
+                totalCount={state.data.experience.length}
+                onSelectAll={() => selectAllTargets("experienceIds")}
+                onClear={() => clearTargets("experienceIds")}
+              >
+                {targetedExperience.map((item) => {
+                  const selected =
+                    activeVariant?.content.experienceIds.includes(item.id) || false;
+                  const selectedIndex =
+                    activeVariant?.content.experienceIds.indexOf(item.id) ?? -1;
+                  return (
+                    <TargetRow
+                      key={item.id}
+                      label={item.role}
+                      detail={item.company}
+                      selected={selected}
+                      onToggle={() => toggleTarget("experienceIds", item.id)}
+                      onMoveUp={() => moveTarget("experienceIds", item.id, -1)}
+                      onMoveDown={() => moveTarget("experienceIds", item.id, 1)}
+                      canMoveUp={selected && selectedIndex > 0}
+                      canMoveDown={
+                        selected &&
+                        selectedIndex <
+                          (activeVariant?.content.experienceIds.length || 0) - 1
+                      }
+                    />
+                  );
+                })}
+              </TargetingSection>
+
+              <TargetingSection
+                title="Projects"
+                selectedCount={activeVariant?.content.projectIds.length || 0}
+                totalCount={state.data.projects.length}
+                onSelectAll={() => selectAllTargets("projectIds")}
+                onClear={() => clearTargets("projectIds")}
+              >
+                {targetedProjects.map((project) => {
+                  const selected =
+                    activeVariant?.content.projectIds.includes(project.id) || false;
+                  const selectedIndex =
+                    activeVariant?.content.projectIds.indexOf(project.id) ?? -1;
+                  return (
+                    <TargetRow
+                      key={project.id}
+                      label={project.title}
+                      detail={project.stack.join(" · ")}
+                      selected={selected}
+                      onToggle={() => toggleTarget("projectIds", project.id)}
+                      onMoveUp={() => moveTarget("projectIds", project.id, -1)}
+                      onMoveDown={() => moveTarget("projectIds", project.id, 1)}
+                      canMoveUp={selected && selectedIndex > 0}
+                      canMoveDown={
+                        selected &&
+                        selectedIndex <
+                          (activeVariant?.content.projectIds.length || 0) - 1
+                      }
+                    />
+                  );
+                })}
+              </TargetingSection>
+
+              <TargetingSection
+                title="Skills"
+                selectedCount={activeVariant?.content.skills.length || 0}
+                totalCount={state.data.skills.length}
+                onSelectAll={() => selectAllTargets("skills")}
+                onClear={() => clearTargets("skills")}
+              >
+                {targetedSkills.map((skill) => {
+                  const selected =
+                    activeVariant?.content.skills.includes(skill) || false;
+                  const selectedIndex =
+                    activeVariant?.content.skills.indexOf(skill) ?? -1;
+                  return (
+                    <TargetRow
+                      key={skill}
+                      label={skill}
+                      selected={selected}
+                      onToggle={() => toggleTarget("skills", skill)}
+                      onMoveUp={() => moveTarget("skills", skill, -1)}
+                      onMoveDown={() => moveTarget("skills", skill, 1)}
+                      canMoveUp={selected && selectedIndex > 0}
+                      canMoveDown={
+                        selected &&
+                        selectedIndex <
+                          (activeVariant?.content.skills.length || 0) - 1
+                      }
+                    />
+                  );
+                })}
+              </TargetingSection>
+            </div>
           ) : (
             <div className="panel-body">
               <div className="panel-intro design-intro">
@@ -832,6 +1142,84 @@ function EditorCard({
 
       {isOpen && <div className="editor-card-body">{children}</div>}
     </section>
+  );
+}
+
+function TargetingSection({
+  title,
+  selectedCount,
+  totalCount,
+  onSelectAll,
+  onClear,
+  children,
+}: {
+  title: string;
+  selectedCount: number;
+  totalCount: number;
+  onSelectAll: () => void;
+  onClear: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="targeting-section">
+      <div className="targeting-section-head">
+        <div>
+          <strong>{title}</strong>
+          <span>
+            {selectedCount} of {totalCount} shown
+          </span>
+        </div>
+        <div>
+          <button onClick={onSelectAll}>All</button>
+          <button onClick={onClear}>None</button>
+        </div>
+      </div>
+      <div className="targeting-list">{children}</div>
+    </section>
+  );
+}
+
+function TargetRow({
+  label,
+  detail,
+  selected,
+  onToggle,
+  onMoveUp,
+  onMoveDown,
+  canMoveUp,
+  canMoveDown,
+}: {
+  label: string;
+  detail?: string;
+  selected: boolean;
+  onToggle: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+}) {
+  return (
+    <div className={`target-row ${selected ? "selected" : ""}`}>
+      <label>
+        <input type="checkbox" checked={selected} onChange={onToggle} />
+        <span>
+          <strong>{label}</strong>
+          {detail && <small>{detail}</small>}
+        </span>
+      </label>
+      <div className="target-order-actions">
+        <button onClick={onMoveUp} disabled={!canMoveUp} aria-label={`Move ${label} up`}>
+          ↑
+        </button>
+        <button
+          onClick={onMoveDown}
+          disabled={!canMoveDown}
+          aria-label={`Move ${label} down`}
+        >
+          ↓
+        </button>
+      </div>
+    </div>
   );
 }
 

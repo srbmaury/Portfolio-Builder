@@ -28,7 +28,7 @@ export default function Home() {
         </div>
 
         <div className="landing-proof">
-          <span>No code</span><span>One shared profile</span><span>Multiple portfolio variants</span><span>Share instantly</span>
+          <span>No code</span><span>One shared profile</span><span>Role-targeted content</span><span>Share instantly</span>
         </div>
 
         <div className="landing-product-shot">
@@ -51,7 +51,7 @@ export default function Home() {
         <div className="steps-grid">
           <article><span>01</span><h3>Add your story</h3><p>Enter your experience, projects, skills, links, and the kind of work you want.</p></article>
           <article><span>02</span><h3>Pick each section</h3><p>Choose a hero, experience layout, projects grid, skills view, and contact block independently.</p></article>
-          <article><span>03</span><h3>Create variants</h3><p>Reuse the same experience and projects across Backend, AI, freelance, or any role-specific portfolio.</p></article>
+          <article><span>03</span><h3>Target the role</h3><p>Choose and reorder the experience, projects, and skills that matter most for each portfolio variant.</p></article>
           <article><span>04</span><h3>Publish</h3><p>Generate a shareable portfolio URL and send it directly to recruiters, clients, or collaborators.</p></article>
         </div>
       </section>

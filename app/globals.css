@@ -602,3 +602,119 @@ a { color: inherit; text-decoration: none; }
   color: #949ba5;
   font-size: 14px;
 }
+
+
+/* Role-targeting editor */
+.panel-tabs-three {
+  grid-template-columns: repeat(3, 1fr);
+}
+.targeting-section {
+  border: 1px solid #e4e6ea;
+  border-radius: 14px;
+  background: white;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.targeting-section-head {
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #eceef1;
+}
+.targeting-section-head > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+.targeting-section-head strong {
+  font-size: 13px;
+}
+.targeting-section-head span {
+  color: #939aa5;
+  font-size: 10px;
+}
+.targeting-section-head > div:last-child {
+  display: flex;
+  gap: 5px;
+}
+.targeting-section-head button {
+  border: 1px solid #e1e4e8;
+  background: #f8f9fa;
+  color: #606874;
+  border-radius: 7px;
+  padding: 5px 8px;
+  font-size: 9px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.targeting-list {
+  padding: 7px;
+  display: grid;
+  gap: 5px;
+}
+.target-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 8px 9px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: #fafbfc;
+  transition: .15s ease;
+}
+.target-row.selected {
+  border-color: #dcd5ff;
+  background: #f7f5ff;
+}
+.target-row > label {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+.target-row input {
+  width: 15px;
+  height: 15px;
+  accent-color: #7457ff;
+}
+.target-row label > span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.target-row label strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+}
+.target-row label small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #9097a2;
+  font-size: 9px;
+}
+.target-order-actions {
+  display: flex;
+  gap: 3px;
+}
+.target-order-actions button {
+  width: 27px;
+  height: 27px;
+  border: 1px solid #e1e4e8;
+  border-radius: 7px;
+  background: white;
+  color: #666e79;
+  cursor: pointer;
+}
+.target-order-actions button:disabled {
+  opacity: .25;
+  cursor: default;
+}

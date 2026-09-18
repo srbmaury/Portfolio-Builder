@@ -20,6 +20,7 @@ export type Profile = {
 };
 
 export type Experience = {
+  id: string;
   company: string;
   role: string;
   period: string;
@@ -27,6 +28,7 @@ export type Experience = {
 };
 
 export type Project = {
+  id: string;
   title: string;
   description: string;
   stack: string[];
@@ -51,11 +53,18 @@ export type PortfolioConfig = {
   sections: SectionConfig[];
 };
 
+export type VariantContentConfig = {
+  experienceIds: string[];
+  projectIds: string[];
+  skills: string[];
+};
+
 export type PortfolioVariant = {
   id: string;
   name: string;
   targetRole: string;
   config: PortfolioConfig;
+  content: VariantContentConfig;
 };
 
 export type BuilderState = {
@@ -134,6 +143,7 @@ export const sampleData: PortfolioData = {
   },
   experience: [
     {
+      id: "exp-northstar",
       company: "Northstar Labs",
       role: "Software Engineer",
       period: "2024 — Present",
@@ -141,6 +151,7 @@ export const sampleData: PortfolioData = {
         "Built platform capabilities used by multiple product teams, improving reliability, observability, and developer velocity.",
     },
     {
+      id: "exp-atlas",
       company: "Atlas Systems",
       role: "Engineering Intern",
       period: "2023 — 2024",
@@ -150,6 +161,7 @@ export const sampleData: PortfolioData = {
   ],
   projects: [
     {
+      id: "project-search",
       title: "Search Engine",
       description:
         "A personalized product search experience with ranked retrieval, caching, and experimentation support.",
@@ -157,6 +169,7 @@ export const sampleData: PortfolioData = {
       url: "https://github.com",
     },
     {
+      id: "project-agent",
       title: "Developer Agent",
       description:
         "An agentic debugging workflow that combines code, logs, and issue context to accelerate investigation.",
@@ -164,6 +177,7 @@ export const sampleData: PortfolioData = {
       url: "https://github.com",
     },
     {
+      id: "project-visualizer",
       title: "Realtime Visualizer",
       description:
         "A collaborative visualization tool built for large structured documents and realtime editing.",
@@ -190,6 +204,24 @@ export function cloneConfig(config: PortfolioConfig): PortfolioConfig {
   };
 }
 
+export function fullContentConfig(data: PortfolioData): VariantContentConfig {
+  return {
+    experienceIds: data.experience.map((item) => item.id),
+    projectIds: data.projects.map((item) => item.id),
+    skills: [...data.skills],
+  };
+}
+
+export function cloneContentConfig(
+  content: VariantContentConfig
+): VariantContentConfig {
+  return {
+    experienceIds: [...content.experienceIds],
+    projectIds: [...content.projectIds],
+    skills: [...content.skills],
+  };
+}
+
 export const sampleBuilderState: BuilderState = {
   data: sampleData,
   variants: [
@@ -198,6 +230,7 @@ export const sampleBuilderState: BuilderState = {
       name: "General",
       targetRole: "Software Engineer",
       config: cloneConfig(defaultConfig),
+      content: fullContentConfig(sampleData),
     },
   ],
   activeVariantId: "general",
@@ -213,32 +246,164 @@ export const sampleSnapshot: PortfolioSnapshot = {
 };
 
 export function snapshotForVariant(state: BuilderState): PortfolioSnapshot {
+  const normalized = normalizeBuilderState(state);
   const active =
-    state.variants.find((variant) => variant.id === state.activeVariantId) ??
-    state.variants[0];
+    normalized.variants.find(
+      (variant) => variant.id === normalized.activeVariantId
+    ) ?? normalized.variants[0];
+
+  if (!active) {
+    return {
+      data: normalized.data,
+      config: cloneConfig(defaultConfig),
+      meta: {
+        name: "Portfolio",
+        targetRole: normalized.data.profile.role,
+      },
+    };
+  }
+
+  const experienceById = new Map(
+    normalized.data.experience.map((item) => [item.id, item])
+  );
+  const projectById = new Map(
+    normalized.data.projects.map((item) => [item.id, item])
+  );
+  const validSkills = new Set(normalized.data.skills);
 
   return {
-    data: state.data,
-    config: active ? active.config : cloneConfig(defaultConfig),
-    meta: active
-      ? { name: active.name, targetRole: active.targetRole }
-      : { name: "Portfolio", targetRole: state.data.profile.role },
+    data: {
+      ...normalized.data,
+      profile: {
+        ...normalized.data.profile,
+        role: active.targetRole || normalized.data.profile.role,
+      },
+      experience: active.content.experienceIds
+        .map((id) => experienceById.get(id))
+        .filter((item): item is Experience => Boolean(item)),
+      projects: active.content.projectIds
+        .map((id) => projectById.get(id))
+        .filter((item): item is Project => Boolean(item)),
+      skills: active.content.skills.filter((skill) => validSkills.has(skill)),
+    },
+    config: active.config,
+    meta: {
+      name: active.name,
+      targetRole: active.targetRole,
+    },
   };
 }
 
-export function builderStateFromSnapshot(snapshot: PortfolioSnapshot): BuilderState {
+export function builderStateFromSnapshot(
+  snapshot: PortfolioSnapshot
+): BuilderState {
+  const data = normalizeData(snapshot.data);
   const variant: PortfolioVariant = {
     id: "general",
     name: snapshot.meta?.name || "General",
-    targetRole: snapshot.meta?.targetRole || snapshot.data.profile.role,
+    targetRole: snapshot.meta?.targetRole || data.profile.role,
     config: cloneConfig(snapshot.config),
+    content: fullContentConfig(data),
   };
 
   return {
-    data: snapshot.data,
+    data,
     variants: [variant],
     activeVariantId: variant.id,
   };
+}
+
+export function normalizeBuilderState(input: BuilderState): BuilderState {
+  const data = normalizeData(input.data);
+  const fallbackContent = fullContentConfig(data);
+  const validExperience = new Set(data.experience.map((item) => item.id));
+  const validProjects = new Set(data.projects.map((item) => item.id));
+  const validSkills = new Set(data.skills);
+
+  const variants = (input.variants || []).map((variant, index) => {
+    const rawContent = variant.content as VariantContentConfig | undefined;
+
+    const experienceIds = rawContent?.experienceIds?.filter((id) =>
+      validExperience.has(id)
+    );
+    const projectIds = rawContent?.projectIds?.filter((id) =>
+      validProjects.has(id)
+    );
+    const skills = rawContent?.skills?.filter((skill) => validSkills.has(skill));
+
+    return {
+      ...variant,
+      id: variant.id || `portfolio-${index + 1}`,
+      name: variant.name || `Portfolio ${index + 1}`,
+      targetRole: variant.targetRole || data.profile.role,
+      config: variant.config
+        ? cloneConfig(variant.config)
+        : cloneConfig(defaultConfig),
+      content: {
+        experienceIds:
+          rawContent?.experienceIds !== undefined
+            ? experienceIds || []
+            : fallbackContent.experienceIds,
+        projectIds:
+          rawContent?.projectIds !== undefined
+            ? projectIds || []
+            : fallbackContent.projectIds,
+        skills:
+          rawContent?.skills !== undefined ? skills || [] : fallbackContent.skills,
+      },
+    };
+  });
+
+  if (!variants.length) {
+    variants.push({
+      id: "general",
+      name: "General",
+      targetRole: data.profile.role,
+      config: cloneConfig(defaultConfig),
+      content: fallbackContent,
+    });
+  }
+
+  const activeVariantId = variants.some(
+    (variant) => variant.id === input.activeVariantId
+  )
+    ? input.activeVariantId
+    : variants[0].id;
+
+  return {
+    data,
+    variants,
+    activeVariantId,
+  };
+}
+
+export function normalizeData(input: PortfolioData): PortfolioData {
+  return {
+    ...input,
+    experience: (input.experience || []).map((item, index) => ({
+      ...item,
+      id:
+        (item as Experience).id ||
+        stableEntityId("experience", `${item.company}-${item.role}`, index),
+    })),
+    projects: (input.projects || []).map((item, index) => ({
+      ...item,
+      id:
+        (item as Project).id ||
+        stableEntityId("project", item.title, index),
+    })),
+    skills: Array.from(new Set((input.skills || []).filter(Boolean))),
+  };
+}
+
+export function createEntityId(prefix: "experience" | "project") {
+  return `${prefix}-${Date.now().toString(36)}-${Math.random()
+    .toString(36)
+    .slice(2, 8)}`;
+}
+
+function stableEntityId(prefix: string, value: string, index: number) {
+  return `${prefix}-${slugify(value)}-${index + 1}`;
 }
 
 export function slugify(value: string) {
