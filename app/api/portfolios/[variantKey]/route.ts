@@ -39,8 +39,6 @@ export async function DELETE(
     );
   }
 
-  const cloudName = configureCloudinaryServer();
-
   const { data: target, error: targetError } = await supabase
     .from("portfolios")
     .select("variant_key, branding_config, resume_config, published_snapshot")
@@ -67,6 +65,7 @@ export async function DELETE(
   }
 
   try {
+    const cloudName = configureCloudinaryServer();
     const [
       profileResult,
       projectResult,
