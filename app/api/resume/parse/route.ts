@@ -42,14 +42,9 @@ export async function POST(request: Request) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15_000);
 
-    let ast;
-    try {
-      ast = await OfficeParser.parseOffice(value, {
-        abortSignal: controller.signal,
-      });
-    } finally {
-      clearTimeout(timeout);
-    }
+    const ast = await OfficeParser.parseOffice(value, {
+      abortSignal: controller.signal,
+    }).finally(() => clearTimeout(timeout));
 
     const rendered = await ast.to("text", {
       includeImages: false,
