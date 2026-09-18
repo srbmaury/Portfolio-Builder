@@ -4,6 +4,7 @@ export type BuiltInSectionType =
   | "experience"
   | "projects"
   | "skills"
+  | "resume"
   | "contact";
 
 export type SectionType = BuiltInSectionType | "custom";
@@ -101,6 +102,12 @@ export type PortfolioBranding = {
   shareImageUrl: string;
 };
 
+export type PortfolioResume = {
+  url: string;
+  publicId: string;
+  fileName: string;
+};
+
 export type PortfolioVariant = {
   id: string;
   name: string;
@@ -108,6 +115,7 @@ export type PortfolioVariant = {
   config: PortfolioConfig;
   content: VariantContentConfig;
   branding: PortfolioBranding;
+  resume: PortfolioResume;
 };
 
 export type BuilderState = {
@@ -123,6 +131,7 @@ export type PortfolioSnapshot = {
     name: string;
     targetRole: string;
     branding?: PortfolioBranding;
+    resume?: PortfolioResume;
   };
 };
 
@@ -190,6 +199,10 @@ export const templateCatalog: Record<
     { id: "compact", label: "Compact", description: "Dense inline technology list" },
     { id: "spotlight", label: "Spotlight", description: "Oversized highlighted skill names" },
   ],
+  resume: [
+    { id: "embed", label: "Embedded", description: "Show the PDF directly in the portfolio" },
+    { id: "card", label: "Card", description: "Compact resume card with an open action" },
+  ],
   contact: [
     { id: "panel", label: "Panel", description: "Strong final call to action" },
     { id: "minimal", label: "Minimal", description: "Simple contact footer" },
@@ -216,6 +229,18 @@ export const defaultBranding: PortfolioBranding = {
   shareImageUrl: "",
 };
 
+export const defaultResume: PortfolioResume = {
+  url: "",
+  publicId: "",
+  fileName: "",
+};
+
+export function cloneResume(
+  resume: PortfolioResume = defaultResume
+): PortfolioResume {
+  return { ...resume };
+}
+
 export function cloneBranding(
   branding: PortfolioBranding = defaultBranding
 ): PortfolioBranding {
@@ -230,6 +255,7 @@ export const defaultConfig: PortfolioConfig = {
     { id: "experience", type: "experience", variant: "timeline", visible: true, title: "Experience" },
     { id: "projects", type: "projects", variant: "bento", visible: true, title: "Selected work" },
     { id: "skills", type: "skills", variant: "cloud", visible: true, title: "Capabilities" },
+    { id: "resume", type: "resume", variant: "embed", visible: true, title: "Resume" },
     { id: "contact", type: "contact", variant: "panel", visible: true, title: "Contact" },
   ],
 };
@@ -244,6 +270,7 @@ export function sectionType(section?: SectionConfig | null): SectionType {
     "experience",
     "projects",
     "skills",
+    "resume",
     "contact",
   ];
   return builtIns.includes(section.id as BuiltInSectionType)
@@ -378,6 +405,7 @@ export const sampleBuilderState: BuilderState = {
       config: cloneConfig(defaultConfig),
       content: fullContentConfig(sampleData),
       branding: cloneBranding(),
+      resume: cloneResume(),
     },
   ],
   activeVariantId: "general",
@@ -411,6 +439,7 @@ export const emptyBuilderState: BuilderState = {
       config: cloneConfig(defaultConfig),
       content: fullContentConfig(emptyData),
       branding: cloneBranding(),
+      resume: cloneResume(),
     },
   ],
   activeVariantId: "portfolio",
@@ -423,6 +452,7 @@ export const sampleSnapshot: PortfolioSnapshot = {
     name: "General",
     targetRole: "Software Engineer",
     branding: cloneBranding(),
+      resume: cloneResume(),
   },
 };
 
@@ -441,6 +471,7 @@ export function snapshotForVariant(state: BuilderState): PortfolioSnapshot {
         name: "Portfolio",
         targetRole: normalized.data.profile.role,
         branding: cloneBranding(),
+      resume: cloneResume(),
       },
     };
   }
@@ -482,6 +513,7 @@ export function snapshotForVariant(state: BuilderState): PortfolioSnapshot {
       name: active.name,
       targetRole: active.targetRole,
       branding: cloneBranding(active.branding),
+      resume: cloneResume(active.resume),
     },
   };
 }
@@ -535,6 +567,20 @@ export function normalizeBuilderState(input: BuilderState): BuilderState {
             ? variant.branding.shareImageUrl
             : "",
       },
+      resume: {
+        url:
+          typeof variant.resume?.url === "string"
+            ? variant.resume.url
+            : "",
+        publicId:
+          typeof variant.resume?.publicId === "string"
+            ? variant.resume.publicId
+            : "",
+        fileName:
+          typeof variant.resume?.fileName === "string"
+            ? variant.resume.fileName
+            : "",
+      },
       content: {
         experienceIds:
           rawContent?.experienceIds !== undefined
@@ -558,6 +604,7 @@ export function normalizeBuilderState(input: BuilderState): BuilderState {
       config: normalizePortfolioConfig(defaultConfig, data.customSections),
       content: fallbackContent,
       branding: cloneBranding(),
+      resume: cloneResume(),
     });
   }
 
@@ -801,7 +848,8 @@ export function publicUsernameForProfile(
 
 export function sectionHasContent(
   section: SectionConfig | SectionType | undefined,
-  data: PortfolioData
+  data: PortfolioData,
+  resume: PortfolioResume = defaultResume
 ) {
   if (!section) return false;
 
@@ -834,6 +882,8 @@ export function sectionHasContent(
       return data.projects.length > 0;
     case "skills":
       return data.skills.length > 0;
+    case "resume":
+      return Boolean(resume.url.trim());
     case "contact":
       return Boolean(
         profile.email.trim() ||
