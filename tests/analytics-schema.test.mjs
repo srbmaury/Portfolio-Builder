@@ -7,6 +7,11 @@ const migration = await readFile(
   "utf8"
 );
 
+const retireMigration = await readFile(
+  new URL("../supabase/migrations/20260919120000_retire_analytics_admins.sql", import.meta.url),
+  "utf8"
+);
+
 test("analytics schema enables RLS and restricts public inserts to published portfolios", () => {
   assert.match(migration, /create table(?: if not exists)? public\.analytics_events/i);
   assert.match(migration, /enable row level security/i);
@@ -27,8 +32,12 @@ test("analytics schema de-duplicates portfolio views per session", () => {
   );
 });
 
-test("admin allowlist uses auth user ids and cannot be modified by normal users", () => {
+test("the analytics_admins allowlist is retired in favour of ADMIN_EMAIL", () => {
+  // The original migration created the table; a later one drops it. Admin
+  // access is now decided solely by the ADMIN_EMAIL environment variable, so
+  // the schema must not leave a second source of authorisation behind.
   assert.match(migration, /create table(?: if not exists)? public\.analytics_admins/i);
-  assert.match(migration, /references auth\.users\(id\) on delete cascade/i);
-  assert.match(migration, /revoke insert, update, delete on public\.analytics_admins from anon, authenticated/i);
+  assert.match(retireMigration, /drop table if exists public\.analytics_admins/i);
+  assert.match(retireMigration, /revoke all on table public\.analytics_admins from anon, authenticated/i);
+  assert.match(retireMigration, /drop policy if exists[\s\S]*on public\.analytics_admins/i);
 });

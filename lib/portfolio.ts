@@ -994,6 +994,13 @@ export function slugify(value: string) {
   );
 }
 
+/**
+ * Demo personas that have seeded new workspaces in the past. Matching only the
+ * current persona would strand anyone seeded under an earlier one, leaving a
+ * stranger's name in their public URL forever, so retired names stay listed.
+ */
+const RETIRED_DEMO_NAME_SLUGS = ["alex-morgan"];
+
 export function publicUsernameForProfile(
   existingUsername: string | null | undefined,
   profileName: string,
@@ -1001,16 +1008,21 @@ export function publicUsernameForProfile(
 ) {
   const profileSlug = slugify(profileName).slice(0, 30);
   const generated = `${profileSlug}-${userId.slice(0, 6)}`;
-  const demoSlug = slugify(sampleData.profile.name);
-  const demoPrefix = `${demoSlug}-`;
+  const demoSlugs = [
+    slugify(sampleData.profile.name),
+    ...RETIRED_DEMO_NAME_SLUGS,
+  ];
 
-  if (
-    existingUsername &&
-    !(
-      existingUsername.startsWith(demoPrefix) &&
-      profileSlug !== demoSlug
-    )
-  ) {
+  // A demo-generated username is replaced once the profile carries a real
+  // name; a user actually called after the demo persona keeps theirs.
+  const isDemoGenerated =
+    Boolean(existingUsername) &&
+    demoSlugs.some(
+      (demoSlug) =>
+        existingUsername!.startsWith(`${demoSlug}-`) && profileSlug !== demoSlug
+    );
+
+  if (existingUsername && !isDemoGenerated) {
     return existingUsername;
   }
 
