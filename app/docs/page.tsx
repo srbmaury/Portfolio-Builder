@@ -43,6 +43,7 @@ const featureGroups = [
       "Add separate GitHub and Live Demo links to projects and skill-logo layouts with text fallbacks.",
       "Set per-portfolio favicon, social share title, share description, and share image.",
       "Publish to clean public URLs in the form /<username>/<portfolio> using immutable published snapshots.",
+      "Published pages include canonical and social metadata, JSON-LD profile data, robots/sitemap discovery, skip navigation, and reduced-motion support.",
     ],
   },
   {
@@ -59,7 +60,7 @@ const featureGroups = [
     items: [
       "See views, unique visitors, engaged visitors, engagement rate, resume opens, contact clicks, project clicks, social clicks, and custom-link clicks.",
       "Inspect 7, 30, or 90 day windows, daily traffic, referrer-host breakdowns, device breakdowns, action breakdowns, and per-portfolio comparisons.",
-      "Admins can access aggregate product analytics including accounts, published/active portfolios, traffic, signups, top actions, devices, referrers, and portfolios.",
+      "Admins can access aggregate product analytics including creator activation, active/returning creators, publish rate, variants per account, time-to-first-publish, resume-import success, traffic, signups, top actions, devices, referrers, and portfolios.",
       "Analytics failures never block the public portfolio experience.",
     ],
   },
@@ -163,9 +164,11 @@ export default function DocsPage() {
           <article className={styles.callout}>
             <h3>What analytics does not store</h3>
             <p>
-              It does not record IP addresses, names, email addresses, resume text,
-              profile text, project descriptions, custom-section names, or full
-              referrer URLs. Browser Do Not Track is honored.
+              Public visitor analytics do not record IP addresses, names, email addresses,
+              resume text, profile text, project descriptions, custom-section names,
+              or full referrer URLs. Browser Do Not Track is honored. Authenticated
+              creator-product events contain only user ID, event type, optional
+              portfolio variant key, and timestamp.
             </p>
           </article>
         </div>
@@ -220,7 +223,9 @@ export default function DocsPage() {
         </div>
         <p className={styles.note}>
           Raw draft profile, experience, project, and skill rows remain owner-only
-          under Supabase Row Level Security. Public pages read the published snapshot.
+          under Supabase Row Level Security. Workspace saves run inside one
+          security-invoker Postgres transaction, while public pages read the
+          published snapshot.
         </p>
       </section>
 
