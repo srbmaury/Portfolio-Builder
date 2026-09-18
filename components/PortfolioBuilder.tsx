@@ -1898,8 +1898,27 @@ export function PortfolioBuilder({
             createVariant(input);
             setCreateDialog(null);
           }}
+          onCreateCustomSection={(title) => {
+            createCustomSection(title);
+            setCreateDialog(null);
+          }}
         />
       )}
+
+      {resumeImportOpen ? (
+        <ResumeImportDialog
+          onClose={() => setResumeImportOpen(false)}
+          onApply={applyResumeImport}
+        />
+      ) : null}
+
+      {jsonEditorOpen ? (
+        <WorkspaceJsonDialog
+          state={state}
+          onClose={() => setJsonEditorOpen(false)}
+          onApply={applyWorkspaceJson}
+        />
+      ) : null}
     </div>
   );
 }
@@ -1912,6 +1931,7 @@ function CreateItemDialog({
   onCreateProject,
   onCreateLink,
   onCreateVariant,
+  onCreateCustomSection,
 }: {
   kind: Exclude<CreateDialogKind, null>;
   defaultTargetRole: string;
@@ -1932,6 +1952,7 @@ function CreateItemDialog({
   }) => void;
   onCreateLink: (input: { label: string; url: string }) => void;
   onCreateVariant: (input: { name: string; targetRole: string }) => void;
+  onCreateCustomSection: (title: string) => void;
 }) {
   const [error, setError] = useState("");
   const [values, setValues] = useState<Record<string, string>>(() => ({
@@ -1948,6 +1969,7 @@ function CreateItemDialog({
     label: "",
     url: "",
     name: "",
+    sectionTitle: "",
     targetRole: kind === "variant" ? defaultTargetRole : "",
   }));
 
@@ -2025,6 +2047,16 @@ function CreateItemDialog({
       return;
     }
 
+    if (kind === "custom-section") {
+      const sectionTitle = values.sectionTitle.trim();
+      if (!sectionTitle) {
+        setError("Add a section title before creating it.");
+        return;
+      }
+      onCreateCustomSection(sectionTitle);
+      return;
+    }
+
     const name = values.name.trim();
     const targetRole = values.targetRole.trim();
 
@@ -2043,7 +2075,9 @@ function CreateItemDialog({
         ? "Add project"
         : kind === "link"
           ? "Add link"
-          : "Create portfolio variant";
+          : kind === "custom-section"
+            ? "Add custom section"
+            : "Create portfolio variant";
 
   const submitLabel =
     kind === "experience"
@@ -2052,7 +2086,9 @@ function CreateItemDialog({
         ? "Add project"
         : kind === "link"
           ? "Add link"
-          : "Create portfolio";
+          : kind === "custom-section"
+            ? "Add section"
+            : "Create portfolio";
 
   return (
     <div
@@ -2109,6 +2145,23 @@ function CreateItemDialog({
             <>
               <DialogField label="Label" placeholder="GitHub, LinkedIn, Website..." value={values.label} onChange={(value) => update("label", value)} autoFocus required />
               <DialogField label="URL" placeholder="https://..." value={values.url} onChange={(value) => update("url", value)} type="url" required />
+            </>
+          )}
+
+          {kind === "custom-section" && (
+            <>
+              <DialogField
+                label="Section title"
+                placeholder="Education, Certifications, Awards..."
+                value={values.sectionTitle}
+                onChange={(value) => update("sectionTitle", value)}
+                autoFocus
+                required
+              />
+              <p className="dialog-hint">
+                Add flexible items afterward. The section is visible in this
+                portfolio and available, hidden, in your other variants.
+              </p>
             </>
           )}
 
