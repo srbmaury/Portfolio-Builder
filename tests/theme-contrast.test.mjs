@@ -33,12 +33,15 @@ function contrast(a, b) {
 }
 
 function variablesFor(selector) {
-  const escaped = selector.replace(/[.*+?^$()|[\]\\]/g, "\\$&");
-  const match = css.match(new RegExp(`${escaped}\\s*\\{([^}]*)\\}`));
-  assert.ok(match, `Missing theme selector ${selector}`);
+  const start = css.indexOf(`${selector} {`);
+  assert.ok(start >= 0, `Missing theme selector ${selector}`);
 
+  const end = css.indexOf("}", start);
+  assert.ok(end > start, `Missing closing brace for ${selector}`);
+
+  const block = css.slice(start, end);
   const vars = {};
-  for (const [, key, value] of match[1].matchAll(/--([a-z-]+):\s*(#[0-9a-fA-F]{6})/g)) {
+  for (const [, key, value] of block.matchAll(/--([a-z-]+):\s*(#[0-9a-fA-F]{6})/g)) {
     vars[key] = value;
   }
   return vars;
