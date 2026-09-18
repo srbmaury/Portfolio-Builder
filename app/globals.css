@@ -2528,12 +2528,14 @@ body.dialog-open {
     grid-template-columns: 1fr;
   }
 
-  /* Keep narrow-screen hero reading order aligned with the DOM:
-     name/copy first, supporting image second on both tablet and mobile. */
-  .hero-photo-frame,
-  .hero-portrait .hero-photo-frame {
+  /* Preserve each photo hero's intended reading order when it stacks:
+     Image Split / Photo Editorial stay copy-first; Portrait stays image-first. */
+  .hero-photo-frame {
     min-height: 480px;
     order: 0;
+  }
+  .hero-portrait .hero-photo-frame {
+    order: -1;
   }
   .hero-editorial-photo .hero-photo-copy {
     padding-top: 0;
@@ -2933,7 +2935,7 @@ body.dialog-open {
     order: 0;
   }
   .hero-portrait .hero-photo-frame {
-    order: 0;
+    order: -1;
   }
   .hero-editorial-photo .hero-photo-copy {
     padding-top: 0;
