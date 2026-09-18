@@ -537,13 +537,14 @@ export function publicUsernameForProfile(
 ) {
   const profileSlug = slugify(profileName).slice(0, 30);
   const generated = `${profileSlug}-${userId.slice(0, 6)}`;
-  const demoPrefix = "alex-morgan-";
+  const demoSlug = slugify(sampleData.profile.name);
+  const demoPrefix = `${demoSlug}-`;
 
   if (
     existingUsername &&
     !(
       existingUsername.startsWith(demoPrefix) &&
-      profileSlug !== "alex-morgan"
+      profileSlug !== demoSlug
     )
   ) {
     return existingUsername;
