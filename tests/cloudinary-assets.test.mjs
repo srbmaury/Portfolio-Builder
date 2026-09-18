@@ -30,6 +30,20 @@ test("parses owned Cloudinary delivery URLs into destroyable image public IDs", 
   );
 });
 
+
+test("parses raw resume URLs without stripping the PDF extension", () => {
+  assert.deepEqual(
+    parseCloudinaryAssetUrl(
+      "https://res.cloudinary.com/demo/raw/upload/v1789749724/folioblocks/uploads/resume.pdf",
+      "demo"
+    ),
+    {
+      publicId: "folioblocks/uploads/resume.pdf",
+      resourceType: "raw",
+    }
+  );
+});
+
 test("recursively collects only Cloudinary URLs from persisted portfolio data", () => {
   const value = {
     branding: {
