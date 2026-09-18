@@ -38,6 +38,7 @@ export function addCustomSection(
             customSectionId: id,
             variant: "list",
             visible: variant.id === state.activeVariantId,
+            title: cleanTitle,
           },
         ],
       },
@@ -77,6 +78,9 @@ export function updateCustomSectionTitle(
   title: string
 ): BuilderState {
   const state = normalizeBuilderState(input);
+  const previousTitle =
+    state.data.customSections.find((section) => section.id === customSectionId)
+      ?.title || "";
 
   return {
     ...state,
@@ -86,6 +90,18 @@ export function updateCustomSectionTitle(
         section.id === customSectionId ? { ...section, title } : section
       ),
     },
+    variants: state.variants.map((variant) => ({
+      ...variant,
+      config: {
+        ...variant.config,
+        sections: variant.config.sections.map((section) =>
+          section.customSectionId === customSectionId &&
+          (!section.title || section.title === previousTitle)
+            ? { ...section, title }
+            : section
+        ),
+      },
+    })),
   };
 }
 
