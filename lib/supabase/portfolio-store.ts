@@ -176,13 +176,27 @@ export async function saveBuilderState(
     if (error) throw error;
   }
 
-  const { error: portfolioDelete } = await supabase
+  const { data: existingPortfolios, error: existingPortfolioError } = await supabase
     .from("portfolios")
-    .delete()
+    .select("variant_key")
     .eq("user_id", user.id);
-  if (portfolioDelete) throw portfolioDelete;
+  if (existingPortfolioError) throw existingPortfolioError;
 
-  const { error: portfolioInsert } = await supabase.from("portfolios").insert(
+  const activeKeys = new Set(state.variants.map((variant) => variant.id));
+  const staleKeys = (existingPortfolios || [])
+    .map((row) => row.variant_key)
+    .filter((key) => !activeKeys.has(key));
+
+  for (const staleKey of staleKeys) {
+    const { error } = await supabase
+      .from("portfolios")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("variant_key", staleKey);
+    if (error) throw error;
+  }
+
+  const { error: portfolioUpsert } = await supabase.from("portfolios").upsert(
     state.variants.map((variant) => ({
       user_id: user.id,
       variant_key: variant.id,
@@ -192,12 +206,10 @@ export async function saveBuilderState(
       theme: variant.config.theme,
       section_config: variant.config.sections,
       content_config: variant.content,
-      is_published: false,
-      public_path: null,
-      published_snapshot: null,
-    }))
+    })),
+    { onConflict: "user_id,variant_key" }
   );
-  if (portfolioInsert) throw portfolioInsert;
+  if (portfolioUpsert) throw portfolioUpsert;
 
   return { username };
 }
