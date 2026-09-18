@@ -50,14 +50,15 @@ Open:
 
 ## Cloudinary images
 
-Create an **unsigned upload preset** in Cloudinary and set:
+Configure Cloudinary only on the server:
 
 ```env
-NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=
-NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
 ```
 
-Hero and project uploads are sent directly from the browser to Cloudinary. Published portfolio images are restricted to `res.cloudinary.com` URLs.
+End users only choose an image. The browser requests a short-lived signed upload from the app and uploads directly to Cloudinary; the API secret never reaches client code. Published portfolio images are restricted to `res.cloudinary.com` URLs.
 
 ## Publishing
 
