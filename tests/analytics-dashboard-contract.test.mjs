@@ -14,6 +14,10 @@ const manager = await readFile(
   new URL("../components/PortfolioManager.tsx", import.meta.url),
   "utf8"
 );
+const dashboard = await readFile(
+  new URL("../components/AnalyticsDashboard.tsx", import.meta.url),
+  "utf8"
+);
 
 test("creator analytics requires authentication and uses owner-scoped Supabase data", () => {
   assert.match(page, /redirect\("\/login"\)/);
@@ -23,9 +27,8 @@ test("creator analytics requires authentication and uses owner-scoped Supabase d
 });
 
 test("creator analytics supports 7, 30, and 90 day windows", () => {
-  assert.match(page, /7/);
-  assert.match(page, /30/);
-  assert.match(page, /90/);
+  assert.match(dashboard, /\[7, 30, 90\]/);
+  assert.match(page, /normalizeAnalyticsDays/);
 });
 
 test("portfolio manager links users to first-party analytics", () => {
