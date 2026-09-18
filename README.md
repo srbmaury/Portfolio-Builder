@@ -46,7 +46,7 @@ Publishing requires an authenticated account and persists the current portfolio 
 Public URLs use:
 
 ```text
-/u/<username>/<portfolio>
+/<username>/<portfolio>
 ```
 
 The public endpoint reads only the immutable published snapshot. Draft profile, experience, project, and skill rows remain owner-only under RLS.
@@ -86,5 +86,5 @@ Portfolio Variants
      ↓
 Published snapshot
      ↓
-/u/<username>/<portfolio>
+/<username>/<portfolio>
 ```
