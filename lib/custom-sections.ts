@@ -3,7 +3,7 @@ import {
   normalizeBuilderState,
   type BuilderState,
   type CustomSectionItem,
-} from "@/lib/portfolio";
+} from "./portfolio.ts";
 
 export function addCustomSection(
   input: BuilderState,
