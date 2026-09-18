@@ -452,7 +452,7 @@ export const sampleSnapshot: PortfolioSnapshot = {
     name: "General",
     targetRole: "Software Engineer",
     branding: cloneBranding(),
-      resume: cloneResume(),
+    resume: cloneResume(),
   },
 };
 
@@ -471,7 +471,7 @@ export function snapshotForVariant(state: BuilderState): PortfolioSnapshot {
         name: "Portfolio",
         targetRole: normalized.data.profile.role,
         branding: cloneBranding(),
-      resume: cloneResume(),
+        resume: cloneResume(),
       },
     };
   }
