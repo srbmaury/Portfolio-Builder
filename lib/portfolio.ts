@@ -59,6 +59,7 @@ export type SectionConfig = {
   id: SectionType;
   variant: string;
   visible: boolean;
+  title?: string;
 };
 
 export type PortfolioConfig = {
@@ -176,12 +177,12 @@ export const templateCatalog: Record<
 export const defaultConfig: PortfolioConfig = {
   theme: "ink",
   sections: [
-    { id: "hero", variant: "split", visible: true },
-    { id: "about", variant: "editorial", visible: true },
-    { id: "experience", variant: "timeline", visible: true },
-    { id: "projects", variant: "bento", visible: true },
-    { id: "skills", variant: "cloud", visible: true },
-    { id: "contact", variant: "panel", visible: true },
+    { id: "hero", variant: "split", visible: true, title: "Portfolio" },
+    { id: "about", variant: "editorial", visible: true, title: "About" },
+    { id: "experience", variant: "timeline", visible: true, title: "Experience" },
+    { id: "projects", variant: "bento", visible: true, title: "Selected work" },
+    { id: "skills", variant: "cloud", visible: true, title: "Capabilities" },
+    { id: "contact", variant: "panel", visible: true, title: "Contact" },
   ],
 };
 
@@ -324,7 +325,7 @@ export const emptyBuilderState: BuilderState = {
   variants: [
     {
       id: "portfolio",
-      name: "Portfolio",
+      name: "",
       targetRole: "",
       config: cloneConfig(defaultConfig),
       content: fullContentConfig(emptyData),
@@ -412,10 +413,34 @@ export function normalizeBuilderState(input: BuilderState): BuilderState {
     return {
       ...variant,
       id: variant.id || `portfolio-${index + 1}`,
-      name: variant.name || `Portfolio ${index + 1}`,
-      targetRole: variant.targetRole || data.profile.role,
+      name:
+        typeof variant.name === "string"
+          ? variant.name
+          : `Portfolio ${index + 1}`,
+      targetRole:
+        typeof variant.targetRole === "string"
+          ? variant.targetRole
+          : data.profile.role,
       config: variant.config
-        ? cloneConfig(variant.config)
+        ? {
+            theme: variant.config.theme,
+            sections: defaultConfig.sections.map((fallbackSection) => {
+              const saved = variant.config.sections?.find(
+                (section) => section.id === fallbackSection.id
+              );
+
+              return saved
+                ? {
+                    ...fallbackSection,
+                    ...saved,
+                    title:
+                      typeof saved.title === "string"
+                        ? saved.title
+                        : fallbackSection.title,
+                  }
+                : { ...fallbackSection };
+            }),
+          }
         : cloneConfig(defaultConfig),
       content: {
         experienceIds:
