@@ -123,7 +123,10 @@ export default async function PublicPortfolioPage({ params }: Props) {
         }}
       />
       <PortfolioAnalyticsTracker portfolioId={published.id} />
-      <PortfolioRenderer snapshot={published.snapshot} />
+      <PortfolioRenderer
+        snapshot={published.snapshot}
+        publicResumeUrl={`/api/public-resume/${published.id}`}
+      />
     </>
   );
 }
