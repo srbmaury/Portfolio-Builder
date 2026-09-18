@@ -27,6 +27,7 @@ export type AdminAnalyticsData = {
     id: string;
     name: string;
     publicPath: string | null;
+    isPublished: boolean;
     views: number;
     uniqueVisitors: number;
     engagementRate: number;
@@ -190,7 +191,7 @@ export function AdminAnalyticsDashboard({
                       <td>{portfolio.uniqueVisitors}</td>
                       <td>{portfolio.engagementRate}%</td>
                       <td>
-                        {portfolio.publicPath ? (
+                        {portfolio.isPublished && portfolio.publicPath ? (
                           <a
                             href={`/${portfolio.publicPath}`}
                             target="_blank"
