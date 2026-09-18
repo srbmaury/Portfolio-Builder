@@ -135,6 +135,7 @@ export async function loadBuilderState(
             publicId: "",
             fileName: "",
             showInHero: false,
+            hideSectionWhenHeroLink: false,
           },
   }));
 
