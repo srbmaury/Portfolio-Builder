@@ -391,9 +391,14 @@ export function ResumeUploadField({
   variantKey,
   onChange,
 }: {
-  value: { url: string; publicId: string; fileName: string };
+  value: { url: string; publicId: string; fileName: string; showInHero: boolean };
   variantKey: string;
-  onChange: (value: { url: string; publicId: string; fileName: string }) => void;
+  onChange: (value: {
+    url: string;
+    publicId: string;
+    fileName: string;
+    showInHero: boolean;
+  }) => void;
 }) {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
@@ -407,6 +412,7 @@ export function ResumeUploadField({
     try {
       const result = await uploadResumeToCloudinary(file, variantKey);
       onChange({
+        ...value,
         url: result.secure_url,
         publicId: result.public_id,
         fileName: file.name,
@@ -434,7 +440,12 @@ export function ResumeUploadField({
             type="button"
             className="danger-link"
             onClick={() =>
-              onChange({ url: "", publicId: "", fileName: "" })
+              onChange({
+                ...value,
+                url: "",
+                publicId: "",
+                fileName: "",
+              })
             }
           >
             Remove
