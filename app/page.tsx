@@ -20,7 +20,7 @@ export default function Home() {
         <p className="landing-kicker">Portfolio building, without the blank canvas</p>
         <h1>Your story. <em>Your sections.</em> Your site.</h1>
         <p className="landing-subtitle">
-          Start completely blank or from a demo, then mix 65 section layouts, images,
+          Start completely blank or from a demo, then mix 75 section layouts, images,
           role-targeted content, and themes into a portfolio that feels uniquely yours.
         </p>
         <div className="landing-actions">
@@ -29,7 +29,7 @@ export default function Home() {
         </div>
 
         <div className="landing-proof">
-          <span>65 section layouts</span><span>10 themes</span><span>Cloudinary images</span><span>Role-targeted variants</span>
+          <span>75 section layouts</span><span>10 themes</span><span>Cloudinary images</span><span>Role-targeted variants</span>
         </div>
 
         <div className="landing-product-shot">
