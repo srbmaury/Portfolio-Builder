@@ -17,7 +17,16 @@ export function PortfolioRenderer({ snapshot, compact = false }: Props) {
   const { config } = snapshot;
 
   return (
-    <main className={`portfolio theme-${config.theme} ${compact ? "portfolio-compact" : ""}`}>
+    <>
+      {!compact ? (
+        <a className="skip-link" href="#portfolio-main">
+          Skip to portfolio content
+        </a>
+      ) : null}
+      <main
+        id={compact ? undefined : "portfolio-main"}
+        className={`portfolio theme-${config.theme} ${compact ? "portfolio-compact" : ""}`}
+      >
       <div className="portfolio-frame">
         {config.sections
           .filter(
@@ -30,6 +39,7 @@ export function PortfolioRenderer({ snapshot, compact = false }: Props) {
           ))}
       </div>
     </main>
+    </>
   );
 }
 
