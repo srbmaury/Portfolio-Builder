@@ -139,6 +139,7 @@ test("tablet and mobile keep photo hero hierarchy consistent", async ({ page }) 
   const photo = preview.locator(".hero-photo-frame");
 
   await page.getByRole("button", { name: "tablet" }).click();
+  await expect(page.locator(".preview-window.preview-tablet")).toBeVisible();
   await expect(copy).toBeVisible();
   await expect(photo).toBeVisible();
 
@@ -160,6 +161,7 @@ test("tablet and mobile keep photo hero hierarchy consistent", async ({ page }) 
   expect(tabletProjectColumns.trim().split(/\s+/)).toHaveLength(2);
 
   await page.getByRole("button", { name: "mobile" }).click();
+  await expect(page.locator(".preview-window.preview-mobile")).toBeVisible();
 
   const mobileCopy = await copy.boundingBox();
   const mobilePhoto = await photo.boundingBox();
