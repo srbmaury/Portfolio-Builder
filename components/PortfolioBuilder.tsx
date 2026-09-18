@@ -893,7 +893,7 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
                     setShareUrl("");
                   }}
                 >
-                  {variant.name}
+                  {variant.name || "Untitled"}
                 </button>
               ))}
             </div>
@@ -1357,7 +1357,7 @@ export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean 
           <div className="preview-toolbar">
             <div>
               <span>Live preview</span>
-              <strong>{activeVariant?.name}</strong>
+              <strong>{activeVariant?.name || "Untitled"}</strong>
             </div>
 
             <div className="preview-controls">
