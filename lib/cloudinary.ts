@@ -95,7 +95,7 @@ async function uploadToCloudinary(
   formData.append("tags", signed.tags);
 
   const response = await fetch(
-    `https://api.cloudinary.com/v1_1/${signed.cloudName}/${resourceType}/upload`,
+    cloudinaryUploadEndpoint(signed.cloudName, resourceType),
     {
       method: "POST",
       body: formData,
@@ -107,4 +107,12 @@ async function uploadToCloudinary(
   }
 
   return (await response.json()) as CloudinaryUploadResult;
+}
+
+
+export function cloudinaryUploadEndpoint(
+  cloudName: string,
+  resourceType: "image" | "raw"
+) {
+  return `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
 }
