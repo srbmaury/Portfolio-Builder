@@ -171,6 +171,20 @@ export function PortfolioBuilder({
   });
 
   const snapshot = useMemo(() => snapshotForVariant(state), [state]);
+  const builderResumeUrl = useMemo(() => {
+    const resume = activeVariant?.resume;
+    if (!resume?.url) return undefined;
+
+    if (
+      cloudUserId &&
+      resume.url.includes("/image/upload/") &&
+      activeVariant?.id
+    ) {
+      return `/api/resume/${encodeURIComponent(activeVariant.id)}`;
+    }
+
+    return resume.url;
+  }, [activeVariant?.id, activeVariant?.resume, cloudUserId]);
   const visibleSections = snapshot.config.sections.filter(
     (section) =>
       section.visible &&
@@ -1224,7 +1238,11 @@ export function PortfolioBuilder({
           </div>
 
           <div className={`preview-window preview-${previewMode}`}>
-            <PortfolioRenderer snapshot={snapshot} compact />
+            <PortfolioRenderer
+              snapshot={snapshot}
+              compact
+              publicResumeUrl={builderResumeUrl}
+            />
           </div>
         </section>
       </div>
