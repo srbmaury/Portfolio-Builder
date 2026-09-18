@@ -1,6 +1,10 @@
 import Image from "next/image";
 import { skillIconUrl, skillInitials } from "@/lib/skill-icons";
-import { sectionDisplayTitle, sectionHasContent } from "@/lib/portfolio";
+import {
+  sectionDisplayTitle,
+  sectionHasContent,
+  sectionType,
+} from "@/lib/portfolio";
 import type { PortfolioSnapshot, Project, SectionConfig } from "@/lib/portfolio";
 
 type Props = {
@@ -17,7 +21,7 @@ export function PortfolioRenderer({ snapshot, compact = false }: Props) {
         {config.sections
           .filter(
             (section) =>
-              section.visible && sectionHasContent(section.id, snapshot.data)
+              section.visible && sectionHasContent(section, snapshot.data)
           )
           .map((section) => (
             <PortfolioSection key={section.id} section={section} snapshot={snapshot} />
@@ -34,7 +38,7 @@ function PortfolioSection({
   section: SectionConfig;
   snapshot: PortfolioSnapshot;
 }) {
-  switch (section.id) {
+  switch (sectionType(section)) {
     case "hero":
       return <Hero snapshot={snapshot} variant={section.variant} title={section.title} />;
     case "about":
@@ -47,6 +51,8 @@ function PortfolioSection({
       return <Skills snapshot={snapshot} variant={section.variant} title={section.title} />;
     case "contact":
       return <Contact snapshot={snapshot} variant={section.variant} title={section.title} />;
+    case "custom":
+      return <CustomSectionBlock snapshot={snapshot} section={section} />;
   }
 }
 
@@ -589,6 +595,110 @@ function Contact({
         <Socials snapshot={snapshot} />
       </div>
     </footer>
+  );
+}
+
+function CustomSectionBlock({
+  snapshot,
+  section,
+}: {
+  snapshot: PortfolioSnapshot;
+  section: SectionConfig;
+}) {
+  const custom = snapshot.data.customSections.find(
+    (item) => item.id === section.customSectionId
+  );
+  if (!custom) return null;
+
+  const items = custom.items.filter((item) =>
+    [
+      item.heading,
+      item.subheading,
+      item.meta,
+      item.description,
+      item.linkLabel,
+      item.linkUrl,
+    ].some((value) => value.trim())
+  );
+  if (!items.length) return null;
+
+  const title = section.title?.trim() || custom.title || "Custom section";
+
+  if (section.variant === "cards") {
+    return (
+      <section className="p-section custom-section custom-v-cards">
+        <SectionHeading index="+" title={title} />
+        <div className="custom-card-grid">
+          {items.map((item) => (
+            <article className="custom-card" key={item.id}>
+              {item.meta ? <span className="custom-meta">{item.meta}</span> : null}
+              <div>
+                {item.heading ? <h3>{item.heading}</h3> : null}
+                {item.subheading ? <h4>{item.subheading}</h4> : null}
+                {item.description ? <p>{item.description}</p> : null}
+              </div>
+              <CustomItemLink item={item} />
+            </article>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (section.variant === "timeline") {
+    return (
+      <section className="p-section custom-section custom-v-timeline">
+        <SectionHeading index="+" title={title} />
+        <div className="custom-timeline">
+          {items.map((item) => (
+            <article className="custom-timeline-item" key={item.id}>
+              <span className="custom-timeline-dot" aria-hidden="true" />
+              <div className="custom-timeline-meta">{item.meta}</div>
+              <div className="custom-timeline-copy">
+                {item.heading ? <h3>{item.heading}</h3> : null}
+                {item.subheading ? <h4>{item.subheading}</h4> : null}
+                {item.description ? <p>{item.description}</p> : null}
+                <CustomItemLink item={item} />
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="p-section custom-section custom-v-list">
+      <SectionHeading index="+" title={title} />
+      <div className="custom-list">
+        {items.map((item) => (
+          <article className="custom-list-row" key={item.id}>
+            <div className="custom-list-meta">{item.meta}</div>
+            <div className="custom-list-copy">
+              {item.heading ? <h3>{item.heading}</h3> : null}
+              {item.subheading ? <h4>{item.subheading}</h4> : null}
+              {item.description ? <p>{item.description}</p> : null}
+            </div>
+            <CustomItemLink item={item} />
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CustomItemLink({
+  item,
+}: {
+  item: PortfolioSnapshot["data"]["customSections"][number]["items"][number];
+}) {
+  const href = safeExternalUrl(item.linkUrl);
+  if (!href) return null;
+
+  return (
+    <a className="custom-item-link" href={href} target="_blank" rel="noreferrer">
+      {item.linkLabel.trim() || "Open"} ↗
+    </a>
   );
 }
 
