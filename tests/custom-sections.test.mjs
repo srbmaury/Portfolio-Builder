@@ -119,3 +119,22 @@ test("custom sections offer eight distinct presentation templates", () => {
     ]
   );
 });
+
+
+test("normalization preserves every supported custom-section template", () => {
+  for (const variant of templateCatalog.custom.map((item) => item.id)) {
+    let state = addCustomSection(structuredClone(emptyBuilderState), "Credentials");
+    const custom = state.data.customSections[0];
+    const config = state.variants[0].config.sections.find(
+      (section) => section.customSectionId === custom.id
+    );
+    config.variant = variant;
+
+    const normalized = normalizeBuilderState(state);
+    const normalizedConfig = normalized.variants[0].config.sections.find(
+      (section) => section.customSectionId === custom.id
+    );
+
+    assert.equal(normalizedConfig?.variant, variant);
+  }
+});
