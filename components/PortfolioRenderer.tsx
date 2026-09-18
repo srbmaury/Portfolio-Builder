@@ -217,7 +217,7 @@ function About({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: st
   const story = display(profile.about, "Write a short story about your work, strengths, and what you care about.");
 
   return (
-    <section className={`p-section about-layout about-${variant}`}>
+    <section className={`p-section about-layout about-v-${variant}`}>
       <SectionHeading index="01" title="About" />
       <div className="about-layout-grid">
         <div className="about-story">
@@ -249,7 +249,7 @@ function Experience({ snapshot, variant }: { snapshot: PortfolioSnapshot; varian
   const items = snapshot.data.experience;
 
   return (
-    <section className={`p-section experience-layout experience-${variant}`}>
+    <section className={`p-section experience-layout experience-v-${variant}`}>
       <SectionHeading index="02" title="Experience" />
       {items.length ? (
         <div className="experience-layout-list">
@@ -466,7 +466,7 @@ function Skills({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: s
   const logoVariant = ["logos", "logo-grid"].includes(variant);
 
   return (
-    <section className={`p-section skills-layout skills-${variant}`}>
+    <section className={`p-section skills-layout skills-v-${variant}`}>
       <SectionHeading index="04" title="Capabilities" />
       {skills.length ? (
         <div className={`skills-layout-list ${logoVariant ? "with-logos" : ""}`}>
@@ -516,7 +516,7 @@ function Contact({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: 
   }
 
   return (
-    <footer className={`p-section contact-layout contact-${variant}`}>
+    <footer className={`p-section contact-layout contact-v-${variant}`}>
       <div className="contact-copy">
         <p className="eyebrow">Let's build something useful</p>
         <h2>{variant === "minimal" || variant === "compact" ? "Get in touch." : "Open to the next hard problem."}</h2>
