@@ -5,7 +5,15 @@ import { readFile } from "node:fs/promises";
 const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
 
 function parseHex(value) {
-  const hex = value.replace("#", "").trim();
+  const raw = value.replace("#", "").trim();
+  const hex =
+    raw.length === 3
+      ? raw
+          .split("")
+          .map((character) => character + character)
+          .join("")
+      : raw;
+
   return [
     Number.parseInt(hex.slice(0, 2), 16),
     Number.parseInt(hex.slice(2, 4), 16),
@@ -41,7 +49,7 @@ function variablesFor(selector) {
 
   const block = css.slice(start, end);
   const vars = {};
-  for (const [, key, value] of block.matchAll(/--([a-z-]+):\s*(#[0-9a-fA-F]{6})/g)) {
+  for (const [, key, value] of block.matchAll(/--([a-z-]+):\s*(#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?)/g)) {
     vars[key] = value;
   }
   return vars;
