@@ -8,7 +8,7 @@ Users maintain one structured profile, create multiple portfolio variants for di
 
 - One shared structured professional profile
 - Multiple named portfolio variants from the same profile
-- Independent theme and section configuration per variant
+- Independent theme and section configuration per variant\n- Per-variant experience, project, and skill selection + ordering\n- Target role is rendered directly in the portfolio hero
 - Duplicate/delete portfolio variants
 - Editable profile, experience, projects, skills, and social links
 - Project stack and URL editing
