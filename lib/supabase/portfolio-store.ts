@@ -17,6 +17,7 @@ type ProfileRow = {
   email: string;
   location: string;
   availability: string;
+  hero_image_url: string;
   social_links: Array<{ label: string; url: string }>;
 };
 
@@ -67,6 +68,7 @@ export async function loadBuilderState(
       email: profile.email,
       location: profile.location,
       availability: profile.availability,
+      heroImageUrl: profile.hero_image_url || "",
       socials: Array.isArray(profile.social_links) ? profile.social_links : [],
     },
     experience: (experienceResult.data || []).map((row) => ({
@@ -81,7 +83,9 @@ export async function loadBuilderState(
       title: row.title,
       description: row.description,
       stack: row.stack || [],
-      url: row.url || undefined,
+      imageUrl: row.image_url || undefined,
+      githubUrl: row.github_url || undefined,
+      liveUrl: row.live_url || undefined,
     })),
     skills: (skillResult.data || []).map((row) => row.name),
   };
@@ -152,7 +156,9 @@ export async function saveBuilderState(
         title: project.title,
         description: project.description,
         stack: project.stack,
-        url: project.url || null,
+        image_url: project.imageUrl || null,
+        github_url: project.githubUrl || null,
+        live_url: project.liveUrl || null,
         sort_order: index,
       }))
     );
@@ -281,6 +287,7 @@ async function ensureProfile(
     email: state.data.profile.email || user.email || "",
     location: state.data.profile.location,
     availability: state.data.profile.availability,
+    hero_image_url: state.data.profile.heroImageUrl || "",
     social_links: state.data.profile.socials,
   });
 

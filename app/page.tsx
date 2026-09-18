@@ -10,7 +10,7 @@ export default function Home() {
         <div className="landing-nav-links">
           <a href="#how">How it works</a>
           <a href="#why">Why it is different</a>
-          <Link className="nav-cta" href="/builder">Start building</Link>
+          <Link className="nav-cta" href="/builder?fresh=1">Start fresh</Link>
         </div>
       </nav>
 
@@ -19,16 +19,16 @@ export default function Home() {
         <p className="landing-kicker">Portfolio building, without the blank canvas</p>
         <h1>Your story. <em>Your sections.</em> Your site.</h1>
         <p className="landing-subtitle">
-          Keep your professional story structured, mix and match pre-built sections,
-          and publish a polished portfolio in minutes.
+          Start completely blank or from a demo, then mix 60 section designs, images,
+          role-targeted content, and themes into a portfolio that feels uniquely yours.
         </p>
         <div className="landing-actions">
-          <Link className="landing-primary" href="/builder">Build my portfolio →</Link>
-          <a className="landing-secondary" href="#how">See how it works</a>
+          <Link className="landing-primary" href="/builder?fresh=1">Start fresh →</Link>
+          <Link className="landing-secondary" href="/builder">Explore with demo</Link>
         </div>
 
         <div className="landing-proof">
-          <span>No code</span><span>One shared profile</span><span>Role-targeted content</span><span>Share instantly</span>
+          <span>60 section designs</span><span>10 themes</span><span>Cloudinary images</span><span>Role-targeted variants</span>
         </div>
 
         <div className="landing-product-shot">
@@ -50,7 +50,7 @@ export default function Home() {
         </div>
         <div className="steps-grid">
           <article><span>01</span><h3>Add your story</h3><p>Enter your experience, projects, skills, links, and the kind of work you want.</p></article>
-          <article><span>02</span><h3>Pick each section</h3><p>Choose a hero, experience layout, projects grid, skills view, and contact block independently.</p></article>
+          <article><span>02</span><h3>Pick each section</h3><p>Choose from 10 real designs for every Hero, About, Experience, Projects, Skills, and Contact section.</p></article>
           <article><span>03</span><h3>Target the role</h3><p>Choose and reorder the experience, projects, and skills that matter most for each portfolio variant.</p></article>
           <article><span>04</span><h3>Publish</h3><p>Generate a shareable portfolio URL and send it directly to recruiters, clients, or collaborators.</p></article>
         </div>
@@ -64,7 +64,7 @@ export default function Home() {
             Traditional builders lock your information into a page. FolioBlocks stores your professional profile separately,
             then lets any compatible section render it. One shared profile can power several role-specific portfolios, each with its own design.
           </p>
-          <Link className="landing-primary" href="/builder">Try the builder →</Link>
+          <Link className="landing-primary" href="/builder?fresh=1">Start from scratch →</Link>
         </div>
         <div className="architecture-card">
           <div className="arch-node arch-data"><strong>Your profile</strong><span>Experience · Projects · Skills</span></div>

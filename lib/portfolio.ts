@@ -13,7 +13,10 @@ export type ThemeName =
   | "aurora"
   | "cobalt"
   | "rose"
-  | "mono";
+  | "mono"
+  | "sunset"
+  | "ice"
+  | "noir";
 
 export type Profile = {
   name: string;
@@ -23,6 +26,7 @@ export type Profile = {
   email: string;
   location: string;
   availability: string;
+  heroImageUrl?: string;
   socials: Array<{ label: string; url: string }>;
 };
 
@@ -39,7 +43,9 @@ export type Project = {
   title: string;
   description: string;
   stack: string[];
-  url?: string;
+  imageUrl?: string;
+  githubUrl?: string;
+  liveUrl?: string;
 };
 
 export type PortfolioData = {
@@ -53,6 +59,7 @@ export type SectionConfig = {
   id: SectionType;
   variant: string;
   visible: boolean;
+  title?: string;
 };
 
 export type PortfolioConfig = {
@@ -95,49 +102,87 @@ export const templateCatalog: Record<
 > = {
   hero: [
     { id: "split", label: "Split", description: "Big intro with profile panel" },
-    { id: "minimal", label: "Minimal", description: "Editorial, text-first hero" },
-    { id: "terminal", label: "Terminal", description: "Developer-inspired intro" },
+    { id: "minimal", label: "Minimal", description: "Editorial text-first hero" },
+    { id: "terminal", label: "Terminal", description: "Developer-inspired command line" },
     { id: "poster", label: "Poster", description: "Oversized type with bold metadata" },
-    { id: "spotlight", label: "Spotlight", description: "Centered intro with luminous focal card" },
+    { id: "spotlight", label: "Spotlight", description: "Centered luminous focal hero" },
+    { id: "image-split", label: "Image Split", description: "Portrait and intro side by side" },
+    { id: "cover", label: "Cover", description: "Full-bleed image with overlay copy" },
+    { id: "portrait", label: "Portrait", description: "Editorial portrait card composition" },
+    { id: "editorial-photo", label: "Photo Editorial", description: "Magazine typography with image" },
+    { id: "glass", label: "Glass", description: "Image backdrop with glass information card" },
   ],
   about: [
     { id: "editorial", label: "Editorial", description: "Readable long-form story" },
     { id: "stats", label: "Snapshot", description: "Bio plus profile highlights" },
-    { id: "manifesto", label: "Manifesto", description: "Big statement with compact profile notes" },
+    { id: "manifesto", label: "Manifesto", description: "Big statement with profile notes" },
+    { id: "quote", label: "Quote", description: "Statement-led personal introduction" },
+    { id: "split", label: "Split", description: "Story and metadata side by side" },
+    { id: "columns", label: "Columns", description: "Magazine-style two-column biography" },
+    { id: "facts", label: "Facts", description: "Story paired with quick facts" },
+    { id: "dossier", label: "Dossier", description: "Structured profile dossier" },
+    { id: "statement", label: "Statement", description: "Oversized narrative statement" },
+    { id: "compact", label: "Compact", description: "Dense recruiter-friendly summary" },
   ],
   experience: [
     { id: "timeline", label: "Timeline", description: "Chronological career path" },
     { id: "cards", label: "Cards", description: "Compact role cards" },
     { id: "stacked", label: "Stacked", description: "Full-width editorial role rows" },
+    { id: "rail", label: "Rail", description: "Vertical rail with strong dates" },
+    { id: "ledger", label: "Ledger", description: "Structured career ledger" },
+    { id: "spotlight", label: "Spotlight", description: "Large feature card per role" },
+    { id: "compact", label: "Compact", description: "Dense résumé-style entries" },
+    { id: "alternating", label: "Alternating", description: "Alternating left-right career story" },
+    { id: "resume", label: "Resume", description: "Classic polished résumé treatment" },
+    { id: "steps", label: "Steps", description: "Numbered progression blocks" },
   ],
   projects: [
     { id: "bento", label: "Bento", description: "Feature-led project grid" },
     { id: "grid", label: "Grid", description: "Balanced project cards" },
-    { id: "list", label: "List", description: "Dense, recruiter-friendly list" },
+    { id: "list", label: "List", description: "Dense recruiter-friendly list" },
     { id: "showcase", label: "Showcase", description: "Large numbered feature stories" },
-    { id: "mosaic", label: "Mosaic", description: "Asymmetric magazine-style project wall" },
+    { id: "mosaic", label: "Mosaic", description: "Asymmetric magazine project wall" },
+    { id: "image-grid", label: "Image Grid", description: "Visual cards with project screenshots" },
+    { id: "image-bento", label: "Image Bento", description: "Image-first asymmetric showcase" },
+    { id: "browser", label: "Browser", description: "Website previews inside browser frames" },
+    { id: "github", label: "GitHub", description: "Repository-inspired project cards" },
+    { id: "gallery", label: "Gallery", description: "Large visual project gallery" },
   ],
   skills: [
     { id: "cloud", label: "Cloud", description: "Scannable skill chips" },
     { id: "columns", label: "Columns", description: "Clean technical inventory" },
     { id: "matrix", label: "Matrix", description: "Bold capability tiles" },
+    { id: "logos", label: "Logos", description: "Brand logos with skill labels" },
+    { id: "logo-grid", label: "Logo Grid", description: "Large icon-forward technology grid" },
+    { id: "ticker", label: "Ticker", description: "Continuous-looking skill rail" },
+    { id: "badges", label: "Badges", description: "Compact credential-like badges" },
+    { id: "cards", label: "Cards", description: "Individual capability cards" },
+    { id: "compact", label: "Compact", description: "Dense inline technology list" },
+    { id: "spotlight", label: "Spotlight", description: "Oversized highlighted skill names" },
   ],
   contact: [
     { id: "panel", label: "Panel", description: "Strong final call to action" },
     { id: "minimal", label: "Minimal", description: "Simple contact footer" },
     { id: "banner", label: "Banner", description: "High-impact closing statement" },
+    { id: "split", label: "Split", description: "CTA and contact details side by side" },
+    { id: "card", label: "Card", description: "Contained contact card" },
+    { id: "centered", label: "Centered", description: "Focused centered invitation" },
+    { id: "terminal", label: "Terminal", description: "Developer command-style ending" },
+    { id: "outline", label: "Outline", description: "Large outlined CTA treatment" },
+    { id: "compact", label: "Compact", description: "Small practical contact footer" },
+    { id: "spotlight", label: "Spotlight", description: "Luminous full-width closing CTA" },
   ],
 };
 
 export const defaultConfig: PortfolioConfig = {
   theme: "ink",
   sections: [
-    { id: "hero", variant: "split", visible: true },
-    { id: "about", variant: "editorial", visible: true },
-    { id: "experience", variant: "timeline", visible: true },
-    { id: "projects", variant: "bento", visible: true },
-    { id: "skills", variant: "cloud", visible: true },
-    { id: "contact", variant: "panel", visible: true },
+    { id: "hero", variant: "split", visible: true, title: "Portfolio" },
+    { id: "about", variant: "editorial", visible: true, title: "About" },
+    { id: "experience", variant: "timeline", visible: true, title: "Experience" },
+    { id: "projects", variant: "bento", visible: true, title: "Selected work" },
+    { id: "skills", variant: "cloud", visible: true, title: "Capabilities" },
+    { id: "contact", variant: "panel", visible: true, title: "Contact" },
   ],
 };
 
@@ -151,6 +196,7 @@ export const sampleData: PortfolioData = {
     email: "alex@example.com",
     location: "Bengaluru, India",
     availability: "Open to interesting product and platform roles",
+    heroImageUrl: "",
     socials: [
       { label: "GitHub", url: "https://github.com" },
       { label: "LinkedIn", url: "https://linkedin.com" },
@@ -181,7 +227,9 @@ export const sampleData: PortfolioData = {
       description:
         "A personalized product search experience with ranked retrieval, caching, and experimentation support.",
       stack: ["Next.js", "PostgreSQL", "Redis"],
-      url: "https://github.com",
+      imageUrl: "",
+      githubUrl: "https://github.com",
+      liveUrl: "",
     },
     {
       id: "project-agent",
@@ -189,7 +237,9 @@ export const sampleData: PortfolioData = {
       description:
         "An agentic debugging workflow that combines code, logs, and issue context to accelerate investigation.",
       stack: ["LLM", "RAG", "MCP"],
-      url: "https://github.com",
+      imageUrl: "",
+      githubUrl: "https://github.com",
+      liveUrl: "",
     },
     {
       id: "project-visualizer",
@@ -197,7 +247,9 @@ export const sampleData: PortfolioData = {
       description:
         "A collaborative visualization tool built for large structured documents and realtime editing.",
       stack: ["React", "WebSockets", "D3"],
-      url: "https://github.com",
+      imageUrl: "",
+      githubUrl: "https://github.com",
+      liveUrl: "",
     },
   ],
   skills: [
@@ -249,6 +301,43 @@ export const sampleBuilderState: BuilderState = {
     },
   ],
   activeVariantId: "general",
+};
+
+export const emptyData: PortfolioData = {
+  profile: {
+    name: "",
+    role: "",
+    tagline: "",
+    about: "",
+    email: "",
+    location: "",
+    availability: "",
+    heroImageUrl: "",
+    socials: [],
+  },
+  experience: [],
+  projects: [],
+  skills: [],
+};
+
+export const emptyBuilderState: BuilderState = {
+  data: emptyData,
+  variants: [
+    {
+      id: "portfolio",
+      name: "",
+      targetRole: "",
+      config: {
+        theme: defaultConfig.theme,
+        sections: defaultConfig.sections.map((section) => ({
+          ...section,
+          title: "",
+        })),
+      },
+      content: fullContentConfig(emptyData),
+    },
+  ],
+  activeVariantId: "portfolio",
 };
 
 export const sampleSnapshot: PortfolioSnapshot = {
@@ -330,10 +419,34 @@ export function normalizeBuilderState(input: BuilderState): BuilderState {
     return {
       ...variant,
       id: variant.id || `portfolio-${index + 1}`,
-      name: variant.name || `Portfolio ${index + 1}`,
-      targetRole: variant.targetRole || data.profile.role,
+      name:
+        typeof variant.name === "string"
+          ? variant.name
+          : `Portfolio ${index + 1}`,
+      targetRole:
+        typeof variant.targetRole === "string"
+          ? variant.targetRole
+          : data.profile.role,
       config: variant.config
-        ? cloneConfig(variant.config)
+        ? {
+            theme: variant.config.theme,
+            sections: defaultConfig.sections.map((fallbackSection) => {
+              const saved = variant.config.sections?.find(
+                (section) => section.id === fallbackSection.id
+              );
+
+              return saved
+                ? {
+                    ...fallbackSection,
+                    ...saved,
+                    title:
+                      typeof saved.title === "string"
+                        ? saved.title
+                        : fallbackSection.title,
+                  }
+                : { ...fallbackSection };
+            }),
+          }
         : cloneConfig(defaultConfig),
       content: {
         experienceIds:
@@ -410,4 +523,44 @@ export function slugify(value: string) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "") || "portfolio"
   );
+}
+
+
+export function sectionHasContent(
+  section: SectionType,
+  data: PortfolioData
+) {
+  const profile = data.profile;
+
+  switch (section) {
+    case "hero":
+      return Boolean(
+        profile.name.trim() ||
+          profile.role.trim() ||
+          profile.tagline.trim() ||
+          profile.location.trim() ||
+          profile.availability.trim() ||
+          profile.email.trim() ||
+          profile.heroImageUrl?.trim() ||
+          profile.socials.some(
+            (social) => social.label.trim() || social.url.trim()
+          )
+      );
+    case "about":
+      return Boolean(profile.about.trim());
+    case "experience":
+      return data.experience.length > 0;
+    case "projects":
+      return data.projects.length > 0;
+    case "skills":
+      return data.skills.length > 0;
+    case "contact":
+      return Boolean(
+        profile.email.trim() ||
+          profile.availability.trim() ||
+          profile.socials.some(
+            (social) => social.label.trim() || social.url.trim()
+          )
+      );
+  }
 }

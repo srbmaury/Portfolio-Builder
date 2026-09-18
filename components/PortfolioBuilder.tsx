@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { PortfolioRenderer } from "@/components/PortfolioRenderer";
+import { uploadImageToCloudinary } from "@/lib/cloudinary";
 import { createClient } from "@/lib/supabase/client";
 import {
   loadBuilderState,
@@ -13,9 +14,11 @@ import {
   cloneContentConfig,
   createEntityId,
   defaultConfig,
+  emptyBuilderState,
   fullContentConfig,
   normalizeBuilderState,
   sampleBuilderState,
+  sectionHasContent,
   slugify,
   snapshotForVariant,
   templateCatalog,
@@ -34,8 +37,10 @@ const EDITOR_WIDTH_KEY = "folioblocks:editor-width";
 type PreviewMode = "desktop" | "tablet" | "mobile";
 type CreateDialogKind = "experience" | "project" | "link" | "variant" | null;
 
-export function PortfolioBuilder() {
-  const [state, setState] = useState<BuilderState>(sampleBuilderState);
+export function PortfolioBuilder({ startFresh = false }: { startFresh?: boolean }) {
+  const [state, setState] = useState<BuilderState>(
+    startFresh ? emptyBuilderState : sampleBuilderState
+  );
   const [tab, setTab] = useState<"content" | "targeting" | "design">("content");
   const [previewMode, setPreviewMode] = useState<PreviewMode>("desktop");
   const [hydrated, setHydrated] = useState(false);
@@ -50,12 +55,15 @@ export function PortfolioBuilder() {
     const saved = window.localStorage.getItem(STORAGE_KEY);
     const savedWidth = Number(window.localStorage.getItem(EDITOR_WIDTH_KEY));
 
-    if (saved) {
+    if (!startFresh && saved) {
       try {
         setState(normalizeBuilderState(JSON.parse(saved) as BuilderState));
       } catch {
         window.localStorage.removeItem(STORAGE_KEY);
       }
+    } else if (startFresh) {
+      window.localStorage.removeItem(STORAGE_KEY);
+      setState(emptyBuilderState);
     }
 
     if (Number.isFinite(savedWidth) && savedWidth >= 320) {
@@ -64,7 +72,7 @@ export function PortfolioBuilder() {
     }
 
     setHydrated(true);
-  }, []);
+  }, [startFresh]);
 
   useEffect(() => {
     if (hydrated) {
@@ -107,6 +115,13 @@ export function PortfolioBuilder() {
       }
 
       setCloudUserId(data.user.id);
+
+      if (startFresh) {
+        setCloudStatus("local");
+        setCloudMessage("Fresh workspace · not saved yet");
+        return;
+      }
+
       setCloudStatus("loading");
 
       try {
@@ -135,14 +150,16 @@ export function PortfolioBuilder() {
     return () => {
       cancelled = true;
     };
-  }, [hydrated]);
+  }, [hydrated, startFresh]);
 
   const activeVariant =
     state.variants.find((variant) => variant.id === state.activeVariantId) ??
     state.variants[0];
 
   const snapshot = useMemo(() => snapshotForVariant(state), [state]);
-  const visibleSections = snapshot.config.sections.filter((section) => section.visible).length;
+  const visibleSections = snapshot.config.sections.filter(
+    (section) => section.visible && sectionHasContent(section.id, snapshot.data)
+  ).length;
 
   const targetedExperience = useMemo(() => {
     if (!activeVariant) return state.data.experience;
@@ -256,7 +273,15 @@ export function PortfolioBuilder() {
   }
 
   function updateProfile(
-    field: "name" | "role" | "tagline" | "about" | "email" | "location" | "availability",
+    field:
+      | "name"
+      | "role"
+      | "tagline"
+      | "about"
+      | "email"
+      | "location"
+      | "availability"
+      | "heroImageUrl",
     value: string
   ) {
     updateData((data) => ({
@@ -274,6 +299,15 @@ export function PortfolioBuilder() {
       ...config,
       sections: config.sections.map((section) =>
         section.id === id ? { ...section, variant: variantName } : section
+      ),
+    }));
+  }
+
+  function setSectionTitle(id: SectionType, title: string) {
+    updateActiveConfig((config) => ({
+      ...config,
+      sections: config.sections.map((section) =>
+        section.id === id ? { ...section, title } : section
       ),
     }));
   }
@@ -298,7 +332,18 @@ export function PortfolioBuilder() {
   }
 
   function shuffleDesign() {
-    const themes: ThemeName[] = ["ink", "sand", "moss", "aurora", "cobalt", "rose", "mono"];
+    const themes: ThemeName[] = [
+      "ink",
+      "sand",
+      "moss",
+      "aurora",
+      "cobalt",
+      "rose",
+      "mono",
+      "sunset",
+      "ice",
+      "noir",
+    ];
     updateActiveConfig((config) => ({
       ...config,
       theme: themes[Math.floor(Math.random() * themes.length)],
@@ -375,7 +420,7 @@ export function PortfolioBuilder() {
 
   function updateProject(
     index: number,
-    field: "title" | "description" | "url",
+    field: "title" | "description" | "imageUrl" | "githubUrl" | "liveUrl",
     value: string
   ) {
     updateData((data) => ({
@@ -404,7 +449,9 @@ export function PortfolioBuilder() {
     title: string;
     description: string;
     stack: string[];
-    url?: string;
+    imageUrl?: string;
+    githubUrl?: string;
+    liveUrl?: string;
   }) {
     const id = createEntityId("project");
     setState((current) => ({
@@ -721,10 +768,25 @@ export function PortfolioBuilder() {
     }
   }
 
-  function reset() {
-    setState(sampleBuilderState);
+  function startFreshWorkspace() {
+    if (
+      !window.confirm(
+        "Start a fresh workspace? Your current browser draft will be replaced. Cloud data is unchanged until you save."
+      )
+    ) {
+      return;
+    }
+
+    setState(emptyBuilderState);
     setShareUrl("");
     window.localStorage.removeItem(STORAGE_KEY);
+    setCloudMessage(cloudUserId ? "Fresh workspace · not saved yet" : "Fresh local workspace");
+    setCloudStatus("local");
+  }
+
+  function loadDemo() {
+    setState(sampleBuilderState);
+    setShareUrl("");
   }
 
   return (
@@ -766,8 +828,11 @@ export function PortfolioBuilder() {
               Sign in
             </a>
           )}
-          <button className="ghost-button reset-button" onClick={reset}>
-            Reset demo
+          <button className="ghost-button reset-button" onClick={startFreshWorkspace}>
+            Start fresh
+          </button>
+          <button className="ghost-button reset-button" onClick={loadDemo}>
+            Load demo
           </button>
           <button
             className="primary-button"
@@ -828,7 +893,7 @@ export function PortfolioBuilder() {
                     setShareUrl("");
                   }}
                 >
-                  {variant.name}
+                  {variant.name || "Untitled"}
                 </button>
               ))}
             </div>
@@ -909,6 +974,12 @@ export function PortfolioBuilder() {
                   value={state.data.profile.availability}
                   onChange={(value) => updateProfile("availability", value)}
                 />
+                <ImageUploadField
+                  label="Hero image"
+                  value={state.data.profile.heroImageUrl || ""}
+                  onChange={(value) => updateProfile("heroImageUrl", value)}
+                  help="Used by image-based hero layouts."
+                />
               </EditorSection>
 
               <EditorSection
@@ -977,10 +1048,21 @@ export function PortfolioBuilder() {
                       onChange={(value) => updateProjectStack(index, value)}
                       hint="Comma separated"
                     />
+                    <ImageUploadField
+                      label="Project image"
+                      value={project.imageUrl || ""}
+                      onChange={(value) => updateProject(index, "imageUrl", value)}
+                      help="Used by image grid, gallery, browser, and image-bento designs."
+                    />
                     <Field
-                      label="Project URL"
-                      value={project.url || ""}
-                      onChange={(value) => updateProject(index, "url", value)}
+                      label="GitHub URL"
+                      value={project.githubUrl || ""}
+                      onChange={(value) => updateProject(index, "githubUrl", value)}
+                    />
+                    <Field
+                      label="Live URL"
+                      value={project.liveUrl || ""}
+                      onChange={(value) => updateProject(index, "liveUrl", value)}
                     />
                   </EditorCard>
                 ))}
@@ -1147,7 +1229,18 @@ export function PortfolioBuilder() {
               <div className="theme-picker">
                 <label>Theme</label>
                 <div className="theme-options">
-                  {(["ink", "sand", "moss", "aurora", "cobalt", "rose", "mono"] as ThemeName[]).map((theme) => (
+                  {([
+                    "ink",
+                    "sand",
+                    "moss",
+                    "aurora",
+                    "cobalt",
+                    "rose",
+                    "mono",
+                    "sunset",
+                    "ice",
+                    "noir",
+                  ] as ThemeName[]).map((theme) => (
                     <button
                       key={theme}
                       className={`theme-swatch swatch-${theme} ${
@@ -1194,7 +1287,16 @@ export function PortfolioBuilder() {
                     </div>
 
                     {section.visible && (
-                      <div className="variant-grid">
+                      <>
+                        <div className="section-title-editor">
+                          <Field
+                            label="Heading"
+                            value={section.title || ""}
+                            onChange={(value) => setSectionTitle(section.id, value)}
+                            hint="Leave blank to hide this heading"
+                          />
+                        </div>
+                        <div className="variant-grid">
                         {templateCatalog[section.id].map((variant) => (
                           <button
                             key={variant.id}
@@ -1215,6 +1317,7 @@ export function PortfolioBuilder() {
                           </button>
                         ))}
                       </div>
+                      </>
                     )}
                   </div>
                 ))}
@@ -1254,7 +1357,7 @@ export function PortfolioBuilder() {
           <div className="preview-toolbar">
             <div>
               <span>Live preview</span>
-              <strong>{activeVariant?.name}</strong>
+              <strong>{activeVariant?.name || "Untitled"}</strong>
             </div>
 
             <div className="preview-controls">
@@ -1329,7 +1432,9 @@ function CreateItemDialog({
     title: string;
     description: string;
     stack: string[];
-    url?: string;
+    imageUrl?: string;
+    githubUrl?: string;
+    liveUrl?: string;
   }) => void;
   onCreateLink: (input: { label: string; url: string }) => void;
   onCreateVariant: (input: { name: string; targetRole: string }) => void;
@@ -1340,7 +1445,14 @@ function CreateItemDialog({
       return { company: "", role: "", period: "", summary: "" };
     }
     if (kind === "project") {
-      return { title: "", description: "", stack: "", url: "" };
+      return {
+        title: "",
+        description: "",
+        stack: "",
+        imageUrl: "",
+        githubUrl: "",
+        liveUrl: "",
+      };
     }
     if (kind === "link") {
       return { label: "", url: "" };
@@ -1402,7 +1514,9 @@ function CreateItemDialog({
         title,
         description,
         stack,
-        url: values.url.trim() || undefined,
+        imageUrl: values.imageUrl.trim() || undefined,
+        githubUrl: values.githubUrl.trim() || undefined,
+        liveUrl: values.liveUrl.trim() || undefined,
       });
       return;
     }
@@ -1489,7 +1603,14 @@ function CreateItemDialog({
               <DialogField label="Project title" value={values.title} onChange={(value) => update("title", value)} autoFocus required />
               <DialogField label="Description" multiline value={values.description} onChange={(value) => update("description", value)} required />
               <DialogField label="Tech stack" placeholder="Java, Redis, PostgreSQL" value={values.stack} onChange={(value) => update("stack", value)} required />
-              <DialogField label="Project URL" placeholder="https://..." value={values.url} onChange={(value) => update("url", value)} type="url" />
+              <ImageUploadField
+                label="Project image"
+                value={values.imageUrl}
+                onChange={(value) => update("imageUrl", value)}
+                help="Optional. Upload a screenshot or visual for image-based project layouts."
+              />
+              <DialogField label="GitHub URL" placeholder="https://github.com/..." value={values.githubUrl} onChange={(value) => update("githubUrl", value)} type="url" />
+              <DialogField label="Live URL" placeholder="https://..." value={values.liveUrl} onChange={(value) => update("liveUrl", value)} type="url" />
             </>
           )}
 
@@ -1572,6 +1693,93 @@ function DialogField({
         />
       )}
     </label>
+  );
+}
+
+function ImageUploadField({
+  label,
+  value,
+  onChange,
+  help,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  help?: string;
+}) {
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
+  const cloudinaryConfigured = Boolean(
+    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME &&
+      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+  );
+
+  async function upload(file?: File) {
+    if (!file) return;
+
+    if (!cloudinaryConfigured) {
+      setStatus("Cloudinary upload is not configured yet. Paste a Cloudinary URL instead.");
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setStatus("Choose an image file.");
+      return;
+    }
+
+    setBusy(true);
+    setStatus("Uploading…");
+
+    try {
+      const result = await uploadImageToCloudinary(file);
+      onChange(result.secure_url);
+      setStatus("Uploaded");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Upload failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="field image-upload-field">
+      <span>{label}</span>
+      {value ? (
+        <div className="image-upload-preview">
+          <img src={value} alt="" />
+          <button type="button" className="danger-link" onClick={() => onChange("")}>
+            Remove
+          </button>
+        </div>
+      ) : null}
+      <input
+        className="image-url-input"
+        value={value}
+        placeholder="Cloudinary image URL"
+        onChange={(event) => onChange(event.target.value)}
+      />
+      <label
+        className={`image-upload-button ${
+          busy || !cloudinaryConfigured ? "disabled" : ""
+        }`}
+      >
+        <input
+          type="file"
+          accept="image/*"
+          disabled={busy || !cloudinaryConfigured}
+          onChange={(event) => upload(event.target.files?.[0])}
+        />
+        {busy
+          ? "Uploading…"
+          : !cloudinaryConfigured
+            ? "Configure Cloudinary to upload"
+            : value
+              ? "Replace image"
+              : "Upload image"}
+      </label>
+      {help && <small className="field-help">{help}</small>}
+      {status && <small className="upload-status">{status}</small>}
+    </div>
   );
 }
 
