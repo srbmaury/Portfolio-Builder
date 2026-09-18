@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { formatPortfolioDate } from "../lib/date-format.ts";
 
 const formatter = await readFile(
   new URL("../lib/date-format.ts", import.meta.url),
@@ -12,6 +13,11 @@ const manager = await readFile(
 );
 
 test("portfolio dates use one deterministic UTC formatter during SSR and hydration", () => {
+  assert.equal(
+    formatPortfolioDate("2026-09-18T00:00:00Z"),
+    "18 Sept 2026"
+  );
+  assert.equal(formatPortfolioDate("not-a-date"), "");
   assert.match(formatter, /Intl\.DateTimeFormat\("en-GB"/);
   assert.match(formatter, /timeZone:\s*"UTC"/);
   assert.match(formatter, /day:\s*"2-digit"/);
