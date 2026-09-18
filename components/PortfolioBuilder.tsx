@@ -14,7 +14,6 @@ import {
   TargetingSection,
   TargetRow,
 } from "@/components/builder/BuilderDialogs";
-import { PortfolioRenderer } from "@/components/PortfolioRenderer";
 import { ResumeImportDialog } from "@/components/ResumeImportDialog";
 import { WorkspaceJsonDialog } from "@/components/WorkspaceJsonDialog";
 import { mergeResumeImport } from "@/lib/resume-import";
