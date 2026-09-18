@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { skillIconUrl, skillInitials } from "@/lib/skill-icons";
+import { sectionHasContent } from "@/lib/portfolio";
 import type { PortfolioSnapshot, Project, SectionConfig } from "@/lib/portfolio";
 
 type Props = {
@@ -14,7 +15,10 @@ export function PortfolioRenderer({ snapshot, compact = false }: Props) {
     <main className={`portfolio theme-${config.theme} ${compact ? "portfolio-compact" : ""}`}>
       <div className="portfolio-frame">
         {config.sections
-          .filter((section) => section.visible)
+          .filter(
+            (section) =>
+              section.visible && sectionHasContent(section.id, snapshot.data)
+          )
           .map((section) => (
             <PortfolioSection key={section.id} section={section} snapshot={snapshot} />
           ))}
@@ -32,21 +36,29 @@ function PortfolioSection({
 }) {
   switch (section.id) {
     case "hero":
-      return <Hero snapshot={snapshot} variant={section.variant} />;
+      return <Hero snapshot={snapshot} variant={section.variant} title={section.title} />;
     case "about":
-      return <About snapshot={snapshot} variant={section.variant} />;
+      return <About snapshot={snapshot} variant={section.variant} title={section.title} />;
     case "experience":
-      return <Experience snapshot={snapshot} variant={section.variant} />;
+      return <Experience snapshot={snapshot} variant={section.variant} title={section.title} />;
     case "projects":
-      return <Projects snapshot={snapshot} variant={section.variant} />;
+      return <Projects snapshot={snapshot} variant={section.variant} title={section.title} />;
     case "skills":
-      return <Skills snapshot={snapshot} variant={section.variant} />;
+      return <Skills snapshot={snapshot} variant={section.variant} title={section.title} />;
     case "contact":
-      return <Contact snapshot={snapshot} variant={section.variant} />;
+      return <Contact snapshot={snapshot} variant={section.variant} title={section.title} />;
   }
 }
 
-function Hero({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: string }) {
+function Hero({
+  snapshot,
+  variant,
+  title,
+}: {
+  snapshot: PortfolioSnapshot;
+  variant: string;
+  title?: string;
+}) {
   const { profile } = snapshot.data;
   const hasImage = Boolean(safeExternalUrl(profile.heroImageUrl));
 
@@ -155,7 +167,9 @@ function Hero({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: str
   return (
     <section className="p-section hero-split">
       <div>
-        <p className="eyebrow">Portfolio / {display(profile.role, "Your role")}</p>
+        <p className="eyebrow">
+          {title?.trim() ? `${title.trim()} / ` : ""}{display(profile.role, "Your role")}
+        </p>
         <h1>{display(profile.name, "Your name")}</h1>
         <p className="hero-copy">{display(profile.tagline, "A concise statement about your work.")}</p>
         <Socials snapshot={snapshot} />
@@ -212,13 +226,21 @@ function Socials({ snapshot }: { snapshot: PortfolioSnapshot }) {
   );
 }
 
-function About({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: string }) {
+function About({
+  snapshot,
+  variant,
+  title,
+}: {
+  snapshot: PortfolioSnapshot;
+  variant: string;
+  title?: string;
+}) {
   const { profile } = snapshot.data;
   const story = display(profile.about, "Write a short story about your work, strengths, and what you care about.");
 
   return (
     <section className={`p-section about-layout about-v-${variant}`}>
-      <SectionHeading index="01" title="About" />
+      <SectionHeading index="01" title={title} />
       <div className="about-layout-grid">
         <div className="about-story">
           {variant === "quote" && <span className="about-quote-mark">“</span>}
@@ -245,12 +267,20 @@ function About({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: st
   );
 }
 
-function Experience({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: string }) {
+function Experience({
+  snapshot,
+  variant,
+  title,
+}: {
+  snapshot: PortfolioSnapshot;
+  variant: string;
+  title?: string;
+}) {
   const items = snapshot.data.experience;
 
   return (
     <section className={`p-section experience-layout experience-v-${variant}`}>
-      <SectionHeading index="02" title="Experience" />
+      <SectionHeading index="02" title={title} />
       {items.length ? (
         <div className="experience-layout-list">
           {items.map((item, index) => (
@@ -272,13 +302,21 @@ function Experience({ snapshot, variant }: { snapshot: PortfolioSnapshot; varian
   );
 }
 
-function Projects({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: string }) {
+function Projects({
+  snapshot,
+  variant,
+  title,
+}: {
+  snapshot: PortfolioSnapshot;
+  variant: string;
+  title?: string;
+}) {
   const projects = snapshot.data.projects;
 
   if (!projects.length) {
     return (
       <section className="p-section">
-        <SectionHeading index="03" title="Selected work" />
+        <SectionHeading index="03" title={title} />
         <EmptySection message="Add projects to showcase your strongest work." />
       </section>
     );
@@ -287,7 +325,7 @@ function Projects({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant:
   if (variant === "list") {
     return (
       <section className="p-section projects-list-layout">
-        <SectionHeading index="03" title="Selected work" />
+        <SectionHeading index="03" title={title} />
         <div className="project-list">
           {projects.map((project, index) => (
             <article key={project.id} className="project-list-row">
@@ -307,7 +345,7 @@ function Projects({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant:
   if (variant === "github") {
     return (
       <section className="p-section projects-github-layout">
-        <SectionHeading index="03" title="Selected work" />
+        <SectionHeading index="03" title={title} />
         <div className="github-project-grid">
           {projects.map((project) => (
             <article key={project.id} className="github-project-card">
@@ -329,7 +367,7 @@ function Projects({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant:
   if (variant === "browser") {
     return (
       <section className="p-section projects-browser-layout">
-        <SectionHeading index="03" title="Selected work" />
+        <SectionHeading index="03" title={title} />
         <div className="browser-project-list">
           {projects.map((project) => (
             <article key={project.id} className="browser-project-card">
@@ -352,7 +390,7 @@ function Projects({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant:
   if (variant === "gallery") {
     return (
       <section className="p-section projects-gallery-layout">
-        <SectionHeading index="03" title="Selected work" />
+        <SectionHeading index="03" title={title} />
         <div className="project-gallery">
           {projects.map((project, index) => (
             <article key={project.id} className="project-gallery-item">
@@ -372,7 +410,7 @@ function Projects({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant:
   if (variant === "showcase") {
     return (
       <section className="p-section">
-        <SectionHeading index="03" title="Selected work" />
+        <SectionHeading index="03" title={title} />
         <div className="project-showcase">
           {projects.map((project, index) => (
             <article key={project.id} className="project-showcase-card">
@@ -404,7 +442,7 @@ function Projects({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant:
 
   return (
     <section className={`p-section projects-layout projects-${variant}`}>
-      <SectionHeading index="03" title="Selected work" />
+      <SectionHeading index="03" title={title} />
       <div className={gridClass}>
         {projects.map((project, index) => (
           <article key={project.id} className={`project-card project-${index + 1}`}>
@@ -461,13 +499,21 @@ function ProjectActions({ project, compact = false }: { project: Project; compac
   );
 }
 
-function Skills({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: string }) {
+function Skills({
+  snapshot,
+  variant,
+  title,
+}: {
+  snapshot: PortfolioSnapshot;
+  variant: string;
+  title?: string;
+}) {
   const skills = snapshot.data.skills;
   const logoVariant = ["logos", "logo-grid"].includes(variant);
 
   return (
     <section className={`p-section skills-layout skills-v-${variant}`}>
-      <SectionHeading index="04" title="Capabilities" />
+      <SectionHeading index="04" title={title} />
       {skills.length ? (
         <div className={`skills-layout-list ${logoVariant ? "with-logos" : ""}`}>
           {skills.map((skill, index) => (
@@ -499,7 +545,15 @@ function SkillLogo({ skill }: { skill: string }) {
   );
 }
 
-function Contact({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: string }) {
+function Contact({
+  snapshot,
+  variant,
+  title,
+}: {
+  snapshot: PortfolioSnapshot;
+  variant: string;
+  title?: string;
+}) {
   const { profile } = snapshot.data;
   const email = profile.email || "your@email.com";
 
@@ -507,7 +561,7 @@ function Contact({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: 
     return (
       <footer className="p-section contact-terminal">
         <div className="terminal-window">
-          <p><span className="terminal-prompt">$</span> contact --next</p>
+          <p><span className="terminal-prompt">$</span> {title?.trim() || "contact"} --next</p>
           <h2>{email}</h2>
           <p>{display(profile.availability, "Open to opportunities")}</p>
         </div>
@@ -518,7 +572,7 @@ function Contact({ snapshot, variant }: { snapshot: PortfolioSnapshot; variant: 
   return (
     <footer className={`p-section contact-layout contact-v-${variant}`}>
       <div className="contact-copy">
-        <p className="eyebrow">Let's build something useful</p>
+        {title?.trim() ? <p className="eyebrow">{title.trim()}</p> : null}
         <h2>{variant === "minimal" || variant === "compact" ? "Get in touch." : "Open to the next hard problem."}</h2>
         <p>{display(profile.availability, "Open to opportunities")}</p>
       </div>
@@ -539,11 +593,13 @@ function EmptySection({ message }: { message: string }) {
   );
 }
 
-function SectionHeading({ index, title }: { index: string; title: string }) {
+function SectionHeading({ index, title }: { index: string; title?: string }) {
+  if (!title?.trim()) return null;
+
   return (
     <div className="section-heading">
       <span>{index}</span>
-      <h2>{title}</h2>
+      <h2>{title.trim()}</h2>
     </div>
   );
 }
