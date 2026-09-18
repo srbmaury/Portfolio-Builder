@@ -38,6 +38,10 @@ const builderSource = await readFile(
   new URL("../components/PortfolioBuilder.tsx", import.meta.url),
   "utf8"
 );
+const deliverySource = await readFile(
+  new URL("../lib/resume-delivery.ts", import.meta.url),
+  "utf8"
+).catch(() => "");
 
 test("portfolio variants have independent resume files with safe legacy defaults", () => {
   const legacy = structuredClone(emptyBuilderState);
@@ -108,8 +112,9 @@ test("public portfolio routes resume rendering through a published-only proxy", 
   assert.match(rendererSource, /publicResumeUrl/);
   assert.match(publicRouteSource, /is_published/);
   assert.match(publicRouteSource, /published_snapshot/);
-  assert.match(publicRouteSource, /application\/pdf/);
-  assert.match(publicRouteSource, /Content-Disposition/);
+  assert.match(publicRouteSource, /loadResumePdf/);
+  assert.match(deliverySource, /application\/pdf/);
+  assert.match(deliverySource, /Content-Disposition/);
 });
 
 test("hero resume modal is opt-in and keyboard accessible", () => {
@@ -131,5 +136,7 @@ test("builder preview proxies legacy saved resumes for the authenticated owner",
 });
 
 test("resume delivery rejects non-PDF upstream payloads", () => {
-  assert.match(publicRouteSource, /loadResumePdf/);
+  assert.match(deliverySource, /%PDF-/);
+  assert.match(deliverySource, /Resume source did not return a PDF/);
+  assert.match(deliverySource, /Cache-Control": "no-store"/);
 });
