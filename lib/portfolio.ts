@@ -106,6 +106,7 @@ export type PortfolioResume = {
   url: string;
   publicId: string;
   fileName: string;
+  showInHero: boolean;
 };
 
 export type PortfolioVariant = {
@@ -219,6 +220,11 @@ export const templateCatalog: Record<
     { id: "list", label: "List", description: "Dense rows for structured details" },
     { id: "cards", label: "Cards", description: "Responsive cards for flexible content" },
     { id: "timeline", label: "Timeline", description: "Meta-led vertical timeline" },
+    { id: "grid", label: "Grid", description: "Balanced two-column content grid" },
+    { id: "compact", label: "Compact", description: "Dense recruiter-friendly rows" },
+    { id: "split", label: "Split", description: "Alternating editorial split layout" },
+    { id: "spotlight", label: "Spotlight", description: "Feature the first item prominently" },
+    { id: "badges", label: "Badges", description: "Compact credential-style pills" },
   ],
 };
 
@@ -233,6 +239,7 @@ export const defaultResume: PortfolioResume = {
   url: "",
   publicId: "",
   fileName: "",
+  showInHero: false,
 };
 
 export function cloneResume(
@@ -580,6 +587,10 @@ export function normalizeBuilderState(input: BuilderState): BuilderState {
           typeof variant.resume?.fileName === "string"
             ? variant.resume.fileName
             : "",
+        showInHero:
+          typeof variant.resume?.showInHero === "boolean"
+            ? variant.resume.showInHero
+            : false,
       },
       content: {
         experienceIds:
@@ -648,9 +659,11 @@ function normalizePortfolioConfig(
         id: raw.id || `custom-${custom.id}`,
         type: "custom",
         customSectionId: custom.id,
-        variant: ["list", "cards", "timeline"].includes(raw.variant)
-          ? raw.variant
-          : "list",
+        variant:
+          typeof raw.variant === "string" &&
+          templateCatalog.custom.some((option) => option.id === raw.variant)
+            ? raw.variant
+            : "list",
         visible: Boolean(raw.visible),
         title:
           typeof raw.title === "string" && raw.title.trim()

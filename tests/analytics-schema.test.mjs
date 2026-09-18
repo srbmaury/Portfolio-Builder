@@ -8,7 +8,7 @@ const migration = await readFile(
 );
 
 test("analytics schema enables RLS and restricts public inserts to published portfolios", () => {
-  assert.match(migration, /create table public\.analytics_events/i);
+  assert.match(migration, /create table(?: if not exists)? public\.analytics_events/i);
   assert.match(migration, /enable row level security/i);
   assert.match(migration, /for insert[\s\S]*to anon, authenticated[\s\S]*is_published = true/i);
 });
@@ -28,7 +28,7 @@ test("analytics schema de-duplicates portfolio views per session", () => {
 });
 
 test("admin allowlist uses auth user ids and cannot be modified by normal users", () => {
-  assert.match(migration, /create table public\.analytics_admins/i);
+  assert.match(migration, /create table(?: if not exists)? public\.analytics_admins/i);
   assert.match(migration, /references auth\.users\(id\) on delete cascade/i);
   assert.match(migration, /revoke insert, update, delete on public\.analytics_admins from anon, authenticated/i);
 });

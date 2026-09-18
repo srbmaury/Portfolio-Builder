@@ -389,11 +389,18 @@ export function ImageUploadField({
 export function ResumeUploadField({
   value,
   variantKey,
+  openUrl,
   onChange,
 }: {
-  value: { url: string; publicId: string; fileName: string };
+  value: { url: string; publicId: string; fileName: string; showInHero: boolean };
   variantKey: string;
-  onChange: (value: { url: string; publicId: string; fileName: string }) => void;
+  openUrl?: string;
+  onChange: (value: {
+    url: string;
+    publicId: string;
+    fileName: string;
+    showInHero: boolean;
+  }) => void;
 }) {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
@@ -407,6 +414,7 @@ export function ResumeUploadField({
     try {
       const result = await uploadResumeToCloudinary(file, variantKey);
       onChange({
+        ...value,
         url: result.secure_url,
         publicId: result.public_id,
         fileName: file.name,
@@ -426,7 +434,7 @@ export function ResumeUploadField({
         <div className="resume-upload-current">
           <div>
             <strong>{value.fileName || "Resume.pdf"}</strong>
-            <a href={value.url} target="_blank" rel="noreferrer">
+            <a href={openUrl || value.url} target="_blank" rel="noreferrer">
               Open PDF ↗
             </a>
           </div>
@@ -434,7 +442,12 @@ export function ResumeUploadField({
             type="button"
             className="danger-link"
             onClick={() =>
-              onChange({ url: "", publicId: "", fileName: "" })
+              onChange({
+                ...value,
+                url: "",
+                publicId: "",
+                fileName: "",
+              })
             }
           >
             Remove

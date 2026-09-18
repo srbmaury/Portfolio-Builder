@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 
 import {
   emptyBuilderState,
@@ -7,11 +8,17 @@ import {
   sectionHasContent,
   sectionType,
   snapshotForVariant,
+  templateCatalog,
 } from "../lib/portfolio.ts";
 import {
   addCustomSection,
   removeCustomSection,
 } from "../lib/custom-sections.ts";
+
+const rendererSource = await readFile(
+  new URL("../components/PortfolioRenderer.tsx", import.meta.url),
+  "utf8"
+);
 
 test("empty workspaces include an empty shared custom-section collection", () => {
   assert.deepEqual(emptyBuilderState.data.customSections, []);
@@ -99,6 +106,51 @@ test("removing a custom section removes its shared content and every variant con
     assert.equal(
       variant.config.sections.some((section) => section.customSectionId === id),
       false
+    );
+  }
+});
+
+test("custom sections offer eight distinct presentation templates", () => {
+  assert.deepEqual(
+    templateCatalog.custom.map((item) => item.id),
+    [
+      "list",
+      "cards",
+      "timeline",
+      "grid",
+      "compact",
+      "split",
+      "spotlight",
+      "badges",
+    ]
+  );
+});
+
+
+test("normalization preserves every supported custom-section template", () => {
+  for (const variant of templateCatalog.custom.map((item) => item.id)) {
+    let state = addCustomSection(structuredClone(emptyBuilderState), "Credentials");
+    const custom = state.data.customSections[0];
+    const config = state.variants[0].config.sections.find(
+      (section) => section.customSectionId === custom.id
+    );
+    config.variant = variant;
+
+    const normalized = normalizeBuilderState(state);
+    const normalizedConfig = normalized.variants[0].config.sections.find(
+      (section) => section.customSectionId === custom.id
+    );
+
+    assert.equal(normalizedConfig?.variant, variant);
+  }
+});
+
+
+test("renderer implements every expanded custom-section template", () => {
+  for (const variant of ["grid", "compact", "split", "spotlight", "badges"]) {
+    assert.match(
+      rendererSource,
+      new RegExp(`section\\.variant === ["']${variant}["']`)
     );
   }
 });

@@ -38,7 +38,7 @@ test("renderer marks high-signal visitor actions instead of every button", () =>
 test("tracker delegates click tracking and stores anonymous ids locally", () => {
   assert.match(tracker, /localStorage/);
   assert.match(tracker, /sessionStorage/);
-  assert.match(tracker, /closest\(/);
+  assert.match(tracker, /closest(?:<[^>]+>)?\(/);
   assert.match(tracker, /portfolio_view/);
   assert.match(tracker, /doNotTrack/);
 });

@@ -31,27 +31,30 @@ export async function listCloudinaryUrlsByTag(tag: string) {
   configureCloudinaryServer();
 
   const urls: string[] = [];
-  let nextCursor: string | undefined;
 
-  do {
-    const response = await cloudinary.api.resources_by_tag(tag, {
-      resource_type: "image",
-      type: "upload",
-      max_results: 500,
-      ...(nextCursor ? { next_cursor: nextCursor } : {}),
-    });
+  for (const resourceType of ["image", "raw"] as const) {
+    let nextCursor: string | undefined;
 
-    for (const resource of response.resources || []) {
-      if (typeof resource.secure_url === "string") {
-        urls.push(resource.secure_url);
+    do {
+      const response = await cloudinary.api.resources_by_tag(tag, {
+        resource_type: resourceType,
+        type: "upload",
+        max_results: 500,
+        ...(nextCursor ? { next_cursor: nextCursor } : {}),
+      });
+
+      for (const resource of response.resources || []) {
+        if (typeof resource.secure_url === "string") {
+          urls.push(resource.secure_url);
+        }
       }
-    }
 
-    nextCursor =
-      typeof response.next_cursor === "string"
-        ? response.next_cursor
-        : undefined;
-  } while (nextCursor);
+      nextCursor =
+        typeof response.next_cursor === "string"
+          ? response.next_cursor
+          : undefined;
+    } while (nextCursor);
+  }
 
   return urls;
 }
@@ -87,4 +90,15 @@ export async function destroyCloudinaryUrls(urls: string[]) {
   }
 
   return refs.size;
+}
+
+
+export function cloudinaryLegacyPdfDownloadUrl(publicId: string) {
+  configureCloudinaryServer();
+
+  return cloudinary.utils.private_download_url(publicId, "pdf", {
+    resource_type: "image",
+    type: "upload",
+    expires_at: Math.floor(Date.now() / 1000) + 5 * 60,
+  });
 }

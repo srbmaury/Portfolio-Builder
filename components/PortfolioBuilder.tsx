@@ -171,6 +171,20 @@ export function PortfolioBuilder({
   });
 
   const snapshot = useMemo(() => snapshotForVariant(state), [state]);
+  const builderResumeUrl = useMemo(() => {
+    const resume = activeVariant?.resume;
+    if (!resume?.url) return undefined;
+
+    if (
+      cloudUserId &&
+      resume.url.includes("/image/upload/") &&
+      activeVariant?.id
+    ) {
+      return `/api/resume/${encodeURIComponent(activeVariant.id)}`;
+    }
+
+    return resume.url;
+  }, [activeVariant?.id, activeVariant?.resume, cloudUserId]);
   const visibleSections = snapshot.config.sections.filter(
     (section) =>
       section.visible &&
@@ -558,8 +572,28 @@ export function PortfolioBuilder({
                 <ResumeUploadField
                   value={activeVariant?.resume || cloneResume()}
                   variantKey={activeVariant?.id || state.activeVariantId}
+                  openUrl={builderResumeUrl}
                   onChange={updateResume}
                 />
+                <label className="resume-hero-toggle">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(activeVariant?.resume.showInHero)}
+                    disabled={!activeVariant?.resume.url}
+                    onChange={(event) =>
+                      updateResume({
+                        ...(activeVariant?.resume || cloneResume()),
+                        showInHero: event.target.checked,
+                      })
+                    }
+                  />
+                  <span>
+                    <strong>Show résumé link in hero</strong>
+                    <small>
+                      Adds a “View résumé” action that opens the PDF in an accessible modal.
+                    </small>
+                  </span>
+                </label>
               </EditorSection>
 
               <EditorSection
@@ -1026,6 +1060,57 @@ export function PortfolioBuilder({
                 </div>
               </div>
 
+              <section className="section-order-panel">
+                <div className="section-order-heading">
+                  <div>
+                    <strong>Section order</strong>
+                    <span>Move sections without opening each layout card.</span>
+                  </div>
+                  <small>{snapshot.config.sections.length} sections</small>
+                </div>
+                <div className="section-order-list">
+                  {snapshot.config.sections.map((section, index) => {
+                    const sectionLabel =
+                      section.title?.trim() ||
+                      (sectionType(section) === "custom"
+                        ? state.data.customSections.find(
+                            (item) => item.id === section.customSectionId
+                          )?.title || "Custom section"
+                        : section.id);
+
+                    return (
+                      <div className="section-order-row" key={`order-${section.id}`}>
+                        <span className="section-order-index">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                        <div>
+                          <strong>{sectionLabel}</strong>
+                          <small>{section.visible ? "Visible" : "Hidden"}</small>
+                        </div>
+                        <div className="section-order-actions">
+                          <button
+                            type="button"
+                            onClick={() => moveSection(index, -1)}
+                            disabled={index === 0}
+                            aria-label={`Move ${sectionLabel} section up`}
+                          >
+                            ↑
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => moveSection(index, 1)}
+                            disabled={index === snapshot.config.sections.length - 1}
+                            aria-label={`Move ${sectionLabel} section down`}
+                          >
+                            ↓
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+
               <div className="section-config-list">
                 {snapshot.config.sections.map((section, index) => (
                   <div className="section-config" key={section.id}>
@@ -1154,7 +1239,11 @@ export function PortfolioBuilder({
           </div>
 
           <div className={`preview-window preview-${previewMode}`}>
-            <PortfolioRenderer snapshot={snapshot} compact />
+            <PortfolioRenderer
+              snapshot={snapshot}
+              compact
+              publicResumeUrl={builderResumeUrl}
+            />
           </div>
         </section>
       </div>
