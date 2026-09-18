@@ -67,3 +67,28 @@ Shared professional profile
 5. Per-variant project/experience visibility and ordering.
 6. Custom domains and portfolio analytics.
 7. More section packs and a template marketplace.
+
+
+## Supabase backend
+
+The production persistence branch uses Supabase Auth + Postgres with Row Level Security.
+
+Project region: `ap-south-1`.
+
+Copy the checked-in example environment file:
+
+```bash
+cp .env.example .env.local
+```
+
+The frontend uses only the Supabase **publishable key**. No secret/service-role key is required by the browser.
+
+Cloud behavior:
+
+- Anonymous users continue to use localStorage.
+- Signed-in users can load/save the shared profile and portfolio variants.
+- Publishing stores only the active rendered snapshot for anonymous public access.
+- Raw profile, experience, project, and skill tables remain owner-only.
+- Clean public URLs use `/u/<username>/<portfolio>`.
+
+Before deploying to a real domain, add that domain under Supabase Auth URL Configuration so email-confirmation redirects are allowed.
