@@ -93,7 +93,7 @@ export default function DocsPage() {
           <span>65 section layouts</span>
           <span>10 themes</span>
           <span>Role-specific variants</span>
-          <span>Public analytics</span>
+          <span>First-party analytics</span>
         </div>
       </section>
 
