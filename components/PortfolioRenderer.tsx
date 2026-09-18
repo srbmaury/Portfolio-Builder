@@ -932,6 +932,7 @@ function CustomSectionBlock({
                 <div>
                   {item.heading ? <h3>{item.heading}</h3> : null}
                   {item.subheading ? <h4>{item.subheading}</h4> : null}
+                  {item.description ? <p>{item.description}</p> : null}
                 </div>
                 {item.meta ? <span>{item.meta}</span> : null}
                 <CustomItemLink item={item} />
@@ -951,8 +952,12 @@ function CustomSectionBlock({
           {items.map((item) => (
             <article className="custom-badge" key={item.id}>
               <div>
-                {item.heading ? <strong>{item.heading}</strong> : null}
-                {item.subheading ? <span>{item.subheading}</span> : null}
+                {item.heading || item.description ? (
+                  <strong>{item.heading || item.description}</strong>
+                ) : null}
+                {item.subheading || (item.heading && item.description) ? (
+                  <span>{item.subheading || item.description}</span>
+                ) : null}
               </div>
               {item.meta ? <small>{item.meta}</small> : null}
               <CustomItemLink item={item} />
