@@ -25,6 +25,7 @@ import {
   cloneBranding,
   cloneConfig,
   cloneContentConfig,
+  cloneResume,
   createEntityId,
   defaultConfig,
   emptyBuilderState,
@@ -246,7 +247,8 @@ export function PortfolioBuilder({
 
   const snapshot = useMemo(() => snapshotForVariant(state), [state]);
   const visibleSections = snapshot.config.sections.filter(
-    (section) => section.visible && sectionHasContent(section, snapshot.data)
+    (section) => section.visible &&
+      sectionHasContent(section, snapshot.data, snapshot.meta?.resume)
   ).length;
 
   const targetedExperience = useMemo(() => {
@@ -758,6 +760,7 @@ export function PortfolioBuilder({
             activeVariant?.content ?? fullContentConfig(current.data)
           ),
           branding: cloneBranding(activeVariant?.branding),
+          resume: cloneResume(activeVariant?.resume),
         },
       ],
     }));
@@ -781,6 +784,7 @@ export function PortfolioBuilder({
           config: cloneConfig(activeVariant.config),
           content: cloneContentConfig(activeVariant.content),
           branding: cloneBranding(activeVariant.branding),
+          resume: cloneResume(activeVariant.resume),
         },
       ],
     }));
