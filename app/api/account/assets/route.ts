@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import {
   cloudinaryUserTag,
   collectCloudinaryUrls,
@@ -8,16 +9,38 @@ import {
   destroyCloudinaryUrls,
   listCloudinaryUrlsByTag,
 } from "@/lib/cloudinary-server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
-export async function DELETE() {
-  const supabase = await createClient();
+export async function DELETE(request: Request) {
+  const authorization = request.headers.get("authorization");
+  const bearerToken = authorization?.startsWith("Bearer ")
+    ? authorization.slice("Bearer ".length)
+    : "";
+
+  const supabase = bearerToken
+    ? createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+        {
+          global: {
+            headers: {
+              Authorization: `Bearer ${bearerToken}`,
+            },
+          },
+          auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+          },
+        }
+      )
+    : await createServerClient();
+
   const {
     data: { user },
     error: authError,
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser(bearerToken || undefined);
 
   if (authError || !user) {
     return NextResponse.json(
