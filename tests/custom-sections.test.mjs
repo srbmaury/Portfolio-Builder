@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 
 import {
   emptyBuilderState,
@@ -13,6 +14,11 @@ import {
   addCustomSection,
   removeCustomSection,
 } from "../lib/custom-sections.ts";
+
+const rendererSource = await readFile(
+  new URL("../components/PortfolioRenderer.tsx", import.meta.url),
+  "utf8"
+);
 
 test("empty workspaces include an empty shared custom-section collection", () => {
   assert.deepEqual(emptyBuilderState.data.customSections, []);
@@ -136,5 +142,15 @@ test("normalization preserves every supported custom-section template", () => {
     );
 
     assert.equal(normalizedConfig?.variant, variant);
+  }
+});
+
+
+test("renderer implements every expanded custom-section template", () => {
+  for (const variant of ["grid", "compact", "split", "spotlight", "badges"]) {
+    assert.match(
+      rendererSource,
+      new RegExp(`section\\.variant === ["']${variant}["']`)
+    );
   }
 });
