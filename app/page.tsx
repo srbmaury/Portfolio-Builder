@@ -20,16 +20,16 @@ export default function Home() {
         <p className="landing-kicker">Portfolio building, without the blank canvas</p>
         <h1>Your story. <em>Your sections.</em> Your site.</h1>
         <p className="landing-subtitle">
-          Start completely blank or from a demo, then mix 65 section layouts, images,
+          Start completely blank or from a demo, then mix 75 section layouts, images,
           role-targeted content, and themes into a portfolio that feels uniquely yours.
         </p>
         <div className="landing-actions">
           <Link className="landing-primary" href="/builder?fresh=1">Start fresh →</Link>
-          <Link className="landing-secondary" href="/builder">Explore with demo</Link>
+          <Link className="landing-secondary" href="/builder">Explore 2-role demo</Link>
         </div>
 
         <div className="landing-proof">
-          <span>65 section layouts</span><span>10 themes</span><span>Cloudinary images</span><span>Role-targeted variants</span>
+          <span>75 section layouts</span><span>10 themes</span><span>Cloudinary images</span><span>Role-targeted variants</span>
         </div>
 
         <div className="landing-product-shot">
@@ -71,9 +71,9 @@ export default function Home() {
           <div className="arch-node arch-data"><strong>Your profile</strong><span>Experience · Projects · Skills</span></div>
           <div className="arch-arrow">↓</div>
           <div className="arch-row">
-            <div className="arch-node"><strong>Hero #3</strong><span>Terminal</span></div>
-            <div className="arch-node"><strong>Projects #1</strong><span>Bento</span></div>
-            <div className="arch-node"><strong>Skills #2</strong><span>Columns</span></div>
+            <div className="arch-node"><strong>Hero</strong><span>Spotlight</span></div>
+            <div className="arch-node"><strong>Projects</strong><span>GitHub</span></div>
+            <div className="arch-node"><strong>Skills</strong><span>Logo grid</span></div>
           </div>
           <div className="arch-arrow">↓</div>
           <div className="arch-node arch-live"><strong>Share the right version</strong><span>Same profile · Different presentation</span></div>

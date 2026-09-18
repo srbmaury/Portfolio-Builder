@@ -26,16 +26,16 @@ FolioBlocks is a portfolio builder for developers and other professionals who ne
 
 ### Design system
 
-FolioBlocks currently provides **65 section layouts**:
+FolioBlocks currently provides **75 section layouts**:
 
 - Hero: 10
 - About: 10
 - Experience: 10
 - Projects: 10
 - Skills: 10
-- Resume: 2
+- Resume: 7
 - Contact: 10
-- Custom sections: 3
+- Custom sections: 8
 
 It also includes:
 
@@ -50,9 +50,9 @@ It also includes:
 ### Resume and custom sections
 
 - Per-portfolio public resume upload.
-- Embedded PDF or compact resume-card presentation.
+- Seven résumé presentations ranging from embedded PDF to compact, split, spotlight, minimal, and terminal treatments.
 - Custom sections for content such as education, certifications, awards, writing, speaking, open source, or other structured material.
-- Custom-section list, cards, and timeline layouts with optional metadata and links.
+- Eight custom-section layouts with optional metadata and links.
 
 ### Branding and public sharing
 

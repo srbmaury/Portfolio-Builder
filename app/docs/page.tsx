@@ -31,7 +31,7 @@ const featureGroups = [
     title: "Design without coding",
     items: [
       "Choose from 10 themes: Ink, Sand, Moss, Aurora, Cobalt, Rose, Mono, Sunset, Ice, and Noir.",
-      "Use 60 layouts across Hero, About, Experience, Projects, Skills, and Contact, plus 2 Resume layouts and 3 Custom Section layouts.",
+      "Use 60 layouts across Hero, About, Experience, Projects, Skills, and Contact, plus 7 Resume layouts and 8 Custom Section layouts.",
       "Rename sections, show/hide them, reorder them, and shuffle designs.",
       "Preview desktop, tablet, and mobile layouts while editing, with an adjustable editor/preview split on desktop.",
     ],
@@ -50,9 +50,9 @@ const featureGroups = [
     title: "Resume and custom sections",
     items: [
       "Attach a public resume to an individual portfolio without forcing the same resume onto every variant.",
-      "Render the resume as an embedded PDF section or a compact card that opens the document.",
+      "Choose from seven résumé treatments, including embedded, card, compact, split, spotlight, minimal, and terminal layouts.",
       "Create flexible custom sections for certifications, awards, education, writing, speaking, open source, or anything else.",
-      "Custom sections support list, cards, and timeline layouts with optional metadata, descriptions, labels, and external links.",
+      "Custom sections support eight layouts, including list, cards, timeline, grid, compact, split, spotlight, and badges.",
     ],
   },
   {
@@ -91,7 +91,7 @@ export default function DocsPage() {
           same information again and again.
         </p>
         <div className={styles.quickFacts}>
-          <span>65 section layouts</span>
+          <span>75 section layouts</span>
           <span>10 themes</span>
           <span>Role-specific variants</span>
           <span>First-party analytics</span>
