@@ -9,12 +9,10 @@ import {
   saveBuilderState,
 } from "@/lib/supabase/portfolio-store";
 import {
-  builderStateFromSnapshot,
   cloneConfig,
   cloneContentConfig,
   createEntityId,
   defaultConfig,
-  encodeSnapshot,
   fullContentConfig,
   normalizeBuilderState,
   sampleBuilderState,
@@ -30,9 +28,8 @@ import {
   type ThemeName,
 } from "@/lib/portfolio";
 
-const STORAGE_KEY = "portfolio-builder:v3";
-const V2_STORAGE_KEY = "portfolio-builder:v2";
-const LEGACY_STORAGE_KEY = "portfolio-builder:v1";
+const STORAGE_KEY = "folioblocks:workspace";
+const EDITOR_WIDTH_KEY = "folioblocks:editor-width";
 
 type PreviewMode = "desktop" | "tablet" | "mobile";
 
@@ -45,11 +42,11 @@ export function PortfolioBuilder() {
   const [cloudUserId, setCloudUserId] = useState<string | null>(null);
   const [cloudStatus, setCloudStatus] = useState<"local" | "loading" | "saved" | "error">("local");
   const [cloudMessage, setCloudMessage] = useState("");
+  const [editorWidth, setEditorWidth] = useState(420);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(STORAGE_KEY);
-    const v2 = window.localStorage.getItem(V2_STORAGE_KEY);
-    const legacy = window.localStorage.getItem(LEGACY_STORAGE_KEY);
+    const savedWidth = Number(window.localStorage.getItem(EDITOR_WIDTH_KEY));
 
     if (saved) {
       try {
@@ -57,18 +54,11 @@ export function PortfolioBuilder() {
       } catch {
         window.localStorage.removeItem(STORAGE_KEY);
       }
-    } else if (v2) {
-      try {
-        setState(normalizeBuilderState(JSON.parse(v2) as BuilderState));
-      } catch {
-        window.localStorage.removeItem(V2_STORAGE_KEY);
-      }
-    } else if (legacy) {
-      try {
-        setState(builderStateFromSnapshot(JSON.parse(legacy)));
-      } catch {
-        window.localStorage.removeItem(LEGACY_STORAGE_KEY);
-      }
+    }
+
+    if (Number.isFinite(savedWidth) && savedWidth >= 320) {
+      const maxWidth = Math.max(320, Math.min(720, window.innerWidth - 460));
+      setEditorWidth(Math.min(savedWidth, maxWidth));
     }
 
     setHydrated(true);
@@ -79,6 +69,23 @@ export function PortfolioBuilder() {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }
   }, [hydrated, state]);
+
+  useEffect(() => {
+    if (hydrated) {
+      window.localStorage.setItem(EDITOR_WIDTH_KEY, String(editorWidth));
+    }
+  }, [editorWidth, hydrated]);
+
+  useEffect(() => {
+    function clampEditorWidth() {
+      if (window.innerWidth <= 760) return;
+      const maxWidth = Math.max(320, Math.min(720, window.innerWidth - 460));
+      setEditorWidth((current) => Math.min(current, maxWidth));
+    }
+
+    window.addEventListener("resize", clampEditorWidth);
+    return () => window.removeEventListener("resize", clampEditorWidth);
+  }, []);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -587,6 +594,71 @@ export function PortfolioBuilder() {
     }));
   }
 
+  function getMaxEditorWidth() {
+    return Math.max(320, Math.min(720, window.innerWidth - 460));
+  }
+
+  function resetEditorWidth() {
+    setEditorWidth(Math.min(420, getMaxEditorWidth()));
+  }
+
+  function nudgeEditorWidth(delta: number) {
+    const maxWidth = getMaxEditorWidth();
+    setEditorWidth((current) => Math.max(320, Math.min(maxWidth, current + delta)));
+  }
+
+  function handleResizerKeyDown(event: React.KeyboardEvent<HTMLButtonElement>) {
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      nudgeEditorWidth(-24);
+    }
+
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      nudgeEditorWidth(24);
+    }
+
+    if (event.key === "Home") {
+      event.preventDefault();
+      setEditorWidth(320);
+    }
+
+    if (event.key === "End") {
+      event.preventDefault();
+      setEditorWidth(getMaxEditorWidth());
+    }
+  }
+
+  function startResize(event: React.PointerEvent<HTMLButtonElement>) {
+    if (window.innerWidth <= 760) return;
+
+    event.preventDefault();
+    const startX = event.clientX;
+    const startWidth = editorWidth;
+
+    document.body.classList.add("builder-resizing");
+
+    function onPointerMove(moveEvent: PointerEvent) {
+      const maxWidth = Math.min(720, window.innerWidth - 460);
+      const nextWidth = Math.max(
+        320,
+        Math.min(maxWidth, startWidth + moveEvent.clientX - startX)
+      );
+      setEditorWidth(nextWidth);
+    }
+
+    function stopResize() {
+      document.body.classList.remove("builder-resizing");
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", stopResize);
+      window.removeEventListener("pointercancel", stopResize);
+    }
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", stopResize);
+    window.addEventListener("pointercancel", stopResize);
+  }
+
   async function saveToCloud() {
     const supabase = createClient();
     const { data, error } = await supabase.auth.getUser();
@@ -622,42 +694,36 @@ export function PortfolioBuilder() {
 
   async function publish() {
     const supabase = createClient();
-    const { data } = await supabase.auth.getUser();
+    const { data, error } = await supabase.auth.getUser();
 
-    let url: string;
-
-    if (data.user) {
-      setCloudStatus("loading");
-      setCloudMessage("Publishing…");
-
-      try {
-        await saveBuilderState(supabase, data.user, state);
-        const publicPath = await publishVariant(supabase, data.user, state);
-        url = `${window.location.origin}/u/${publicPath}`;
-        setCloudUserId(data.user.id);
-        setCloudStatus("saved");
-        setCloudMessage("Published from cloud");
-      } catch (publishError) {
-        setCloudStatus("error");
-        setCloudMessage(
-          publishError instanceof Error ? publishError.message : "Publish failed"
-        );
-        return;
-      }
-    } else {
-      const encoded = encodeSnapshot(snapshot);
-      const variantSlug = slugify(snapshot.meta?.name || "portfolio");
-      url = `${window.location.origin}/p/${slugify(
-        snapshot.data.profile.name
-      )}-${variantSlug}?data=${encoded}`;
+    if (error || !data.user) {
+      window.location.href = "/login";
+      return;
     }
 
-    setShareUrl(url);
+    setCloudStatus("loading");
+    setCloudMessage("Publishing…");
 
     try {
-      await navigator.clipboard.writeText(url);
-    } catch {
-      // Clipboard can be blocked in some preview environments.
+      await saveBuilderState(supabase, data.user, state);
+      const publicPath = await publishVariant(supabase, data.user, state);
+      const url = `${window.location.origin}/${publicPath}`;
+
+      setShareUrl(url);
+      setCloudUserId(data.user.id);
+      setCloudStatus("saved");
+      setCloudMessage("Published from cloud");
+
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch {
+        // Clipboard can be blocked in some preview environments.
+      }
+    } catch (publishError) {
+      setCloudStatus("error");
+      setCloudMessage(
+        publishError instanceof Error ? publishError.message : "Publish failed"
+      );
     }
   }
 
@@ -665,8 +731,6 @@ export function PortfolioBuilder() {
     setState(sampleBuilderState);
     setShareUrl("");
     window.localStorage.removeItem(STORAGE_KEY);
-    window.localStorage.removeItem(V2_STORAGE_KEY);
-    window.localStorage.removeItem(LEGACY_STORAGE_KEY);
   }
 
   return (
@@ -692,7 +756,11 @@ export function PortfolioBuilder() {
         <div className="topbar-actions">
           {cloudUserId ? (
             <>
-              <button className="ghost-button" onClick={saveToCloud}>
+              <button
+                className="ghost-button"
+                onClick={saveToCloud}
+                disabled={cloudStatus === "loading"}
+              >
                 Save cloud
               </button>
               <button className="ghost-button" onClick={signOut}>
@@ -707,13 +775,20 @@ export function PortfolioBuilder() {
           <button className="ghost-button reset-button" onClick={reset}>
             Reset demo
           </button>
-          <button className="primary-button" onClick={publish}>
-            Publish & copy link
+          <button
+            className="primary-button"
+            onClick={publish}
+            disabled={cloudStatus === "loading"}
+          >
+            {cloudUserId ? "Publish & copy link" : "Sign in to publish"}
           </button>
         </div>
       </header>
 
-      <div className="builder-grid">
+      <div
+        className="builder-grid"
+        style={{ "--editor-width": `${editorWidth}px` } as React.CSSProperties}
+      >
         <aside className="builder-panel">
           <div className="panel-tabs panel-tabs-three">
             <button
@@ -1157,7 +1232,7 @@ export function PortfolioBuilder() {
               <div>
                 <strong>{activeVariant?.name || "Portfolio"} link ready</strong>
                 <p>
-                  Copied to clipboard. The selected variant is encoded into the share URL.
+                  Copied to clipboard. This is a clean public link backed by Supabase.
                 </p>
               </div>
               <a href={shareUrl} target="_blank" rel="noreferrer">
@@ -1166,6 +1241,18 @@ export function PortfolioBuilder() {
             </div>
           )}
         </aside>
+
+        <button
+          type="button"
+          className="builder-resizer"
+          onPointerDown={startResize}
+          onKeyDown={handleResizerKeyDown}
+          onDoubleClick={resetEditorWidth}
+          aria-label="Resize editor and preview panels"
+          title="Drag to resize · arrows to adjust · double-click to reset"
+        >
+          <span />
+        </button>
 
         <section className="preview-stage">
           <div className="preview-toolbar">

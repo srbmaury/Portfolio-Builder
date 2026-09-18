@@ -1,94 +1,90 @@
 # FolioBlocks — Modular Portfolio Builder
 
-A portfolio builder where professional content is stored separately from presentation.
+FolioBlocks stores professional content once and lets users create focused portfolio variants for different roles.
 
-Users maintain one structured profile, create multiple portfolio variants for different roles or audiences, and independently choose the hero, about, experience, project, skills, and contact layouts for each variant.
+## Product model
 
-## MVP v2 included
-
-- One shared structured professional profile
-- Multiple named portfolio variants from the same profile
-- Independent theme and section configuration per variant\n- Per-variant experience, project, and skill selection + ordering\n- Target role is rendered directly in the portfolio hero
-- Duplicate/delete portfolio variants
-- Editable profile, experience, projects, skills, and social links
-- Project stack and URL editing
-- Add/remove experience, projects, and links
-- Live desktop, tablet, and mobile preview modes
-- Three visual themes
-- Swappable section variants
-- Show/hide and reorder sections
-- One-click design shuffle
-- Local autosave with migration from the v1 builder state
-- Shareable published portfolio links
-- Portfolio-specific page title and description metadata
-- Responsive landing, builder, and public portfolio pages
-
-The current MVP intentionally uses URL-encoded portfolio snapshots for publishing. This keeps the full create → customize → variant → publish → share loop testable without requiring authentication or a database.
+- One shared professional profile
+- Multiple named portfolio variants
+- Per-variant target role
+- Per-variant experience, project, and skill selection
+- Independent ordering for targeted evidence
+- Independent theme, section visibility, section order, and layout variants
+- Desktop, tablet, and mobile previews
+- Resizable desktop editor/preview split
+- Independent editor and preview scrolling
+- Local draft autosave
+- Supabase authentication and cloud persistence
+- Clean public portfolio URLs
+- Snapshot-based public publishing with raw profile data kept private
 
 ## Run locally
+
+Create a local environment file:
+
+```bash
+cp .env.example .env.local
+```
+
+Fill in your Supabase project values, then run:
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open `http://localhost:3000` and use `http://localhost:3000/builder` for the editor.
+Open:
 
-## Product architecture
+- `http://localhost:3000`
+- `http://localhost:3000/builder`
+- `http://localhost:3000/login`
 
-```
-Shared professional profile
-  ├── Profile
-  ├── Experience
-  ├── Projects
-  ├── Skills
-  └── Social links
-        │
-        ├──────────────┬──────────────┐
-        ▼              ▼              ▼
-  Backend variant   AI variant    General variant
-  ├── Theme         ├── Theme      ├── Theme
-  ├── Sections      ├── Sections   ├── Sections
-  └── Order         └── Order      └── Order
-        │              │              │
-        └──────────────┴──────────────┘
-                       ▼
-                PortfolioRenderer
-                       ▼
-             Live preview / share URL
+## Publishing
+
+Publishing requires an authenticated account and persists the current portfolio variant to Supabase.
+
+Public URLs use:
+
+```text
+/<username>/<portfolio>
 ```
 
-## Next production milestones
+The public endpoint reads only the immutable published snapshot. Draft profile, experience, project, and skill rows remain owner-only under RLS.
 
-1. Authentication and persistent user profiles.
-2. PostgreSQL/Supabase storage for profiles and variants.
-3. Stable short publishing URLs instead of encoded query strings.
-4. Resume import and GitHub project import.
-5. Per-variant project/experience visibility and ordering.
-6. Custom domains and portfolio analytics.
-7. More section packs and a template marketplace.
+## Supabase
 
+Region: `ap-south-1`.
 
-## Supabase backend
+Frontend code uses only:
 
-The production persistence branch uses Supabase Auth + Postgres with Row Level Security.
-
-Project region: `ap-south-1`.
-
-Copy the checked-in example environment file:
-
-```bash
-cp .env.example .env.local
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 ```
 
-The frontend uses only the Supabase **publishable key**. No secret/service-role key is required by the browser.
+Never expose a Supabase secret or service-role key to the browser.
 
-Cloud behavior:
+Before production deployment, configure the production domain in Supabase Auth URL Configuration so authentication redirects are accepted.
 
-- Anonymous users continue to use localStorage.
-- Signed-in users can load/save the shared profile and portfolio variants.
-- Publishing stores only the active rendered snapshot for anonymous public access.
-- Raw profile, experience, project, and skill tables remain owner-only.
-- Clean public URLs use `/u/<username>/<portfolio>`.
+## Architecture
 
-Before deploying to a real domain, add that domain under Supabase Auth URL Configuration so email-confirmation redirects are allowed.
+```text
+Supabase Auth
+     ↓
+Shared Profile
+├── Experience
+├── Projects
+├── Skills
+└── Links
+     ↓
+Portfolio Variants
+├── Target role
+├── Selected evidence
+├── Ordering
+├── Theme
+└── Section layouts
+     ↓
+Published snapshot
+     ↓
+/<username>/<portfolio>
+```
