@@ -16,7 +16,7 @@ const portfolioDeleteSource = await readFile(
 );
 const transactionalDeleteSource = await readFile(
   new URL(
-    "../supabase/migrations/20260919130000_transactional_portfolio_deletion.sql",
+    "../supabase/migrations/20260919044326_transactional_portfolio_deletion.sql",
     import.meta.url
   ),
   "utf8"
