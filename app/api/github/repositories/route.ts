@@ -111,38 +111,46 @@ export async function GET(request: Request) {
 }
 
 function sanitizeRepository(
-  value: GitHubApiRepository
+  value: unknown
 ): GitHubRepositorySummary | null {
+  if (!value || typeof value !== "object") return null;
+  const repository = value as GitHubApiRepository;
+
   if (
-    typeof value.id !== "number" ||
-    typeof value.name !== "string" ||
-    typeof value.full_name !== "string" ||
-    typeof value.html_url !== "string"
+    typeof repository.id !== "number" ||
+    typeof repository.name !== "string" ||
+    typeof repository.full_name !== "string" ||
+    typeof repository.html_url !== "string"
   ) {
     return null;
   }
 
   return {
-    id: value.id,
-    name: value.name,
-    fullName: value.full_name,
+    id: repository.id,
+    name: repository.name,
+    fullName: repository.full_name,
     description:
-      typeof value.description === "string" ? value.description : "",
-    htmlUrl: value.html_url,
-    homepage: typeof value.homepage === "string" ? value.homepage : "",
-    language: typeof value.language === "string" ? value.language : "",
-    topics: Array.isArray(value.topics)
-      ? value.topics.filter((topic): topic is string => typeof topic === "string")
+      typeof repository.description === "string" ? repository.description : "",
+    htmlUrl: repository.html_url,
+    homepage: typeof repository.homepage === "string" ? repository.homepage : "",
+    language: typeof repository.language === "string" ? repository.language : "",
+    topics: Array.isArray(repository.topics)
+      ? repository.topics.filter(
+          (topic): topic is string => typeof topic === "string"
+        )
       : [],
     stars:
-      typeof value.stargazers_count === "number"
-        ? value.stargazers_count
+      typeof repository.stargazers_count === "number"
+        ? repository.stargazers_count
         : 0,
     forks:
-      typeof value.forks_count === "number" ? value.forks_count : 0,
-    fork: value.fork === true,
-    archived: value.archived === true || value.disabled === true,
-    pushedAt: typeof value.pushed_at === "string" ? value.pushed_at : "",
+      typeof repository.forks_count === "number"
+        ? repository.forks_count
+        : 0,
+    fork: repository.fork === true,
+    archived: repository.archived === true || repository.disabled === true,
+    pushedAt:
+      typeof repository.pushed_at === "string" ? repository.pushed_at : "",
   };
 }
 
