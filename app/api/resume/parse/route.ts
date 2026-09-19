@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { OfficeParser } from "officeparser";
+import { parseOffice } from "officeparser";
 import { parseResumeText } from "@/lib/resume-parser";
 import {
   MAX_RESUME_FILE_SIZE,
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15_000);
 
-    const ast = await OfficeParser.parseOffice(value, {
+    const ast = await parseOffice(value, {
       abortSignal: controller.signal,
     }).finally(() => clearTimeout(timeout));
 
@@ -64,6 +64,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ draft: parseResumeText(text) });
   } catch (error) {
+    // The message below is deliberately vague for the visitor, which once hid
+    // a TypeError from a bad import behind "could not read that resume" for
+    // every file. Keep the cause on the server.
+    console.error("Resume parsing failed", error);
+
     const message =
       error instanceof Error && error.name === "AbortError"
         ? "Resume parsing took too long. Try a smaller or simpler PDF/DOCX file."
