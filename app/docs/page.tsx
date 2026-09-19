@@ -14,6 +14,8 @@ const featureGroups = [
     items: [
       "Maintain one shared professional profile with experience, projects, skills, social links, and custom sections.",
       "Start from a true blank workspace, use the demo, or import a PDF/DOCX resume up to 5 MB.",
+      "Import projects from a public GitHub profile by selecting repositories; FolioBlocks maps descriptions, language/topics, repository links, and homepage links into editable projects.",
+      "Run the active portfolio through a health check for identity/contact gaps, targeting, project completeness, links, resume readiness, and image-led layout requirements.",
       "Resume import is parsed in memory, is not stored, and lets you review/edit profile, experience, projects, and skills before applying.",
       "Use the advanced JSON editor to edit the complete workspace: shared content, variants, targeting, design, branding, resume data, and custom sections.",
     ],
@@ -107,7 +109,7 @@ export default function DocsPage() {
           <article>
             <span>01</span>
             <h3>Add your content</h3>
-            <p>Enter it manually, import a resume, or edit the workspace as JSON.</p>
+            <p>Enter it manually, import a resume or GitHub projects, then run a portfolio health check before publishing.</p>
           </article>
           <article>
             <span>02</span>
