@@ -4,6 +4,7 @@ import {
   type AdminAnalyticsData,
 } from "@/components/AdminAnalyticsDashboard";
 import { createClient } from "@/lib/supabase/server";
+import { isAdminEmail } from "@/lib/admin";
 import { normalizeAnalyticsDays } from "@/lib/supabase/analytics-store";
 
 type Props = {
@@ -18,13 +19,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
     redirect("/login");
   }
 
-  const { data: membership, error: membershipError } = await supabase
-    .from("analytics_admins")
-    .select("user_id")
-    .eq("user_id", data.user.id)
-    .maybeSingle();
-
-  if (membershipError || !membership) {
+  if (!isAdminEmail(data.user.email)) {
     notFound();
   }
 

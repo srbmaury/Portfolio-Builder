@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { PortfolioManager } from "@/components/PortfolioManager";
 import { createClient } from "@/lib/supabase/server";
+import { isAdminEmail } from "@/lib/admin";
 import { listPortfolios } from "@/lib/supabase/portfolio-store";
 
 export default async function PortfoliosPage() {
@@ -11,19 +12,12 @@ export default async function PortfoliosPage() {
     redirect("/login");
   }
 
-  const [portfolios, adminResult] = await Promise.all([
-    listPortfolios(supabase, data.user),
-    supabase
-      .from("analytics_admins")
-      .select("user_id")
-      .eq("user_id", data.user.id)
-      .maybeSingle(),
-  ]);
+  const portfolios = await listPortfolios(supabase, data.user);
 
   return (
     <PortfolioManager
       initialPortfolios={portfolios}
-      isAdmin={Boolean(adminResult.data)}
+      isAdmin={isAdminEmail(data.user.email)}
     />
   );
 }

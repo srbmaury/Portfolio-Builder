@@ -27,6 +27,23 @@ type ProductEventRow = {
   created_at: string;
 };
 
+function normalizeEmail(email: string | null | undefined) {
+  return (email || "").trim().toLowerCase();
+}
+
+/**
+ * Admin access is granted to the single address configured as ADMIN_EMAIL.
+ * Set it with: supabase secrets set ADMIN_EMAIL=you@example.com
+ * When unset we fail closed and nobody is treated as an admin.
+ */
+function isAdminEmail(email: string | null | undefined) {
+  const admin = normalizeEmail(Deno.env.get("ADMIN_EMAIL"));
+  if (!admin) return false;
+
+  const candidate = normalizeEmail(email);
+  return Boolean(candidate) && candidate === admin;
+}
+
 Deno.serve(async (request: Request) => {
   if (request.method !== "POST") {
     return Response.json({ error: "Method not allowed." }, { status: 405 });
@@ -63,23 +80,13 @@ Deno.serve(async (request: Request) => {
     return Response.json({ error: "Authentication required." }, { status: 401 });
   }
 
+  if (!isAdminEmail(user.email)) {
+    return Response.json({ error: "Admin access required." }, { status: 403 });
+  }
+
   const admin = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-
-  const { data: adminMembership, error: adminError } = await admin
-    .from("analytics_admins")
-    .select("user_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (adminError) {
-    return Response.json({ error: "Admin verification failed." }, { status: 500 });
-  }
-
-  if (!adminMembership) {
-    return Response.json({ error: "Admin access required." }, { status: 403 });
-  }
 
   const payload = await request.json().catch(() => ({}));
   const days = normalizeDays(Number(payload?.days || 30));

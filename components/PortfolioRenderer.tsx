@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { ResumeModalLauncher } from "@/components/ResumeModalLauncher";
+import { SkillLogo } from "@/components/SkillLogo";
 import { analyticsSocialTarget } from "@/lib/analytics";
-import { skillIconUrl, skillInitials } from "@/lib/skill-icons";
 import {
   sectionDisplayTitle,
   sectionHasContent,
@@ -648,20 +648,6 @@ function Skills({
         <EmptySection message="Add skills to build your capability section." />
       )}
     </section>
-  );
-}
-
-function SkillLogo({ skill }: { skill: string }) {
-  const url = skillIconUrl(skill);
-
-  return (
-    <span className="skill-logo">
-      {url ? (
-        <Image src={url} alt="" width={34} height={34} unoptimized />
-      ) : (
-        <span>{skillInitials(skill)}</span>
-      )}
-    </span>
   );
 }
 
