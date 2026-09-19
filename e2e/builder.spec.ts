@@ -107,6 +107,95 @@ test("tablet and mobile preview use real isolated viewport widths", async ({
   )).toBeVisible();
 });
 
+test("tablet and mobile preserve photo hero hierarchy by layout", async ({ page }) => {
+  await page.goto("/builder");
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => Boolean(window.localStorage.getItem("folioblocks:workspace")))
+    )
+    .toBe(true);
+
+  async function useHeroLayout(layout: "image-split" | "portrait") {
+    await page.evaluate((variant) => {
+      const key = "folioblocks:workspace";
+      const raw = window.localStorage.getItem(key);
+      if (!raw) throw new Error("Builder state was not persisted.");
+
+      const state = JSON.parse(raw);
+      const active = state.variants.find(
+        (portfolio: { id: string }) => portfolio.id === state.activeVariantId
+      );
+      const hero = active.config.sections.find(
+        (section: { id: string }) => section.id === "hero"
+      );
+      hero.variant = variant;
+      window.localStorage.setItem(key, JSON.stringify(state));
+    }, layout);
+
+    await page.reload();
+  }
+
+  async function verticalOrder() {
+    const preview = page.frameLocator(".preview-device-frame");
+    const copy = preview.locator(".hero-photo-copy");
+    const photo = preview.locator(".hero-photo-frame");
+    await expect(copy).toBeVisible();
+    await expect(photo).toBeVisible();
+
+    const copyBox = await copy.boundingBox();
+    const photoBox = await photo.boundingBox();
+    expect(copyBox).not.toBeNull();
+    expect(photoBox).not.toBeNull();
+
+    return {
+      copyY: copyBox!.y,
+      photoY: photoBox!.y,
+    };
+  }
+
+  await useHeroLayout("image-split");
+  await page.getByRole("button", { name: "tablet" }).click();
+  await expect(page.locator(".preview-window.preview-tablet")).toBeVisible();
+  const tabletImageSplit = await verticalOrder();
+  expect(tabletImageSplit.copyY).toBeLessThan(tabletImageSplit.photoY);
+
+  await page.getByRole("button", { name: "mobile" }).click();
+  await expect(page.locator(".preview-window.preview-mobile")).toBeVisible();
+  const mobileImageSplit = await verticalOrder();
+  expect(mobileImageSplit.copyY).toBeLessThan(mobileImageSplit.photoY);
+
+  await useHeroLayout("portrait");
+  await page.getByRole("button", { name: "tablet" }).click();
+  await expect(page.locator(".preview-window.preview-tablet")).toBeVisible();
+  const tabletPortrait = await verticalOrder();
+  expect(tabletPortrait.photoY).toBeLessThan(tabletPortrait.copyY);
+
+  await page.getByRole("button", { name: "mobile" }).click();
+  await expect(page.locator(".preview-window.preview-mobile")).toBeVisible();
+  const mobilePortrait = await verticalOrder();
+  expect(mobilePortrait.photoY).toBeLessThan(mobilePortrait.copyY);
+
+  const preview = page.frameLocator(".preview-device-frame");
+  await page.getByRole("button", { name: "tablet" }).click();
+  const tabletExperienceColumns = await preview
+    .locator(".experience-v-ledger .experience-layout-item")
+    .first()
+    .evaluate((element) => getComputedStyle(element).gridTemplateColumns);
+  expect(tabletExperienceColumns.trim().split(/\s+/)).toHaveLength(1);
+
+  const tabletProjectColumns = await preview
+    .locator(".github-project-grid")
+    .evaluate((element) => getComputedStyle(element).gridTemplateColumns);
+  expect(tabletProjectColumns.trim().split(/\s+/)).toHaveLength(2);
+
+  await page.getByRole("button", { name: "mobile" }).click();
+  const mobileProjectColumns = await preview
+    .locator(".github-project-grid")
+    .evaluate((element) => getComputedStyle(element).gridTemplateColumns);
+  expect(mobileProjectColumns.trim().split(/\s+/)).toHaveLength(1);
+});
+
 test("SEO metadata routes expose crawler guidance", async ({ request }) => {
   const robots = await request.get("/robots.txt");
   expect(robots.ok()).toBeTruthy();
