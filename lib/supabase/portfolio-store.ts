@@ -18,6 +18,7 @@ export type PortfolioSummary = {
   publishedAt: string | null;
   publicPath: string | null;
   createdAt: string;
+  updatedAt: string;
 };
 
 type ProfileRow = {
@@ -229,6 +230,12 @@ export async function publishVariant(
   const publicPath = existing?.public_path || `${username}/${slug}`;
   const snapshot = snapshotForVariant(normalized);
 
+  // published_at and updated_at are written together so "has this portfolio
+  // changed since it was published" is a comparison of two values from the
+  // same clock. Leaving updated_at to the database made it a client clock
+  // against a server one, and the page always looked out of date.
+  const publishedAt = new Date().toISOString();
+
   const { error } = await supabase.from("portfolios").upsert(
     {
       user_id: user.id,
@@ -242,7 +249,8 @@ export async function publishVariant(
       branding_config: active.branding,
       resume_config: active.resume,
       is_published: true,
-      published_at: new Date().toISOString(),
+      published_at: publishedAt,
+      updated_at: publishedAt,
       public_path: publicPath,
       published_snapshot: snapshot,
     },
@@ -261,7 +269,7 @@ export async function listPortfolios(
   const { data, error } = await supabase
     .from("portfolios")
     .select(
-      "variant_key, name, target_role, theme, is_published, published_at, public_path, created_at"
+      "variant_key, name, target_role, theme, is_published, published_at, public_path, created_at, updated_at"
     )
     .eq("user_id", user.id)
     .order("created_at");
@@ -277,6 +285,7 @@ export async function listPortfolios(
     publishedAt: row.published_at,
     publicPath: row.public_path,
     createdAt: row.created_at,
+    updatedAt: row.updated_at,
   }));
 }
 

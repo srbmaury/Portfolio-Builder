@@ -94,6 +94,25 @@ export function PortfolioManager({
     }
   }
 
+  async function refreshPublished(item: PortfolioSummary) {
+    try {
+      await withUser(item.variantKey, (supabase, user) =>
+        publishPortfolioByKey(supabase, user, item.variantKey)
+      );
+      const publishedAt = new Date().toISOString();
+      setPortfolios((current) =>
+        current.map((portfolio) =>
+          portfolio.variantKey === item.variantKey
+            ? { ...portfolio, isPublished: true, publishedAt, updatedAt: publishedAt }
+            : portfolio
+        )
+      );
+      setMessage("Public page updated with your latest edits.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not update the public page.");
+    }
+  }
+
   async function togglePublish(item: PortfolioSummary) {
     try {
       if (item.isPublished) {
@@ -232,6 +251,18 @@ export function PortfolioManager({
             {portfolios.map((item) => {
               const isBusy = busyKey === item.variantKey;
               const publicUrl = item.publicPath ? `/${item.publicPath}` : null;
+              // Publishing freezes a snapshot. Later edits to the shared
+              // profile or this variant do not reach the public page until it
+              // is published again, which is why a live page can show content
+              // the builder no longer has.
+              // A couple of seconds of slack absorbs clock skew between the
+              // browser that published and the database that records saves.
+              const publishedIsStale =
+                item.isPublished &&
+                Boolean(item.publishedAt) &&
+                new Date(item.updatedAt).getTime() -
+                  new Date(item.publishedAt as string).getTime() >
+                  5000;
 
               return (
                 <article className="portfolio-manager-card" key={item.variantKey}>
@@ -264,7 +295,12 @@ export function PortfolioManager({
                   <div className="portfolio-manager-meta">
                     {publicUrl ? <code>{publicUrl}</code> : <span>Publish to create a public link.</span>}
                     {item.publishedAt && (
-                      <span>Updated {formatPortfolioDate(item.publishedAt)}</span>
+                      <span>Published {formatPortfolioDate(item.publishedAt)}</span>
+                    )}
+                    {publishedIsStale && (
+                      <span className="portfolio-stale" role="status">
+                        Public page shows an older version of this portfolio.
+                      </span>
                     )}
                   </div>
 
@@ -276,6 +312,15 @@ export function PortfolioManager({
                       <a className="ghost-button" href={`/${item.publicPath}`} target="_blank" rel="noreferrer">
                         Open ↗
                       </a>
+                    ) : null}
+                    {publishedIsStale ? (
+                      <button
+                        className="primary-button"
+                        disabled={isBusy}
+                        onClick={() => refreshPublished(item)}
+                      >
+                        Update public page
+                      </button>
                     ) : null}
                     <button className="ghost-button" disabled={isBusy} onClick={() => togglePublish(item)}>
                       {item.isPublished ? "Unpublish" : "Publish"}
