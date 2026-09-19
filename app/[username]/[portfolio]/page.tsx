@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { PortfolioAnalyticsTracker } from "@/components/PortfolioAnalyticsTracker";
 import { PortfolioRenderer } from "@/components/PortfolioRenderer";
+import { siteOrigin } from "@/lib/site-url";
 import {
   loadPublishedPortfolio,
   loadPublishedSnapshot,
@@ -12,19 +12,6 @@ import {
 type Props = {
   params: Promise<{ username: string; portfolio: string }>;
 };
-
-async function publicOrigin() {
-  const requestHeaders = await headers();
-  const host =
-    requestHeaders.get("x-forwarded-host") ||
-    requestHeaders.get("host") ||
-    "portfolio-builder-miia.onrender.com";
-  const protocol =
-    requestHeaders.get("x-forwarded-proto") ||
-    (host.startsWith("localhost") ? "http" : "https");
-
-  return `${protocol}://${host}`;
-}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { username, portfolio } = await params;
@@ -45,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     snapshot.data.profile.tagline;
   const favicon = safePublishedImageUrl(branding?.faviconUrl);
   const customShareImage = safePublishedImageUrl(branding?.shareImageUrl);
-  const origin = await publicOrigin();
+  const origin = siteOrigin();
   const canonicalUrl = `${origin}/${username}/${portfolio}`;
   const shareImage =
     customShareImage ||
@@ -97,8 +84,7 @@ export default async function PublicPortfolioPage({ params }: Props) {
 
   if (!published) notFound();
 
-  const origin = await publicOrigin();
-  const publicUrl = `${origin}/${username}/${portfolio}`;
+  const publicUrl = `${siteOrigin()}/${username}/${portfolio}`;
   const profile = published.snapshot.data.profile;
   const structuredData = {
     "@context": "https://schema.org",
