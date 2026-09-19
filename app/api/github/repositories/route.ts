@@ -84,7 +84,7 @@ export async function GET(request: Request) {
       .map(sanitizeRepository)
       .filter(
         (item): item is GitHubRepositorySummary =>
-          Boolean(item) && !item.archived
+          item !== null && !item.archived
       );
 
     return NextResponse.json(
