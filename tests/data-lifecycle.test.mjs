@@ -38,9 +38,16 @@ test("portfolio deletion considers published snapshots and removes target-only c
   const portfolioDeleteIndex = portfolioDeleteSource.indexOf('.from("portfolios")\n      .delete()');
 
   assert.ok(cloudinaryIndex >= 0);
+  // This order was deliberately reversed. Destroying assets first guaranteed
+  // no orphaned uploads, but it made an irreversible remote deletion depend on
+  // database work that could still fail: a permissions error left the
+  // portfolio in place with its images permanently gone. The `deletable` list
+  // is computed before either step, so deleting the row first does not lose
+  // track of the assets. Orphaned files cost storage; destroyed files cannot
+  // be recovered, so the failure mode now favours keeping the files.
   assert.ok(
-    portfolioDeleteIndex > cloudinaryIndex,
-    "database portfolio row should be deleted only after remote cleanup"
+    cloudinaryIndex > portfolioDeleteIndex,
+    "assets should only be destroyed once the portfolio row is gone"
   );
 });
 

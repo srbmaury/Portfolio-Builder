@@ -54,3 +54,35 @@ test("portfolio delete surfaces Supabase errors instead of swallowing them", () 
   assert.match(route, /typeof message === "string"/);
   assert.match(route, /errorMessage\(error, "Portfolio deletion failed\."\)/);
 });
+
+test("assets are destroyed only after the database work succeeds", () => {
+  // Destroying Cloudinary assets cannot be undone. Running it before the
+  // fallible database work meant a failed delete left the portfolio in place
+  // with its images permanently gone.
+  const destroy = route.indexOf("await destroyCloudinaryUrls(deletable)");
+  const rowDelete = route.indexOf('.from("portfolios")\n      .delete()');
+  const deleteGuard = route.indexOf("if (deleteError) throw deleteError");
+
+  assert.ok(destroy > 0, "expected the asset destruction call");
+  assert.ok(rowDelete > 0, "expected the portfolio row delete");
+  assert.ok(
+    destroy > deleteGuard && deleteGuard > rowDelete,
+    "destroyCloudinaryUrls must run after the portfolio row is deleted"
+  );
+});
+
+test("product analytics cleanup cannot block deleting a portfolio", () => {
+  // variant_key is plain text, not a foreign key, so these rows do not
+  // cascade; but a permissions failure here must not abort the delete.
+  const rowDelete = route.indexOf("if (deleteError) throw deleteError");
+  const productCleanup = route.indexOf('.from("product_events")');
+
+  assert.ok(
+    productCleanup > rowDelete,
+    "product_events cleanup must run after the portfolio row is deleted"
+  );
+  assert.match(route, /if \(productEventsError\) \{\s*\n\s*console\.warn/);
+  assert.match(route, /productEventsCleaned: !productEventsError/);
+  // It must never be rethrown.
+  assert.doesNotMatch(route, /throw productEventsError/);
+});
