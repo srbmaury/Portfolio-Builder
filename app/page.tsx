@@ -25,7 +25,7 @@ export default function Home() {
         </p>
         <div className="landing-actions">
           <Link className="landing-primary" href="/builder?fresh=1">Start fresh →</Link>
-          <Link className="landing-secondary" href="/builder">Explore 2-role demo</Link>
+          <Link className="landing-secondary" href="/builder?demo=1">Explore 2-role demo</Link>
         </div>
 
         <div className="landing-proof">

@@ -42,10 +42,12 @@ export function PortfolioBuilder({
   startFresh = false,
   initialVariantId,
   openCreateVariant = false,
+  startWithDemo = false,
 }: {
   startFresh?: boolean;
   initialVariantId?: string;
   openCreateVariant?: boolean;
+  startWithDemo?: boolean;
 }) {
   const {
     state,
@@ -76,6 +78,7 @@ export function PortfolioBuilder({
   const [resumeImportOpen, setResumeImportOpen] = useState(false);
   const [jsonEditorOpen, setJsonEditorOpen] = useState(false);
   const createVariantOpenedRef = useRef(false);
+  const demoLoadedRef = useRef(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const previewFrameRef = useRef<HTMLIFrameElement>(null);
 
@@ -124,6 +127,32 @@ export function PortfolioBuilder({
     createVariantOpenedRef.current = true;
     setCreateDialog("variant");
   }, [cloudResolved, hydrated, openCreateVariant]);
+
+  // The landing page's "Explore 2-role demo" link used to point at a bare
+  // /builder, which for a first-time visitor is an empty workspace: the demo
+  // was only reachable from the More menu. Loading it is deliberately skipped
+  // when the workspace already holds content, so the link can never discard
+  // someone's draft.
+  useEffect(() => {
+    if (!hydrated || !cloudResolved || !startWithDemo || demoLoadedRef.current) {
+      return;
+    }
+
+    demoLoadedRef.current = true;
+
+    const { profile, experience, projects, skills, customSections } = state.data;
+    const hasContent =
+      Boolean(profile.name.trim() || profile.role.trim() || profile.tagline.trim()) ||
+      experience.length > 0 ||
+      projects.length > 0 ||
+      skills.length > 0 ||
+      customSections.length > 0;
+
+    if (!hasContent) {
+      setState(sampleBuilderState);
+      setShareUrl("");
+    }
+  }, [cloudResolved, hydrated, startWithDemo, state.data, setState, setShareUrl]);
 
 
   const {
