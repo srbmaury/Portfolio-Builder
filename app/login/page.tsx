@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<"login" | "signup" | "reset">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -23,6 +23,22 @@ export default function LoginPage() {
     setMessage("");
 
     const supabase = createClient();
+
+    if (mode === "reset") {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+      });
+
+      setBusy(false);
+      // Never reveal whether an address has an account.
+      setMessage(
+        error
+          ? error.message
+          : "If that address has an account, a reset link is on its way."
+      );
+      return;
+    }
+
     const result =
       mode === "login"
         ? await supabase.auth.signInWithPassword({ email, password })
@@ -30,7 +46,9 @@ export default function LoginPage() {
             email,
             password,
             options: {
-              emailRedirectTo: `${window.location.origin}/builder`,
+              // Confirmation links carry a PKCE code that has to be exchanged
+              // for a session, which is what /auth/callback does.
+              emailRedirectTo: `${window.location.origin}/auth/callback?next=/builder`,
             },
           });
 
@@ -56,7 +74,13 @@ export default function LoginPage() {
         <a className="brand" href="/">folio<span>blocks</span></a>
         <div>
           <p className="panel-kicker">Cloud workspace</p>
-          <h1>{mode === "login" ? "Sign in" : "Create account"}</h1>
+          <h1>
+            {mode === "login"
+              ? "Sign in"
+              : mode === "signup"
+                ? "Create account"
+                : "Reset password"}
+          </h1>
           <p>Save your profile, portfolio variants, and published links across devices.</p>
         </div>
 
@@ -65,26 +89,45 @@ export default function LoginPage() {
           <input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} />
         </label>
 
-        <label className="field">
-          <span>Password</span>
-          <input type="password" minLength={6} required value={password} onChange={(event) => setPassword(event.target.value)} />
-        </label>
+        {mode !== "reset" && (
+          <label className="field">
+            <span>Password</span>
+            <input type="password" minLength={6} required value={password} onChange={(event) => setPassword(event.target.value)} />
+          </label>
+        )}
 
         {message && <p className="auth-message">{message}</p>}
 
         <button className="primary-button auth-submit" disabled={busy || !ready}>
-          {busy ? "Working…" : mode === "login" ? "Sign in" : "Create account"}
+          {busy
+            ? "Working…"
+            : mode === "login"
+              ? "Sign in"
+              : mode === "signup"
+                ? "Create account"
+                : "Send reset link"}
         </button>
 
         <button
           type="button"
           className="ghost-button"
           onClick={() => {
-            setMode(mode === "login" ? "signup" : "login");
+            setMode(mode === "signup" ? "login" : "signup");
             setMessage("");
           }}
         >
-          {mode === "login" ? "Need an account? Sign up" : "Already have an account? Sign in"}
+          {mode === "signup" ? "Already have an account? Sign in" : "Need an account? Sign up"}
+        </button>
+
+        <button
+          type="button"
+          className="ghost-button"
+          onClick={() => {
+            setMode(mode === "reset" ? "login" : "reset");
+            setMessage("");
+          }}
+        >
+          {mode === "reset" ? "Back to sign in" : "Forgot your password?"}
         </button>
       </form>
     </main>

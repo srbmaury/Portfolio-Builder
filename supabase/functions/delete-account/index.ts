@@ -1,14 +1,39 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
+/**
+ * This function is the only one invoked from the browser, so it needs CORS.
+ * Without a preflight response the browser refuses to send the request at all
+ * and supabase-js reports "Failed to send a request to the Edge Function".
+ *
+ * Allowing any origin is safe here because authorisation is a bearer token in
+ * a header rather than a cookie: a third-party page cannot obtain one, and a
+ * request without a valid token is rejected below.
+ */
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Max-Age": "86400",
+};
+
+function json(body: unknown, status: number) {
+  return Response.json(body, { status, headers: CORS_HEADERS });
+}
+
 Deno.serve(async (request: Request) => {
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
+  }
+
   if (request.method !== "POST") {
-    return Response.json({ error: "Method not allowed." }, { status: 405 });
+    return json({ error: "Method not allowed." }, 405);
   }
 
   const authorization = request.headers.get("Authorization");
   if (!authorization?.startsWith("Bearer ")) {
-    return Response.json({ error: "Authentication required." }, { status: 401 });
+    return json({ error: "Authentication required." }, 401);
   }
 
   const token = authorization.slice("Bearer ".length);
@@ -17,10 +42,7 @@ Deno.serve(async (request: Request) => {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
   if (!supabaseUrl || !anonKey || !serviceRoleKey) {
-    return Response.json(
-      { error: "Account deletion is not configured." },
-      { status: 503 }
-    );
+    return json({ error: "Account deletion is not configured." }, 503);
   }
 
   const userClient = createClient(supabaseUrl, anonKey, {
@@ -41,7 +63,7 @@ Deno.serve(async (request: Request) => {
   } = await userClient.auth.getUser(token);
 
   if (userError || !user) {
-    return Response.json({ error: "Authentication required." }, { status: 401 });
+    return json({ error: "Authentication required." }, 401);
   }
 
   const cleanupUrl =
@@ -59,14 +81,14 @@ Deno.serve(async (request: Request) => {
     const payload = await cleanupResponse
       .json()
       .catch(() => ({ error: "Account asset cleanup failed." }));
-    return Response.json(
+    return json(
       {
         error:
           typeof payload?.error === "string"
             ? payload.error
             : "Account asset cleanup failed.",
       },
-      { status: 502 }
+      502
     );
   }
 
@@ -80,8 +102,8 @@ Deno.serve(async (request: Request) => {
   const { error: deleteError } = await admin.auth.admin.deleteUser(user.id);
 
   if (deleteError) {
-    return Response.json({ error: deleteError.message }, { status: 500 });
+    return json({ error: deleteError.message }, 500);
   }
 
-  return Response.json({ deleted: true });
+  return json({ deleted: true }, 200);
 });

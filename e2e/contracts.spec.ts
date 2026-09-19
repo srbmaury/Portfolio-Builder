@@ -133,3 +133,53 @@ test("unknown portfolios 404 and published routes stay crawlable", async ({ requ
   expect(sitemap.ok()).toBeTruthy();
   expect(await sitemap.text()).toContain("<urlset");
 });
+
+test("password reset is offered and requests a recovery email", async ({ page }) => {
+  await page.goto("/login");
+  const submit = page.locator("button.auth-submit");
+  await expect(submit).toBeEnabled();
+
+  await page.getByRole("button", { name: /forgot your password/i }).click();
+
+  // Reset mode asks for an address only.
+  await expect(page.getByRole("heading", { name: /reset password/i })).toBeVisible();
+  await expect(page.locator('input[type="password"]')).toHaveCount(0);
+  await expect(submit).toHaveText(/send reset link/i);
+
+  const recovery = page.waitForRequest(
+    (request) =>
+      request.url().includes("/auth/v1/recover") && request.method() === "POST"
+  );
+  await page.locator('input[type="email"]').fill("nobody@example.test");
+  await submit.click();
+  const request = await recovery;
+
+  // The link must come back through the callback that exchanges the PKCE code.
+  expect(decodeURIComponent(request.url())).toContain("/auth/callback?next=/reset-password");
+
+  // The response must not reveal whether the address has an account.
+  await expect(page.locator(".auth-message")).toHaveText(/if that address has an account/i);
+});
+
+test("auth callback rejects missing and invalid codes", async ({ request }) => {
+  const missing = await request.get("/auth/callback", { maxRedirects: 0 });
+  expect(missing.status()).toBe(307);
+  expect(missing.headers()["location"]).toContain("/login?error=missing_code");
+
+  const invalid = await request.get("/auth/callback?code=not-a-real-code", {
+    maxRedirects: 0,
+  });
+  expect(invalid.status()).toBe(307);
+  expect(invalid.headers()["location"]).toContain("/login?error=expired_link");
+});
+
+test("reset password page refuses to submit without a recovery session", async ({
+  page,
+}) => {
+  await page.goto("/reset-password");
+  await expect(
+    page.getByText(/this reset link is invalid or has expired/i)
+  ).toBeVisible();
+  // The control stays disabled, so a visitor cannot attempt a password change.
+  await expect(page.locator("button.auth-submit")).toBeDisabled();
+});
