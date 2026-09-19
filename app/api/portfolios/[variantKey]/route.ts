@@ -184,26 +184,17 @@ export async function DELETE(
       ? Array.from(new Set(candidates))
       : selectUnreferencedAssetUrls(candidates, remainingReferences);
 
-    await destroyCloudinaryUrls(deletable);
-
     if (isLastPortfolio) {
       const cleanupResults = await Promise.all([
         supabase.from("experiences").delete().eq("user_id", user.id),
         supabase.from("projects").delete().eq("user_id", user.id),
         supabase.from("skills").delete().eq("user_id", user.id),
         supabase.from("profiles").delete().eq("user_id", user.id),
-        supabase.from("product_events").delete().eq("user_id", user.id),
       ]);
       const cleanupError = cleanupResults.find((result) => result.error)?.error;
       if (cleanupError) throw cleanupError;
     } else {
-      const cleanupResults = [
-        await supabase
-          .from("product_events")
-          .delete()
-          .eq("user_id", user.id)
-          .eq("variant_key", variantKey),
-      ];
+      const cleanupResults = [];
 
       if (orphanedContent.experienceIds.length) {
         cleanupResults.push(
@@ -247,10 +238,43 @@ export async function DELETE(
 
     if (deleteError) throw deleteError;
 
+    // Product analytics are secondary, and variant_key is plain text rather
+    // than a foreign key, so nothing cascades. A failure here used to abort
+    // the whole delete: on a database missing the product_events grants it
+    // raised 42501 and no portfolio could ever be deleted. Orphaned rows are
+    // harmless and are removed with the account, so clean up best-effort.
+    const { error: productEventsError } = isLastPortfolio
+      ? await supabase.from("product_events").delete().eq("user_id", user.id)
+      : await supabase
+          .from("product_events")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("variant_key", variantKey);
+
+    if (productEventsError) {
+      console.warn(
+        "Portfolio deleted, but its product analytics could not be cleaned up",
+        productEventsError
+      );
+    }
+
+    // Destroying Cloudinary assets cannot be undone, so it runs only once the
+    // database work has succeeded. Doing it earlier meant a failed delete left
+    // the portfolio in place with its images permanently gone.
+    let deletedAssets = 0;
+    try {
+      await destroyCloudinaryUrls(deletable);
+      deletedAssets = deletable.length;
+    } catch (assetError) {
+      // The rows are already gone; leaving files behind beats failing here.
+      console.warn("Portfolio deleted, but its assets were not removed", assetError);
+    }
+
     return NextResponse.json({
       deleted: true,
-      deletedAssets: deletable.length,
+      deletedAssets,
       deletedSharedWorkspace: isLastPortfolio,
+      productEventsCleaned: !productEventsError,
     });
   } catch (error) {
     // Supabase rejects with a plain object, not an Error, so an instanceof

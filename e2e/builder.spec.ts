@@ -116,6 +116,23 @@ test("tablet and mobile preserve photo hero hierarchy by layout", async ({ page 
     )
     .toBe(true);
 
+  // A fresh workspace has no profile content, so every section is filtered out
+  // of the preview and there is no hero to measure. Load the demo first.
+  await page.locator("button.topbar-more-trigger").click();
+  await page.getByRole("menuitem", { name: "Load demo" }).click();
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const raw = window.localStorage.getItem("folioblocks:workspace");
+        if (!raw) return false;
+        // Profile content lives on the state, not on the active variant.
+        const state = JSON.parse(raw);
+        return Boolean(state?.data?.profile?.name);
+      })
+    )
+    .toBe(true);
+
   async function useHeroLayout(layout: "image-split" | "portrait") {
     await page.evaluate((variant) => {
       const key = "folioblocks:workspace";
@@ -177,7 +194,23 @@ test("tablet and mobile preserve photo hero hierarchy by layout", async ({ page 
   expect(mobilePortrait.photoY).toBeLessThan(mobilePortrait.copyY);
 
   const preview = page.frameLocator(".preview-device-frame");
-  await page.getByRole("button", { name: "tablet" }).click();
+
+  // The preview frame animates its width, so a measurement taken straight
+  // after the click reads the previous device's layout. Wait for the frame's
+  // own viewport to reach the expected width before measuring.
+  async function usePreviewDevice(device: "tablet" | "mobile", width: number) {
+    await page.getByRole("button", { name: device, exact: true }).click();
+    await expect(page.locator(`.preview-window.preview-${device}`)).toBeVisible();
+    await expect
+      .poll(() =>
+        preview
+          .locator("body")
+          .evaluate((element) => element.ownerDocument.documentElement.clientWidth)
+      )
+      .toBe(width);
+  }
+
+  await usePreviewDevice("tablet", 768);
   const tabletExperienceColumns = await preview
     .locator(".experience-v-ledger .experience-layout-item")
     .first()
@@ -189,7 +222,7 @@ test("tablet and mobile preserve photo hero hierarchy by layout", async ({ page 
     .evaluate((element) => getComputedStyle(element).gridTemplateColumns);
   expect(tabletProjectColumns.trim().split(/\s+/)).toHaveLength(2);
 
-  await page.getByRole("button", { name: "mobile" }).click();
+  await usePreviewDevice("mobile", 390);
   const mobileProjectColumns = await preview
     .locator(".github-project-grid")
     .evaluate((element) => getComputedStyle(element).gridTemplateColumns);
@@ -229,6 +262,23 @@ test("section ordering and hero resume modal work from saved builder state", asy
   await expect(rows.nth(0).locator("strong")).toHaveText(secondLabel);
   await expect(rows.nth(1).locator("strong")).toHaveText(firstLabel);
 
+  // The rest of this test reads the rendered preview. A fresh workspace has no
+  // profile content, so every section is filtered out and nothing renders;
+  // load the demo to give the hero and résumé sections something to show.
+  await page.getByRole("button", { name: "Content", exact: true }).click();
+  await page.locator("button.topbar-more-trigger").click();
+  await page.getByRole("menuitem", { name: "Load demo" }).click();
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const raw = window.localStorage.getItem("folioblocks:workspace");
+        if (!raw) return false;
+        return Boolean(JSON.parse(raw)?.data?.profile?.name);
+      })
+    )
+    .toBe(true);
+
   await page.evaluate(() => {
     const key = "folioblocks:workspace";
     const raw = window.localStorage.getItem(key);
@@ -247,18 +297,37 @@ test("section ordering and hero resume modal work from saved builder state", asy
       hideSectionWhenHeroLink: false,
     };
 
+    // The demo ships the résumé section hidden, and this test needs it on to
+    // observe it being hidden again by the hero link.
+    const resumeSection = active.config.sections.find(
+      (section: { id: string }) => section.id === "resume"
+    );
+    if (resumeSection) resumeSection.visible = true;
+
     window.localStorage.setItem(key, JSON.stringify(state));
   });
 
   await page.goto("/builder");
+
+  // The résumé controls only exist once that editor section is expanded.
+  await page
+    .locator("button.editor-section-toggle")
+    .filter({ hasText: "Resume" })
+    .first()
+    .click();
+
   const heroToggle = page.getByRole("checkbox", {
     name: /show résumé link in hero/i,
   });
   await expect(heroToggle).toBeEnabled();
   await heroToggle.check();
 
-  const preview = page.locator(".preview-window");
-  const resumeAction = preview.getByRole("button", { name: "View résumé" });
+  // The portfolio renders inside the preview iframe, so these controls are not
+  // in the builder's own document.
+  const preview = page.frameLocator(".preview-device-frame");
+  // The standalone résumé section renders its own "View résumé" button, so
+  // match the hero's one specifically.
+  const resumeAction = preview.locator("button.hero-resume-link");
   await expect(resumeAction).toBeVisible();
   await expect(preview.locator(".resume-section")).toBeVisible();
 
@@ -272,10 +341,10 @@ test("section ordering and hero resume modal work from saved builder state", asy
   await expect(preview.locator(".resume-section")).toHaveCount(0);
   await resumeAction.click();
 
-  const dialog = page.getByRole("dialog", { name: /resume\.pdf preview/i });
+  const dialog = preview.getByRole("dialog", { name: /resume\.pdf preview/i });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("link", { name: /open in new tab/i })).toBeVisible();
 
   await page.keyboard.press("Escape");
-  await expect(dialog).toBeHidden();
+  await expect(dialog).toHaveCount(0);
 });
