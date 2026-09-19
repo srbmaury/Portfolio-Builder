@@ -1,5 +1,6 @@
+import { Buffer } from "node:buffer";
 import { NextResponse } from "next/server";
-import { OfficeParser } from "officeparser";
+import { parseOffice } from "officeparser";
 import { parseResumeText } from "@/lib/resume-parser";
 import {
   MAX_RESUME_FILE_SIZE,
@@ -8,7 +9,19 @@ import {
 
 export const runtime = "nodejs";
 
+const DOCX_MIME =
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+type OfficeParserFailure = Error & {
+  officeIssue?: {
+    code?: string;
+    severity?: string;
+  };
+};
+
 export async function POST(request: Request) {
+  let uploadedFile: File | null = null;
+
   try {
     const contentLength = Number(request.headers.get("content-length") || "0");
     if (
@@ -31,6 +44,8 @@ export async function POST(request: Request) {
       );
     }
 
+    uploadedFile = value;
+
     const validation = validateResumeFileMetadata(value);
     if (!validation.ok) {
       return NextResponse.json(
@@ -39,11 +54,21 @@ export async function POST(request: Request) {
       );
     }
 
+    // Give officeparser a Node Buffer and an explicit format. This avoids
+    // relying on the framework's multipart File implementation or runtime
+    // magic-byte detection after Next has compiled the route.
+    const fileType =
+      value.type === DOCX_MIME || value.name.toLowerCase().endsWith(".docx")
+        ? "docx"
+        : "pdf";
+    const bytes = Buffer.from(await value.arrayBuffer());
+
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15_000);
 
-    const ast = await OfficeParser.parseOffice(value, {
+    const ast = await parseOffice(bytes, {
       abortSignal: controller.signal,
+      fileType,
     }).finally(() => clearTimeout(timeout));
 
     const rendered = await ast.to("text", {
@@ -64,6 +89,16 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ draft: parseResumeText(text) });
   } catch (error) {
+    const parserError = error as OfficeParserFailure;
+    console.error("[resume/parse] Resume parsing failed", {
+      name: error instanceof Error ? error.name : typeof error,
+      message: error instanceof Error ? error.message : String(error),
+      officeIssueCode: parserError?.officeIssue?.code,
+      officeIssueSeverity: parserError?.officeIssue?.severity,
+      fileType: uploadedFile?.type || undefined,
+      fileSize: uploadedFile?.size || undefined,
+    });
+
     const message =
       error instanceof Error && error.name === "AbortError"
         ? "Resume parsing took too long. Try a smaller or simpler PDF/DOCX file."
