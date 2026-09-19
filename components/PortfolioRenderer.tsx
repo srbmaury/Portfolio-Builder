@@ -671,6 +671,10 @@ function Resume({
     snapshot.data.profile.role.trim() ||
     "Professional profile";
   const profileName = snapshot.data.profile.name.trim() || "Portfolio";
+  // A visitor gains nothing from the upload's file name, and a long one used
+  // to break out of its card. Name the document instead. The real file name
+  // still reaches the download and the preview dialog.
+  const documentLabel = `${profileName} — résumé`;
 
   if (variant === "card") {
     return (
@@ -679,7 +683,7 @@ function Resume({
         <div className="resume-card">
           <div>
             <span className="resume-file-type">PDF</span>
-            <h3>{fileName}</h3>
+            <h3>{documentLabel}</h3>
             <p>View the complete résumé in a new tab.</p>
           </div>
           <a
@@ -703,7 +707,7 @@ function Resume({
         <div className="resume-compact-row">
           <div>
             <span className="resume-file-type">PDF</span>
-            <strong>{fileName}</strong>
+            <strong>{documentLabel}</strong>
           </div>
           <span>{targetRole}</span>
           <ResumeModalLauncher
@@ -735,7 +739,7 @@ function Resume({
               PDF
             </span>
             <div>
-              <strong>{fileName}</strong>
+              <strong>{documentLabel}</strong>
               <small>{targetRole}</small>
             </div>
             <ResumeModalLauncher
@@ -757,7 +761,7 @@ function Resume({
           <span className="resume-spotlight-index">05 / Résumé</span>
           <h2>{heading}</h2>
           <p>{targetRole}</p>
-          <strong>{fileName}</strong>
+          <strong>{documentLabel}</strong>
           <ResumeModalLauncher
             url={url}
             fileName={fileName}
@@ -777,7 +781,7 @@ function Resume({
             <span>05</span>
             <h2>{heading}</h2>
           </div>
-          <p>{fileName}</p>
+          <p>{documentLabel}</p>
           <ResumeModalLauncher
             url={url}
             fileName={fileName}
@@ -797,7 +801,7 @@ function Resume({
           <p>
             <span className="terminal-prompt">$</span> open resume.pdf
           </p>
-          <p className="resume-terminal-file">{fileName}</p>
+          <p className="resume-terminal-file">{documentLabel}</p>
           <p>
             <span className="terminal-prompt">role:</span> {targetRole}
           </p>

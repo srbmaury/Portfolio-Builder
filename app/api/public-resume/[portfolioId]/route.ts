@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { loadResumePdf, resumeResponseHeaders } from "@/lib/resume-delivery";
+import {
+  ResumeUnavailableError,
+  loadResumePdf,
+  resumeErrorResponse,
+  resumeResponseHeaders,
+} from "@/lib/resume-delivery";
 import type { PortfolioSnapshot } from "@/lib/portfolio";
 import { createPublicClient } from "@/lib/supabase/public";
 
@@ -21,31 +26,34 @@ export async function GET(_request: Request, { params }: Props) {
     .maybeSingle();
 
   if (error || !data?.is_published || !data.published_snapshot) {
-    return NextResponse.json({ error: "Resume not found." }, { status: 404 });
+    return resumeErrorResponse(
+        new ResumeUnavailableError("This résumé is no longer available.", true)
+      );
   }
 
   const snapshot = data.published_snapshot as PortfolioSnapshot;
   const resume = snapshot.meta?.resume;
 
   if (!resume?.url || !resume.publicId) {
-    return NextResponse.json({ error: "Resume not found." }, { status: 404 });
+    return resumeErrorResponse(
+        new ResumeUnavailableError("This résumé is no longer available.", true)
+      );
   }
 
   try {
     const pdf = await loadResumePdf(resume);
 
     if (!pdf) {
-      return NextResponse.json({ error: "Resume not found." }, { status: 404 });
+      return resumeErrorResponse(
+        new ResumeUnavailableError("This résumé is no longer available.", true)
+      );
     }
 
     return new NextResponse(pdf.body, {
       status: 200,
       headers: resumeResponseHeaders(pdf.fileName),
     });
-  } catch {
-    return NextResponse.json(
-      { error: "Resume delivery is temporarily unavailable." },
-      { status: 502 }
-    );
+  } catch (error) {
+    return resumeErrorResponse(error);
   }
 }
