@@ -412,6 +412,14 @@ export function PortfolioBuilder({
               </a>
             )}
 
+            <button
+              type="button"
+              className="topbar-link"
+              onClick={() => setHealthOpen(true)}
+            >
+              Health
+            </button>
+
             <div className="topbar-more" ref={moreMenuRef}>
               <button
                 type="button"
