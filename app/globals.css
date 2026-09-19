@@ -2813,7 +2813,11 @@ body.dialog-open {
   justify-content: center;
   min-height: 38px;
 }
-.portfolio-manager-actions button {
+/* Secondary styling for the plain actions only. Without the exclusion this
+   beat .primary-button on specificity and left a primary action with grey
+   text, which then sat on a dark hover background and became unreadable.
+   "Edit" escaped it only by being an anchor rather than a button. */
+.portfolio-manager-actions button:not(.primary-button) {
   border: 0;
   border-radius: 8px;
   padding: 7px 10px;
@@ -2823,7 +2827,7 @@ body.dialog-open {
   font-weight: 750;
   cursor: pointer;
 }
-.portfolio-manager-actions button:disabled {
+.portfolio-manager-actions button:not(.primary-button):disabled {
   opacity: .5;
   cursor: wait;
 }

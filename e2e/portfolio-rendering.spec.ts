@@ -343,3 +343,59 @@ test("each portfolio owns its content, so editing one leaves the others alone", 
   await page.getByRole("button", { name: variantNames[0], exact: true }).click();
   await expect.poll(() => nameField.inputValue()).toBe("ONLY THIS PORTFOLIO");
 });
+
+test("a primary action keeps its own colours inside the portfolio actions row", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  // The manager needs an account, so exercise the rule itself: build the same
+  // structure and read what the stylesheet computes. A bare element selector
+  // used to beat .primary-button here, leaving grey text that landed on a
+  // dark hover background.
+  const colours = await page.evaluate(() => {
+    const row = document.createElement("div");
+    row.className = "portfolio-manager-actions primary-actions";
+    row.innerHTML =
+      '<button class="primary-button">Update public page</button>' +
+      '<button class="ghost-button">Unpublish</button>';
+    document.body.appendChild(row);
+
+    const read = (el: Element) => {
+      const style = getComputedStyle(el);
+      return { color: style.color, background: style.backgroundColor };
+    };
+    const primary = read(row.children[0]);
+    const secondary = read(row.children[1]);
+    row.remove();
+    return { primary, secondary };
+  });
+
+  const channel = (raw: number) => {
+    const v = raw / 255;
+    return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  };
+  const luminance = (value: string) => {
+    const [r, g, b] = (value.match(/[\d.]+/g) || ["0", "0", "0"]).slice(0, 3).map(Number);
+    return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+  };
+  const contrast = (a: string, b: string) => {
+    const light = Math.max(luminance(a), luminance(b));
+    const dark = Math.min(luminance(a), luminance(b));
+    return (light + 0.05) / (dark + 0.05);
+  };
+
+  // A primary action is light text on a dark fill, like every other one.
+  expect(luminance(colours.primary.color)).toBeGreaterThan(
+    luminance(colours.primary.background)
+  );
+  expect(
+    contrast(colours.primary.color, colours.primary.background),
+    `primary ${colours.primary.color} on ${colours.primary.background}`
+  ).toBeGreaterThanOrEqual(4.5);
+
+  // The secondary buttons keep their quieter treatment.
+  expect(
+    contrast(colours.secondary.color, colours.secondary.background)
+  ).toBeGreaterThanOrEqual(4.5);
+});
