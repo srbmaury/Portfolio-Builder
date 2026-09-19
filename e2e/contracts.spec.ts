@@ -243,3 +243,41 @@ test("asking for a portfolio that does not exist says so", async ({ page }) => {
     /could not be found/i
   );
 });
+
+
+test("home exposes X card metadata and Ory verification", async ({ page }) => {
+  await page.goto("/");
+
+  const expectedImage = new URL("/twitter-image", page.url()).href;
+
+  await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute(
+    "content",
+    "summary_large_image"
+  );
+  await expect(page.locator('meta[name="twitter:image"]')).toHaveAttribute(
+    "content",
+    expectedImage
+  );
+  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+    "content",
+    new URL("/opengraph-image", page.url()).href
+  );
+  await expect(page.locator('meta[name="ory-verify"]')).toHaveAttribute(
+    "content",
+    "orynth-53d2c4c72e0141eaa85c34a83e54b1c2"
+  );
+});
+
+test("social card image routes are directly fetchable by crawlers", async ({
+  request,
+}) => {
+  for (const path of ["/twitter-image", "/opengraph-image"]) {
+    const response = await request.get(path, {
+      headers: { "user-agent": "Twitterbot/1.0" },
+    });
+
+    expect(response.ok(), path).toBeTruthy();
+    expect(response.headers()["content-type"], path).toContain("image/png");
+    expect((await response.body()).byteLength, path).toBeGreaterThan(10_000);
+  }
+});
