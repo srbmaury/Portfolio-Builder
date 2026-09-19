@@ -13,6 +13,7 @@ import {
   renamePortfolio,
   unpublishPortfolio,
   type PortfolioSummary,
+  restorePublishedSnapshot,
 } from "@/lib/supabase/portfolio-store";
 
 export function PortfolioManager({
@@ -91,6 +92,35 @@ export function PortfolioManager({
       }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Duplicate failed.");
+    }
+  }
+
+  async function restorePublished(item: PortfolioSummary) {
+    if (
+      !window.confirm(
+        `Replace your edits to “${item.name}” with the version currently on its public page? This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await withUser(item.variantKey, (supabase, user) =>
+        restorePublishedSnapshot(supabase, user, item.variantKey)
+      );
+      const now = new Date().toISOString();
+      setPortfolios((current) =>
+        current.map((portfolio) =>
+          portfolio.variantKey === item.variantKey
+            ? { ...portfolio, updatedAt: now, publishedAt: now }
+            : portfolio
+        )
+      );
+      setMessage("Restored this portfolio to its published version.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Could not restore the published version."
+      );
     }
   }
 
@@ -314,13 +344,22 @@ export function PortfolioManager({
                       </a>
                     ) : null}
                     {publishedIsStale ? (
-                      <button
-                        className="primary-button"
-                        disabled={isBusy}
-                        onClick={() => refreshPublished(item)}
-                      >
-                        Update public page
-                      </button>
+                      <>
+                        <button
+                          className="primary-button"
+                          disabled={isBusy}
+                          onClick={() => refreshPublished(item)}
+                        >
+                          Update public page
+                        </button>
+                        <button
+                          className="ghost-button"
+                          disabled={isBusy}
+                          onClick={() => restorePublished(item)}
+                        >
+                          Restore published version
+                        </button>
+                      </>
                     ) : null}
                     <button className="ghost-button" disabled={isBusy} onClick={() => togglePublish(item)}>
                       {item.isPublished ? "Unpublish" : "Publish"}

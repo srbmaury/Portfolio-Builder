@@ -1,12 +1,14 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import {
   cloneConfig,
+  fullContentConfig,
   normalizeBuilderState,
   publicUsernameForProfile,
   slugify,
   snapshotForVariant,
   type BuilderState,
   type PortfolioData,
+  type PortfolioSnapshot,
   type PortfolioVariant,
 } from "@/lib/portfolio";
 
@@ -298,6 +300,59 @@ export async function listPortfolios(
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }));
+}
+
+/**
+ * Puts the workspace copy of one portfolio back to what its public page is
+ * serving. Publishing freezes a snapshot, so the two drift apart as soon as
+ * the portfolio is edited; this is the way back for an edit you did not mean
+ * to keep. Only the named portfolio is touched.
+ */
+export async function restorePublishedSnapshot(
+  supabase: SupabaseClient,
+  user: User,
+  variantKey: string
+): Promise<BuilderState> {
+  const { data: row, error } = await supabase
+    .from("portfolios")
+    .select("published_snapshot")
+    .eq("user_id", user.id)
+    .eq("variant_key", variantKey)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  const snapshot = row?.published_snapshot as PortfolioSnapshot | null;
+  if (!snapshot?.data || !snapshot?.config) {
+    throw new Error("This portfolio has no published version to restore.");
+  }
+
+  const state = await loadBuilderState(supabase, user);
+  if (!state) throw new Error("Could not load your workspace.");
+
+  const restored = normalizeBuilderState({
+    ...state,
+    activeVariantId: variantKey,
+    variants: state.variants.map((variant) =>
+      variant.id === variantKey
+        ? {
+            ...variant,
+            name: snapshot.meta?.name ?? variant.name,
+            targetRole: snapshot.meta?.targetRole ?? variant.targetRole,
+            // The snapshot already holds exactly what the page shows, so the
+            // restored portfolio includes all of it.
+            data: snapshot.data,
+            content: fullContentConfig(snapshot.data),
+            config: snapshot.config,
+            branding: snapshot.meta?.branding ?? variant.branding,
+            resume: snapshot.meta?.resume ?? variant.resume,
+          }
+        : variant
+    ),
+  });
+
+  await saveBuilderState(supabase, user, restored);
+  return restored;
 }
 
 export async function renamePortfolio(
