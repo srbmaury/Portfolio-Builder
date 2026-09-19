@@ -36,7 +36,7 @@ export function PortfolioHealthDialog({
 
   const statusDetail =
     report.status === "needs-attention"
-      ? "Fix the blocking items first, then work through the improvements that matter for this portfolio."
+      ? "Fix the highest-priority items first, then work through the improvements that matter for this portfolio."
       : report.status === "good"
         ? "Nothing fundamental is missing. A few improvements can make the portfolio stronger."
         : "No obvious content, targeting, link, or layout issues were detected.";
