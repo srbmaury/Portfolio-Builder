@@ -2,6 +2,7 @@ import { Buffer } from "node:buffer";
 import { NextResponse } from "next/server";
 import { parseOffice } from "officeparser";
 import { parseResumeText } from "@/lib/resume-parser";
+import { extractResumeWithAi } from "@/lib/resume-ai";
 import {
   MAX_RESUME_FILE_SIZE,
   validateResumeFileMetadata,
@@ -87,7 +88,7 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ draft: parseResumeText(text) });
+    return NextResponse.json({ draft: await draftFromText(text) });
   } catch (error) {
     const parserError = error as OfficeParserFailure;
     console.error("[resume/parse] Resume parsing failed", {
@@ -108,4 +109,23 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ error: message }, { status: 422 });
   }
+}
+
+// Layout is already gone by the time the text reaches us, which is what the
+// deterministic parser keeps getting wrong on two-column resumes. When a
+// GEMINI_API_KEY is configured the model reads the text instead; the parser
+// stays as the fallback for an unset key, a failed call, or an empty result.
+async function draftFromText(text: string) {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20_000);
+    const draft = await extractResumeWithAi(text, {
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeout));
+    if (draft) return draft;
+  } catch (error) {
+    console.error("AI resume extraction failed, using the parser", error);
+  }
+
+  return parseResumeText(text);
 }
