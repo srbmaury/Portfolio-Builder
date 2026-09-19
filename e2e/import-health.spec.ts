@@ -49,10 +49,25 @@ test("GitHub import turns selected repositories into editable projects", async (
   await dialog.getByRole("button", { name: "Import 1 project" }).click();
 
   await expect(dialog).toBeHidden();
-  await expect(page.getByDisplayValue("demo-repo")).toBeVisible();
-  await expect(
-    page.getByDisplayValue("https://github.com/octocat/demo-repo")
-  ).toBeVisible();
+
+  // getByDisplayValue is a Testing Library API, not a Playwright one, and an
+  // input[value=...] selector reads the HTML attribute, which React does not
+  // update for controlled inputs. Assert on the workspace the import produced.
+  const importedProject = () =>
+    page.evaluate(() => {
+      const raw = window.localStorage.getItem("folioblocks:workspace");
+      if (!raw) return null;
+      const projects = JSON.parse(raw)?.data?.projects ?? [];
+      const match = projects.find(
+        (project: { title?: string }) => project.title === "demo-repo"
+      );
+      return match ? { title: match.title, githubUrl: match.githubUrl } : null;
+    });
+
+  await expect.poll(importedProject).toEqual({
+    title: "demo-repo",
+    githubUrl: "https://github.com/octocat/demo-repo",
+  });
 
   await page.getByRole("button", { name: "Targeting" }).click();
   await expect(page.getByText("demo-repo", { exact: true })).toBeVisible();

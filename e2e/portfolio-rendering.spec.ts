@@ -24,42 +24,63 @@ async function openDemoBuilder(page: Page) {
   await expect(page.locator("iframe.preview-device-frame")).toBeVisible();
 }
 
-/** Applies a patch to the active variant's config and reloads. */
-async function patchActiveVariant(page: Page, patch: Record<string, unknown>) {
-  await page.evaluate((value) => {
-    const key = "folioblocks:workspace";
-    const state = JSON.parse(window.localStorage.getItem(key)!);
-    const active = state.variants.find(
-      (variant: { id: string }) => variant.id === state.activeVariantId
-    );
-    Object.assign(active.config, value);
-    window.localStorage.setItem(key, JSON.stringify(state));
-  }, patch);
-  await page.reload();
+/**
+ * The builder persists its in-memory draft on pagehide, so patching local
+ * storage and reloading lets that handler write the old state back over the
+ * patch. Leave the builder first, edit storage while nothing is mounted to
+ * overwrite it, then return.
+ */
+async function patchWorkspace(
+  page: Page,
+  mutate: (state: Record<string, any>, value: any) => void,
+  value: unknown
+) {
+  await page.goto("/login");
+  await page.evaluate(
+    ({ body, value }) => {
+      const key = "folioblocks:workspace";
+      const state = JSON.parse(window.localStorage.getItem(key)!);
+      // eslint-disable-next-line no-new-func
+      new Function("state", "value", body)(state, value);
+      window.localStorage.setItem(key, JSON.stringify(state));
+    },
+    { body: `(${mutate.toString()})(state, value)`, value }
+  );
+  await page.goto("/builder");
   await expect(page.locator("iframe.preview-device-frame")).toBeVisible();
 }
 
+/** Applies a patch to the active variant's config. */
+async function patchActiveVariant(page: Page, patch: Record<string, unknown>) {
+  await patchWorkspace(
+    page,
+    (state, value) => {
+      const active = state.variants.find(
+        (variant: { id: string }) => variant.id === state.activeVariantId
+      );
+      Object.assign(active.config, value);
+    },
+    patch
+  );
+}
+
 async function setSectionVariant(page: Page, sectionId: string, variant: string) {
-  await page.evaluate(
-    ({ sectionId, variant }) => {
-      const key = "folioblocks:workspace";
-      const state = JSON.parse(window.localStorage.getItem(key)!);
+  await patchWorkspace(
+    page,
+    (state, value) => {
       const active = state.variants.find(
         (v: { id: string }) => v.id === state.activeVariantId
       );
       const section = active.config.sections.find(
-        (s: { id: string }) => s.id === sectionId
+        (s: { id: string }) => s.id === value.sectionId
       );
       if (section) {
-        section.variant = variant;
+        section.variant = value.variant;
         section.visible = true;
       }
-      window.localStorage.setItem(key, JSON.stringify(state));
     },
     { sectionId, variant }
   );
-  await page.reload();
-  await expect(page.locator("iframe.preview-device-frame")).toBeVisible();
 }
 
 /** Waits for the preview frame to actually reach a device width. */

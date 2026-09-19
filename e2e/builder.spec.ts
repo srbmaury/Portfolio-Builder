@@ -134,6 +134,10 @@ test("tablet and mobile preserve photo hero hierarchy by layout", async ({ page 
     .toBe(true);
 
   async function useHeroLayout(layout: "image-split" | "portrait") {
+    // The builder writes its in-memory draft on pagehide, so editing local
+    // storage and reloading lets that handler put the old state back. Step off
+    // the builder first so nothing overwrites the change.
+    await page.goto("/login");
     await page.evaluate((variant) => {
       const key = "folioblocks:workspace";
       const raw = window.localStorage.getItem(key);
@@ -150,7 +154,7 @@ test("tablet and mobile preserve photo hero hierarchy by layout", async ({ page 
       window.localStorage.setItem(key, JSON.stringify(state));
     }, layout);
 
-    await page.reload();
+    await page.goto("/builder");
   }
 
   async function verticalOrder() {
@@ -279,6 +283,8 @@ test("section ordering and hero resume modal work from saved builder state", asy
     )
     .toBe(true);
 
+  // Step off the builder so its pagehide draft save cannot overwrite this.
+  await page.goto("/login");
   await page.evaluate(() => {
     const key = "folioblocks:workspace";
     const raw = window.localStorage.getItem(key);
