@@ -297,7 +297,6 @@ function HeroImage({ url, priority = false }: { url?: string; priority?: boolean
       fill
       sizes="(max-width: 900px) 100vw, 50vw"
       priority={priority}
-      unoptimized
     />
   );
 }
@@ -574,7 +573,6 @@ function ProjectMedia({ project }: { project: Project }) {
           alt={project.title}
           fill
           sizes="(max-width: 800px) 100vw, 50vw"
-          unoptimized
         />
       ) : (
         <div className="media-placeholder">
