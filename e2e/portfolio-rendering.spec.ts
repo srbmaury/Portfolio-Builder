@@ -257,3 +257,44 @@ test("about facts and minimal contact keep their intended styling", async ({ pag
     expect(contact.social, "social row uses the accent").toBe(contact.accent);
   }
 });
+
+test("content tab counts reflect the open portfolio, not the shared pool", async ({
+  page,
+}) => {
+  await openDemoBuilder(page);
+
+  const subtitles = () =>
+    page
+      .locator("button.editor-section-toggle")
+      .evaluateAll((buttons) =>
+        buttons
+          .map((button) => (button as HTMLElement).innerText.replace(/\s+/g, " "))
+          .filter((text) => /roles|projects|skills/.test(text))
+      );
+
+  // The shared pool is identical for every variant, so a count of the pool
+  // alone made a portfolio that targets nothing look like it contained
+  // everything. The counts must describe what this portfolio publishes.
+  await expect.poll(subtitles).toEqual([
+    expect.stringMatching(/\d+ of \d+ roles in this portfolio/),
+    expect.stringMatching(/\d+ of \d+ projects in this portfolio/),
+    expect.stringMatching(/\d+ of \d+ skills in this portfolio/),
+  ]);
+
+  // Targeting nothing must read as zero rather than as the pool size.
+  await patchWorkspace(
+    page,
+    (state) => {
+      const active = state.variants.find(
+        (variant: { id: string }) => variant.id === state.activeVariantId
+      );
+      active.content.experienceIds = [];
+      active.content.projectIds = [];
+    },
+    null
+  );
+
+  const cleared = await subtitles();
+  expect(cleared[0]).toMatch(/^Experience 0 of [1-9]\d* roles in this portfolio/);
+  expect(cleared[1]).toMatch(/^Projects 0 of [1-9]\d* projects in this portfolio/);
+});

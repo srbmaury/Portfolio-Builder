@@ -743,7 +743,7 @@ export function PortfolioBuilder({
 
               <EditorSection
                 title="Experience"
-                subtitle={`${state.data.experience.length} roles`}
+                subtitle={`${snapshot.data.experience.length} of ${state.data.experience.length} roles in this portfolio`}
                 actionLabel="+ Add"
                 onAction={() => setCreateDialog("experience")}
               >
@@ -780,7 +780,7 @@ export function PortfolioBuilder({
 
               <EditorSection
                 title="Projects"
-                subtitle={`${state.data.projects.length} projects`}
+                subtitle={`${snapshot.data.projects.length} of ${state.data.projects.length} projects in this portfolio`}
                 actionLabel="+ Add"
                 onAction={() => setCreateDialog("project")}
               >
@@ -827,7 +827,10 @@ export function PortfolioBuilder({
                 ))}
               </EditorSection>
 
-              <EditorSection title="Skills" subtitle={`${state.data.skills.length} skills`}>
+              <EditorSection
+                title="Skills"
+                subtitle={`${snapshot.data.skills.length} of ${state.data.skills.length} skills in this portfolio`}
+              >
                 <Field
                   label="Skills"
                   multiline
