@@ -15,6 +15,7 @@ import {
 } from "@/lib/supabase/portfolio-store";
 
 export const WORKSPACE_STORAGE_KEY = "folioblocks:workspace";
+const LOCAL_DRAFT_DELAY_MS = 200;
 
 type CloudStatus = "local" | "loading" | "saved" | "error";
 
@@ -61,12 +62,26 @@ export function useBuilderWorkspace({
   }, [initialVariantId, startFresh]);
 
   useEffect(() => {
-    if (hydrated) {
-      window.localStorage.setItem(
-        WORKSPACE_STORAGE_KEY,
-        JSON.stringify(state)
-      );
-    }
+    if (!hydrated) return;
+
+    const persist = () => {
+      try {
+        window.localStorage.setItem(
+          WORKSPACE_STORAGE_KEY,
+          JSON.stringify(state)
+        );
+      } catch {
+        // A full/blocked storage area should not interrupt editing.
+      }
+    };
+
+    const timeout = window.setTimeout(persist, LOCAL_DRAFT_DELAY_MS);
+    window.addEventListener("pagehide", persist);
+
+    return () => {
+      window.clearTimeout(timeout);
+      window.removeEventListener("pagehide", persist);
+    };
   }, [hydrated, state]);
 
   useEffect(() => {
