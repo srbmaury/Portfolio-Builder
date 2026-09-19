@@ -15,6 +15,12 @@ import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
+type DeletePortfolioRpcResult = {
+  deleted?: boolean;
+  deletedSharedWorkspace?: boolean;
+  productEventsCleaned?: boolean;
+};
+
 /** Reads a message off an Error or off a Supabase/PostgREST error object. */
 function errorMessage(error: unknown, fallback: string) {
   if (error instanceof Error && error.message) return error.message;
@@ -184,97 +190,35 @@ export async function DELETE(
       ? Array.from(new Set(candidates))
       : selectUnreferencedAssetUrls(candidates, remainingReferences);
 
-    if (isLastPortfolio) {
-      const cleanupResults = await Promise.all([
-        supabase.from("experiences").delete().eq("user_id", user.id),
-        supabase.from("projects").delete().eq("user_id", user.id),
-        supabase.from("skills").delete().eq("user_id", user.id),
-        supabase.from("profiles").delete().eq("user_id", user.id),
-      ]);
-      const cleanupError = cleanupResults.find((result) => result.error)?.error;
-      if (cleanupError) throw cleanupError;
-    } else {
-      const cleanupResults = [];
-
-      if (orphanedContent.experienceIds.length) {
-        cleanupResults.push(
-          await supabase
-            .from("experiences")
-            .delete()
-            .eq("user_id", user.id)
-            .in("id", orphanedContent.experienceIds)
-        );
-      }
-
-      if (orphanedContent.projectIds.length) {
-        cleanupResults.push(
-          await supabase
-            .from("projects")
-            .delete()
-            .eq("user_id", user.id)
-            .in("id", orphanedContent.projectIds)
-        );
-      }
-
-      if (orphanedContent.skills.length) {
-        cleanupResults.push(
-          await supabase
-            .from("skills")
-            .delete()
-            .eq("user_id", user.id)
-            .in("name", orphanedContent.skills)
-        );
-      }
-
-      const cleanupError = cleanupResults.find((result) => result.error)?.error;
-      if (cleanupError) throw cleanupError;
-    }
-
-    const { error: deleteError } = await supabase
-      .from("portfolios")
-      .delete()
-      .eq("user_id", user.id)
-      .eq("variant_key", variantKey);
+    // All database mutations happen inside one Postgres function invocation.
+    // If any delete fails, Postgres rolls the entire RPC statement back.
+    const { data: deletionResult, error: deleteError } = await supabase.rpc(
+      "delete_portfolio_workspace",
+      { p_variant_key: variantKey }
+    );
 
     if (deleteError) throw deleteError;
 
-    // Product analytics are secondary, and variant_key is plain text rather
-    // than a foreign key, so nothing cascades. A failure here used to abort
-    // the whole delete: on a database missing the product_events grants it
-    // raised 42501 and no portfolio could ever be deleted. Orphaned rows are
-    // harmless and are removed with the account, so clean up best-effort.
-    const { error: productEventsError } = isLastPortfolio
-      ? await supabase.from("product_events").delete().eq("user_id", user.id)
-      : await supabase
-          .from("product_events")
-          .delete()
-          .eq("user_id", user.id)
-          .eq("variant_key", variantKey);
+    const result = (deletionResult || {}) as DeletePortfolioRpcResult;
 
-    if (productEventsError) {
-      console.warn(
-        "Portfolio deleted, but its product analytics could not be cleaned up",
-        productEventsError
-      );
-    }
-
-    // Destroying Cloudinary assets cannot be undone, so it runs only once the
-    // database work has succeeded. Doing it earlier meant a failed delete left
-    // the portfolio in place with its images permanently gone.
+    // Cloudinary is an external system and cannot join the database
+    // transaction. Run irreversible asset deletion only after the RPC commits.
     let deletedAssets = 0;
     try {
       await destroyCloudinaryUrls(deletable);
       deletedAssets = deletable.length;
     } catch (assetError) {
-      // The rows are already gone; leaving files behind beats failing here.
+      // The database transaction is already committed; leaving orphaned files
+      // behind is safer than pretending the portfolio deletion failed.
       console.warn("Portfolio deleted, but its assets were not removed", assetError);
     }
 
     return NextResponse.json({
-      deleted: true,
+      deleted: result.deleted !== false,
       deletedAssets,
-      deletedSharedWorkspace: isLastPortfolio,
-      productEventsCleaned: !productEventsError,
+      deletedSharedWorkspace:
+        result.deletedSharedWorkspace ?? isLastPortfolio,
+      productEventsCleaned: result.productEventsCleaned !== false,
     });
   } catch (error) {
     // Supabase rejects with a plain object, not an Error, so an instanceof
