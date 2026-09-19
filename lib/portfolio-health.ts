@@ -1,9 +1,8 @@
 import {
   sectionType,
   type BuilderState,
-  type PortfolioVariant,
   type Project,
-} from "@/lib/portfolio";
+} from "./portfolio.ts";
 
 export type PortfolioHealthSeverity = "error" | "warning" | "suggestion";
 export type PortfolioHealthTab = "content" | "targeting" | "design";
