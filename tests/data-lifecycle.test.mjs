@@ -14,6 +14,13 @@ const portfolioDeleteSource = await readFile(
   new URL("../app/api/portfolios/[variantKey]/route.ts", import.meta.url),
   "utf8"
 );
+const transactionalDeleteSource = await readFile(
+  new URL(
+    "../supabase/migrations/20260919130000_transactional_portfolio_deletion.sql",
+    import.meta.url
+  ),
+  "utf8"
+);
 
 test("account deletion cleans Cloudinary assets before deleting the auth user", () => {
   const cleanupIndex = functionSource.indexOf("/api/account/assets");
@@ -29,31 +36,33 @@ test("account cleanup accepts an authenticated bearer token for backend orchestr
   assert.match(accountCleanupSource, /cloudinaryUserTag\(user\.id\)/);
 });
 
-test("portfolio deletion considers published snapshots and removes target-only content", () => {
+test("portfolio deletion considers published snapshots and removes target-only content atomically", () => {
   assert.match(portfolioDeleteSource, /published_snapshot/);
   assert.match(portfolioDeleteSource, /selectOrphanedTargetContent/);
-  assert.match(portfolioDeleteSource, /destroyCloudinaryUrls\(deletable\)/);
+  assert.match(portfolioDeleteSource, /delete_portfolio_workspace/);
+  assert.match(transactionalDeleteSource, /v_orphaned_experience_ids/);
+  assert.match(transactionalDeleteSource, /v_orphaned_project_ids/);
+  assert.match(transactionalDeleteSource, /v_orphaned_skills/);
 
-  const cloudinaryIndex = portfolioDeleteSource.indexOf("destroyCloudinaryUrls(deletable)");
-  const portfolioDeleteIndex = portfolioDeleteSource.indexOf('.from("portfolios")\n      .delete()');
+  const rpcIndex = portfolioDeleteSource.indexOf('"delete_portfolio_workspace"');
+  const cloudinaryIndex = portfolioDeleteSource.indexOf(
+    "destroyCloudinaryUrls(deletable)"
+  );
 
-  assert.ok(cloudinaryIndex >= 0);
-  // This order was deliberately reversed. Destroying assets first guaranteed
-  // no orphaned uploads, but it made an irreversible remote deletion depend on
-  // database work that could still fail: a permissions error left the
-  // portfolio in place with its images permanently gone. The `deletable` list
-  // is computed before either step, so deleting the row first does not lose
-  // track of the assets. Orphaned files cost storage; destroyed files cannot
-  // be recovered, so the failure mode now favours keeping the files.
+  assert.ok(rpcIndex >= 0);
   assert.ok(
-    cloudinaryIndex > portfolioDeleteIndex,
-    "assets should only be destroyed once the portfolio row is gone"
+    cloudinaryIndex > rpcIndex,
+    "external assets should only be destroyed after the database transaction commits"
   );
 });
 
-
-test("portfolio deletion also cleans creator product events", () => {
-  assert.match(portfolioDeleteSource, /from\("product_events"\)/);
-  assert.match(portfolioDeleteSource, /eq\("variant_key", variantKey\)/);
-  assert.match(portfolioDeleteSource, /delete\(\)\.eq\("user_id", user\.id\)/);
+test("portfolio deletion also cleans creator product events inside the transaction", () => {
+  assert.match(
+    transactionalDeleteSource,
+    /delete from public\.product_events[\s\S]*variant_key = p_variant_key/
+  );
+  assert.match(
+    transactionalDeleteSource,
+    /delete from public\.product_events[\s\S]*where user_id = v_user_id/
+  );
 });
