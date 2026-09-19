@@ -200,11 +200,7 @@ export function analyzePortfolioHealth(
   const resumeSection = variant.config.sections.find(
     (section) => sectionType(section) === "resume"
   );
-  if (
-    resumeSection?.visible &&
-    !variant.resume.url &&
-    !variant.resume.hideSectionWhenHeroLink
-  ) {
+  if (resumeSection?.visible && !variant.resume.url) {
     issues.push(
       issue(
         "resume",
