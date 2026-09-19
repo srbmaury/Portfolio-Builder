@@ -110,7 +110,7 @@ It explains the builder workflow, current features, analytics/privacy behavior, 
 
 ## Data lifecycle
 
-Deleting a portfolio removes its saved/published data, target-only content, attached resume, analytics events, and uploaded assets that are no longer referenced by another portfolio. Deleting the last portfolio also removes the shared workspace data.
+Deleting a portfolio removes its saved/published data, target-only content, attached resume, analytics events, and uploaded assets that are no longer referenced by another portfolio. All database-side deletion runs inside one RLS-aware Postgres transaction, so any database error rolls the complete delete back. Irreversible Cloudinary cleanup runs only after that transaction commits. Deleting the last portfolio also removes the shared workspace data.
 
 The account danger zone permanently removes all portfolios, shared workspace data, published pages, uploaded Cloudinary assets, analytics-admin membership, and the sign-in account.
 
@@ -180,4 +180,4 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 
 Never expose a Supabase secret or service-role key to the browser.
 
-Before production deployment, configure the production domain in Supabase Auth URL Configuration so authentication redirects are accepted. The analytics schema and admin access are protected with Row Level Security plus an explicit admin allowlist.
+Before production deployment, configure the production domain in Supabase Auth URL Configuration so authentication redirects are accepted. Analytics data is protected with Row Level Security, and admin analytics access is gated by the server-side `ADMIN_EMAIL` setting.
