@@ -8,3 +8,6 @@ out
 npm-debug.log*
 test-results/
 playwright-report/
+
+# Supabase CLI local state
+supabase/.temp/
