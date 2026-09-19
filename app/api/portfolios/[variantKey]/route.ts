@@ -15,6 +15,18 @@ import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
+/** Reads a message off an Error or off a Supabase/PostgREST error object. */
+function errorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) return error.message;
+
+  if (error && typeof error === "object") {
+    const { message } = error as { message?: unknown };
+    if (typeof message === "string" && message) return message;
+  }
+
+  return fallback;
+}
+
 export async function DELETE(
   _request: Request,
   context: { params: Promise<{ variantKey: string }> }
@@ -241,8 +253,11 @@ export async function DELETE(
       deletedSharedWorkspace: isLastPortfolio,
     });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Portfolio deletion failed.";
+    // Supabase rejects with a plain object, not an Error, so an instanceof
+    // check alone discarded the real cause and every failure surfaced as an
+    // unhelpful "Portfolio deletion failed."
+    const message = errorMessage(error, "Portfolio deletion failed.");
+    console.error("Portfolio deletion failed", error);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

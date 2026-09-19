@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -11,6 +11,11 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  // Before hydration the submit handler is not attached, so a click would fall
+  // through to a native GET and Supabase would answer "missing email or phone".
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => setReady(true), []);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -67,7 +72,7 @@ export default function LoginPage() {
 
         {message && <p className="auth-message">{message}</p>}
 
-        <button className="primary-button auth-submit" disabled={busy}>
+        <button className="primary-button auth-submit" disabled={busy || !ready}>
           {busy ? "Working…" : mode === "login" ? "Sign in" : "Create account"}
         </button>
 

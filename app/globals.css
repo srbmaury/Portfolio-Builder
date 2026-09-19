@@ -690,6 +690,10 @@ a { color: inherit; text-decoration: none; }
   border-radius: 8px;
 }
 .preview-controls button {
+  display: inline-flex;
+  align-items: center;
+  /* WCAG 2.5.8 asks for a 24px minimum target. */
+  min-height: 24px;
   border: 0;
   background: transparent;
   color: #727985;
@@ -4179,6 +4183,11 @@ body.dialog-open {
 .analytics-table td a {
   color: #5846d8;
   font-weight: 760;
+  /* Row links sat at 14px tall; give them a 24px target without moving the
+     cell text, since the padded cell already reserves the height. */
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
 }
 .analytics-table td:first-child small {
   margin-top: 3px;
