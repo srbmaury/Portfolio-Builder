@@ -146,8 +146,8 @@ test("password reset is offered and requests a recovery email", async ({ page })
   await expect(page.locator('input[type="password"]')).toHaveCount(0);
   await expect(submit).toHaveText(/send reset link/i);
 
-  // Stub Supabase so the suite never sends real mail: the hosted SMTP has a
-  // small hourly quota, and a test run must not consume it.
+  // Stub Supabase so the deterministic suite never creates accounts or sends
+  // real transactional mail; live delivery is covered by the production Gmail pass.
   await page.route("**/auth/v1/recover**", (route) =>
     route.fulfill({
       status: 200,
