@@ -2,11 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  // Resolved through Node rather than the bundler. officeparser ships browser,
-  // import and require builds, and bundling it left its class export undefined
-  // at runtime, so every résumé import failed to read the file.
-  serverExternalPackages: ["officeparser"],
   devIndicators: false,
+  // officeparser resolves pdf.js workers and format parsers dynamically at
+  // runtime. Bundling it into a Next.js route can break those Node-only
+  // lookups, so let Node load the package directly from node_modules.
+  serverExternalPackages: ["officeparser"],
   images: {
     remotePatterns: [
       {

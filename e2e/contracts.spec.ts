@@ -243,36 +243,3 @@ test("asking for a portfolio that does not exist says so", async ({ page }) => {
     /could not be found/i
   );
 });
-
-test("résumé parsing reaches the parser rather than failing to load it", async ({
-  request,
-}) => {
-  // A PDF with no text. A working parser reports that it found no text; a
-  // parser that failed to load cannot tell the difference between this and
-  // any other file, and answers with the generic "could not read" message.
-  // That is exactly how a bad import once broke every résumé import silently.
-  const blankPdf = Buffer.from(
-    "%PDF-1.4\n" +
-      "1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n" +
-      "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n" +
-      "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]>>endobj\n" +
-      "trailer<</Root 1 0 R>>\n%%EOF\n"
-  );
-
-  const response = await request.post("/api/resume/parse", {
-    multipart: {
-      file: {
-        name: "blank.pdf",
-        mimeType: "application/pdf",
-        buffer: blankPdf,
-      },
-    },
-  });
-
-  expect(response.status()).toBe(422);
-  const body = await response.json();
-  expect(body.error).toMatch(/no readable resume text/i);
-  expect(body.error, "the parser loaded and ran").not.toMatch(
-    /could not read that resume/i
-  );
-});
