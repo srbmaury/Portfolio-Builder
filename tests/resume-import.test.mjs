@@ -203,3 +203,72 @@ Java, Redis
   assert.equal(draft.experience[1].company, "Razorpay");
   assert.match(draft.experience[1].summary, /payment observability/i);
 });
+
+test("resume parser separates projects that a PDF runs together without blank lines", () => {
+  const draft = parseResumeText(`
+Saurabh Maurya
+saurabh@example.com
+
+Projects
+Chess ML Coach
+GitHub | Live
+Built an end-to-end ML pipeline that ingests Chess.com games and trains a personalized LightGBM classifier.
+Tech: Python, LightGBM, FastAPI, Docker
+ML-Powered E-commerce Search Engine
+GitHub | Live
+Built personalized search ranking with a LightGBM learning-to-rank model trained on implicit feedback.
+Tech: Python, Flask, PostgreSQL, Redis/RQ
+`);
+
+  assert.equal(draft.projects.length, 2);
+  assert.equal(draft.projects[0].title, "Chess ML Coach");
+  assert.deepEqual(draft.projects[0].stack, [
+    "Python",
+    "LightGBM",
+    "FastAPI",
+    "Docker",
+  ]);
+  assert.equal(draft.projects[1].title, "ML-Powered E-commerce Search Engine");
+  assert.deepEqual(draft.projects[1].stack, [
+    "Python",
+    "Flask",
+    "PostgreSQL",
+    "Redis/RQ",
+  ]);
+
+  assert.doesNotMatch(
+    draft.projects[0].description,
+    /learning-to-rank/i,
+    "the first project must not swallow the second"
+  );
+  assert.doesNotMatch(
+    draft.projects[0].description,
+    /GitHub \| Live/,
+    "link labels lose their href when extracted, so they stay out of the copy"
+  );
+});
+
+test("resume parser keeps role and company apart when the company lands on the period line", () => {
+  const draft = parseResumeText(`
+Saurabh Maurya
+saurabh@example.com
+
+Experience
+Associate Member of Technical Staff (Software Engineer)
+Jun 2024 - Present Salesforce
+Designed and built an LLM-powered developer agent for bug triage.
+Tech: Java, Spring, GraphQL
+Software Development Intern
+May 2023 - Jul 2023 Razorpay
+Built 20+ Grafana dashboards and automated Alertmanager-to-Slack routing.
+`);
+
+  assert.equal(draft.experience.length, 2);
+  assert.equal(
+    draft.experience[0].role,
+    "Associate Member of Technical Staff (Software Engineer)"
+  );
+  assert.equal(draft.experience[0].company, "Salesforce");
+  assert.equal(draft.experience[1].role, "Software Development Intern");
+  assert.equal(draft.experience[1].company, "Razorpay");
+});

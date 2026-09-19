@@ -153,6 +153,10 @@ function sectionHeading(line: string): ResumeSection | null {
   return SECTION_ALIASES[normalized] || null;
 }
 
+// Words that read as a job title rather than an employer name.
+const ROLE_RE =
+  /\b(?:engineer|engineering|developer|programmer|architect|analyst|scientist|designer|manager|director|consultant|specialist|administrator|intern|internship|associate|lead|head|officer|founder|researcher|technician|coordinator|supervisor|executive|staff)\b/i;
+
 function parseExperience(lines: string[]): Experience[] {
   const clean = nonEmpty(lines).map(stripBullet);
   const periodIndexes = clean
@@ -177,9 +181,21 @@ function parseExperience(lines: string[]): Experience[] {
     let role = "";
 
     if (beforePeriod) {
-      role = beforePeriod;
       companyIndex = periodIndex - 1;
-      company = clean[companyIndex] || "";
+      const previous = clean[companyIndex] || "";
+
+      // Two layouts leave text on the period line. "Role | Jun 2024 - Present"
+      // leaves the role behind and keeps the company on the line above. A
+      // two-column resume flattens instead to "Jun 2024 - Present Company",
+      // which leaves the company behind and puts the role above. Tell them
+      // apart by which side actually reads like a job title.
+      if (ROLE_RE.test(previous) && !ROLE_RE.test(beforePeriod)) {
+        role = previous;
+        company = beforePeriod;
+      } else {
+        role = beforePeriod;
+        company = previous;
+      }
     } else if (periodIndex >= 2) {
       companyIndex = periodIndex - 2;
       company = clean[companyIndex] || "";
@@ -224,19 +240,72 @@ function parseExperience(lines: string[]): Experience[] {
   return entries;
 }
 
+const STACK_RE = /^(?:stack|tech(?:nologies)?|built with)\s*:/i;
+
+// A line made of nothing but link labels, like "GitHub | Live" or
+// "Source · Demo". PDF extraction keeps the anchor text and drops the href, so
+// these carry no information of their own, but they do sit directly under a
+// project heading.
+const LINK_LABEL =
+  "github|gitlab|bitbucket|live|demo|source|repo(?:sitory)?|website|site|code|preview|app";
+const LINK_LINE_RE = new RegExp(
+  `^(?:${LINK_LABEL})(?:\\s*(?:[|·•/,–—-]|\\band\\b)\\s*(?:${LINK_LABEL}))*$`,
+  "i"
+);
+
+function looksLikeProjectHeading(line: string) {
+  return (
+    line.length <= 80 &&
+    !/[.,;:]$/.test(line) &&
+    !/^[a-z]/.test(line) &&
+    !STACK_RE.test(line)
+  );
+}
+
+// blocks() separates entries on blank lines, which a DOCX has and a PDF does
+// not: extracting a PDF returns the whole section as one run of lines, so every
+// project after the first was being swallowed into the first one's
+// description. Re-split on the shape a heading has instead — a short,
+// capitalised line that either follows the previous project's stack line or is
+// followed by its own link line.
+function projectBlocks(lines: string[]): string[][] {
+  const result: string[][] = [];
+
+  for (const block of blocks(lines)) {
+    const clean = block.map(stripBullet).filter(Boolean);
+    let current: string[] = [];
+
+    for (const [index, line] of clean.entries()) {
+      const startsEntry =
+        index > 0 &&
+        looksLikeProjectHeading(line) &&
+        (STACK_RE.test(clean[index - 1]) ||
+          LINK_LINE_RE.test(clean[index + 1] ?? ""));
+
+      if (startsEntry && current.length) {
+        result.push(current);
+        current = [];
+      }
+
+      current.push(line);
+    }
+
+    if (current.length) result.push(current);
+  }
+
+  return result;
+}
+
 function parseProjects(lines: string[]): Project[] {
   const entries: Project[] = [];
 
-  for (const [index, block] of blocks(lines).entries()) {
-    const clean = block.map(stripBullet).filter(Boolean);
+  for (const [index, clean] of projectBlocks(lines).entries()) {
     if (clean.length < 2) continue;
 
     const title = clean[0];
     if (PERIOD_RE.test(title) || EMAIL_RE.test(title)) continue;
 
-    const stackLine = clean.find((line) =>
-      /^(?:stack|tech(?:nologies)?|built with)\s*:/i.test(line)
-    );
+    const stackLine = clean.find((line) => STACK_RE.test(line));
     const stack = stackLine
       ? stackLine
           .replace(/^[^:]+:/, "")
@@ -253,6 +322,7 @@ function parseProjects(lines: string[]): Project[] {
       .filter(
         (line) =>
           line !== stackLine &&
+          !LINK_LINE_RE.test(line) &&
           !line.match(/^https?:\/\//i)
       )
       .join(" ")
