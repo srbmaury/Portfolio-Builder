@@ -1,16 +1,24 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 
-const migration = await readFile(
-  new URL("../supabase/migrations/20260918143237_add_first_party_analytics.sql", import.meta.url),
-  "utf8"
-);
+const migrationsDir = new URL("../supabase/migrations/", import.meta.url);
 
-const retireMigration = await readFile(
-  new URL("../supabase/migrations/20260919120000_retire_analytics_admins.sql", import.meta.url),
-  "utf8"
-);
+/**
+ * Migrations are looked up by name rather than by full filename. Their version
+ * prefixes get realigned whenever Supabase applies them under a different
+ * timestamp, and a hardcoded prefix turns that rename into a test failure.
+ */
+async function readMigration(name) {
+  const files = await readdir(migrationsDir);
+  const match = files.find((file) => file.endsWith(`_${name}.sql`));
+
+  assert.ok(match, `no migration found for ${name}`);
+  return readFile(new URL(match, migrationsDir), "utf8");
+}
+
+const migration = await readMigration("add_first_party_analytics");
+const retireMigration = await readMigration("retire_analytics_admins");
 
 test("analytics schema enables RLS and restricts public inserts to published portfolios", () => {
   assert.match(migration, /create table(?: if not exists)? public\.analytics_events/i);
