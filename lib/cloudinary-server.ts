@@ -93,12 +93,36 @@ export async function destroyCloudinaryUrls(urls: string[]) {
 }
 
 
-export function cloudinaryLegacyPdfDownloadUrl(publicId: string) {
+/**
+ * Cloudinary accounts block PDF delivery by default, so a plain asset URL
+ * answers 401 whatever the resource type. A short-lived signed download URL is
+ * served regardless, which is the only way to fetch a résumé without asking
+ * every user to change an account setting.
+ *
+ * The two resource types need different arguments: an image asset is addressed
+ * without its extension plus an explicit format, while a raw asset keeps the
+ * extension in its public id and takes no format.
+ */
+export function cloudinarySignedPdfUrl(
+  publicId: string,
+  resourceType: "image" | "raw"
+) {
   configureCloudinaryServer();
 
-  return cloudinary.utils.private_download_url(publicId, "pdf", {
-    resource_type: "image",
-    type: "upload",
-    expires_at: Math.floor(Date.now() / 1000) + 5 * 60,
-  });
+  const isRaw = resourceType === "raw";
+
+  return cloudinary.utils.private_download_url(
+    publicId,
+    isRaw ? "" : "pdf",
+    {
+      resource_type: resourceType,
+      type: "upload",
+      expires_at: Math.floor(Date.now() / 1000) + 5 * 60,
+    }
+  );
+}
+
+/** @deprecated Use cloudinarySignedPdfUrl. */
+export function cloudinaryLegacyPdfDownloadUrl(publicId: string) {
+  return cloudinarySignedPdfUrl(publicId, "image");
 }

@@ -1,7 +1,7 @@
 import { parseCloudinaryAssetUrl } from "@/lib/cloudinary-assets";
 import {
   cloudinaryCloudName,
-  cloudinaryLegacyPdfDownloadUrl,
+  cloudinarySignedPdfUrl,
 } from "@/lib/cloudinary-server";
 import type { PortfolioResume } from "@/lib/portfolio";
 
@@ -30,10 +30,14 @@ export async function loadResumePdf(resume: PortfolioResume) {
 
   if (!asset || asset.publicId !== resume.publicId) return null;
 
-  const sourceUrl =
-    asset.resourceType === "image"
-      ? cloudinaryLegacyPdfDownloadUrl(asset.publicId)
-      : resume.url;
+  // A résumé is only ever uploaded as an image or raw asset.
+  if (asset.resourceType !== "image" && asset.resourceType !== "raw") {
+    return null;
+  }
+
+  // Both resource types need signing: a plain URL is refused while the
+  // account has PDF delivery turned off, which is the default.
+  const sourceUrl = cloudinarySignedPdfUrl(asset.publicId, asset.resourceType);
 
   const upstream = await fetch(sourceUrl, {
     cache: "no-store",

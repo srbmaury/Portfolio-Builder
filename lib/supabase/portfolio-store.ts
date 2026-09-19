@@ -216,6 +216,17 @@ export async function saveBuilderState(
   };
 }
 
+/** PostgREST reports an unknown column as PGRST204 with the name in the message. */
+function isMissingColumnError(error: unknown, column: string) {
+  if (!error || typeof error !== "object") return false;
+  const { code, message } = error as { code?: unknown; message?: unknown };
+  return (
+    code === "PGRST204" &&
+    typeof message === "string" &&
+    message.includes(column)
+  );
+}
+
 export async function publishVariant(
   supabase: SupabaseClient,
   user: User,
@@ -248,29 +259,46 @@ export async function publishVariant(
   // against a server one, and the page always looked out of date.
   const publishedAt = new Date().toISOString();
 
-  const { error } = await supabase.from("portfolios").upsert(
-    {
-      user_id: user.id,
-      variant_key: active.id,
-      name: active.name,
-      slug,
-      target_role: active.targetRole,
-      theme: active.config.theme,
-      section_config: cloneConfig(active.config).sections,
-      content_config: active.content,
-      data_config: active.data,
-      branding_config: active.branding,
-      resume_config: active.resume,
-      is_published: true,
-      published_at: publishedAt,
-      updated_at: publishedAt,
-      public_path: publicPath,
-      published_snapshot: snapshot,
-    },
-    { onConflict: "user_id,variant_key" }
-  );
+  const row = {
+    user_id: user.id,
+    variant_key: active.id,
+    name: active.name,
+    slug,
+    target_role: active.targetRole,
+    theme: active.config.theme,
+    section_config: cloneConfig(active.config).sections,
+    content_config: active.content,
+    data_config: active.data,
+    branding_config: active.branding,
+    resume_config: active.resume,
+    is_published: true,
+    published_at: publishedAt,
+    updated_at: publishedAt,
+    public_path: publicPath,
+    published_snapshot: snapshot,
+  };
 
-  if (error) throw error;
+  const { error } = await supabase
+    .from("portfolios")
+    .upsert(row, { onConflict: "user_id,variant_key" });
+
+  if (error) {
+    // data_config arrives with the per-portfolio content migration. Publishing
+    // must keep working against a database that has not had it applied yet,
+    // rather than failing on a column the deployment has not reached.
+    if (isMissingColumnError(error, "data_config")) {
+      const { data_config: _ignored, ...withoutData } = row;
+      const retry = await supabase
+        .from("portfolios")
+        .upsert(withoutData, { onConflict: "user_id,variant_key" });
+
+      if (retry.error) throw retry.error;
+      return publicPath;
+    }
+
+    throw error;
+  }
+
   return publicPath;
 }
 
