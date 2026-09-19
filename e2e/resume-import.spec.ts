@@ -7,6 +7,13 @@ function escapePdfText(value: string) {
     .replace(/\)/g, "\\)");
 }
 
+// officeparser only treats a vertical jump as a line break once the gap is
+// clearly wider than the font size. At 11pt text a 16pt leading falls below
+// that threshold, so every line arrives joined by spaces instead. The resume
+// parser is line-based, so the fixture has to clear the threshold to exercise
+// anything past the email regex.
+const LINE_GAP = 24;
+
 function buildTextPdf(lines: string[]) {
   const commands = [
     "BT",
@@ -14,7 +21,7 @@ function buildTextPdf(lines: string[]) {
     "72 740 Td",
     ...lines.flatMap((line, index) => [
       `(${escapePdfText(line)}) Tj`,
-      ...(index < lines.length - 1 ? ["0 -16 Td"] : []),
+      ...(index < lines.length - 1 ? [`0 -${LINE_GAP} Td`] : []),
     ]),
     "ET",
   ].join("\n");
