@@ -69,6 +69,7 @@ export function PortfolioBuilder({
     cloudMessage,
     setCloudMessage,
     cloudResolved,
+    requestedVariantMissing,
     saveToCloud,
     publish,
     signOut,
@@ -538,7 +539,13 @@ export function PortfolioBuilder({
           </div>
 
           <div className="builder-panel-scroll">
-            <div className="variant-switcher">
+            {requestedVariantMissing && (
+            <p className="builder-notice" role="status">
+              That portfolio could not be found, so the most recently edited one
+              is shown instead. Check the link, or pick a portfolio below.
+            </p>
+          )}
+          <div className="variant-switcher">
             <div className="variant-switcher-head">
               <div>
                 <span>Portfolio variants</span>

@@ -208,3 +208,38 @@ test("reset password page refuses to submit without a recovery session", async (
   // The control stays disabled, so a visitor cannot attempt a password change.
   await expect(page.locator("button.auth-submit")).toBeDisabled();
 });
+
+test("asking for a portfolio that does not exist says so", async ({ page }) => {
+  await page.goto("/builder?demo=1");
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const raw = window.localStorage.getItem("folioblocks:workspace");
+        return raw ? JSON.parse(raw).variants.length : 0;
+      })
+    )
+    .toBeGreaterThan(1);
+
+  // A known-good id opens that portfolio and says nothing.
+  const firstId = await page.evaluate(
+    () => JSON.parse(window.localStorage.getItem("folioblocks:workspace")!).variants[0].id
+  );
+  await page.goto(`/builder?portfolio=${firstId}`);
+  await expect(page.locator("iframe.preview-device-frame")).toBeVisible();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => JSON.parse(window.localStorage.getItem("folioblocks:workspace")!).activeVariantId
+      )
+    )
+    .toBe(firstId);
+  await expect(page.locator(".builder-notice")).toHaveCount(0);
+
+  // An unknown id previously fell back to whichever portfolio was edited
+  // last, with nothing shown, which looked like Edit opening the wrong one.
+  await page.goto("/builder?portfolio=definitely-not-a-real-variant");
+  await expect(page.locator(".builder-notice")).toBeVisible();
+  await expect(page.locator(".builder-notice")).toContainText(
+    /could not be found/i
+  );
+});

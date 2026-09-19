@@ -33,6 +33,10 @@ export function useBuilderWorkspace({
   const [cloudStatus, setCloudStatus] = useState<CloudStatus>("local");
   const [cloudMessage, setCloudMessage] = useState("");
   const [cloudResolved, setCloudResolved] = useState(false);
+  // Set when a portfolio was asked for by id but no longer exists. Without
+  // this the builder silently opened whichever portfolio was edited last,
+  // which reads as Edit loading the wrong portfolio's details.
+  const [requestedVariantMissing, setRequestedVariantMissing] = useState(false);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(WORKSPACE_STORAGE_KEY);
@@ -42,14 +46,18 @@ export function useBuilderWorkspace({
         const localState = normalizeBuilderState(
           JSON.parse(saved) as BuilderState
         );
+        const requestedExists =
+          !initialVariantId ||
+          localState.variants.some(
+            (variant) => variant.id === initialVariantId
+          );
+
         setState(
-          initialVariantId &&
-            localState.variants.some(
-              (variant) => variant.id === initialVariantId
-            )
+          initialVariantId && requestedExists
             ? { ...localState, activeVariantId: initialVariantId }
             : localState
         );
+        setRequestedVariantMissing(!requestedExists);
       } catch {
         window.localStorage.removeItem(WORKSPACE_STORAGE_KEY);
       }
@@ -118,15 +126,21 @@ export function useBuilderWorkspace({
         if (cancelled) return;
 
         if (remote) {
+          const requestedExists =
+            !initialVariantId ||
+            remote.variants.some((variant) => variant.id === initialVariantId);
+
           setState(
-            initialVariantId &&
-              remote.variants.some(
-                (variant) => variant.id === initialVariantId
-              )
+            initialVariantId && requestedExists
               ? { ...remote, activeVariantId: initialVariantId }
               : remote
           );
-          setCloudMessage("Loaded from cloud");
+          setRequestedVariantMissing(!requestedExists);
+          setCloudMessage(
+            requestedExists
+              ? "Loaded from cloud"
+              : "That portfolio no longer exists. Showing your most recent one."
+          );
           setCloudStatus("saved");
         } else {
           setCloudMessage("Signed in · local draft not saved yet");
@@ -248,6 +262,7 @@ export function useBuilderWorkspace({
     cloudMessage,
     setCloudMessage,
     cloudResolved,
+    requestedVariantMissing,
     saveToCloud,
     publish,
     signOut,
