@@ -9,6 +9,13 @@ const migration = await readFile(
   ),
   "utf8"
 );
+const deleteMigration = await readFile(
+  new URL(
+    "../supabase/migrations/20260919130000_transactional_portfolio_deletion.sql",
+    import.meta.url
+  ),
+  "utf8"
+);
 const store = await readFile(
   new URL("../lib/supabase/portfolio-store.ts", import.meta.url),
   "utf8"
@@ -43,6 +50,17 @@ test("workspace persistence is performed through one RLS-aware database function
     /grant execute on function public\.save_portfolio_workspace\(jsonb\)[\s\S]*to authenticated, service_role/i
   );
   assert.match(store, /\.rpc\("save_portfolio_workspace"/);
+});
+
+test("portfolio deletion is also one RLS-aware database transaction", () => {
+  assert.match(
+    deleteMigration,
+    /function public\.delete_portfolio_workspace\(p_variant_key text\)/i
+  );
+  assert.match(deleteMigration, /security invoker/i);
+  assert.match(deleteMigration, /auth\.uid\(\)/i);
+  assert.match(deleteMigration, /delete from public\.portfolios/i);
+  assert.match(deleteMigration, /delete from public\.product_events/i);
 });
 
 test("creator product analytics are authenticated and content-free", () => {
