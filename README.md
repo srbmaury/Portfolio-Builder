@@ -112,7 +112,7 @@ It explains the builder workflow, current features, analytics/privacy behavior, 
 
 Deleting a portfolio removes its saved/published data, target-only content, attached resume, analytics events, and uploaded assets that are no longer referenced by another portfolio. All database-side deletion runs inside one RLS-aware Postgres transaction, so any database error rolls the complete delete back. Irreversible Cloudinary cleanup runs only after that transaction commits. Deleting the last portfolio also removes the shared workspace data.
 
-The account danger zone permanently removes all portfolios, shared workspace data, published pages, uploaded Cloudinary assets, analytics-admin membership, and the sign-in account.
+The account danger zone permanently removes all portfolios, shared workspace data, published pages, uploaded Cloudinary assets, product analytics, and the sign-in account.
 
 ## Run locally
 
