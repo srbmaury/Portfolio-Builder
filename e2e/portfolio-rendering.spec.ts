@@ -298,3 +298,48 @@ test("content tab counts reflect the open portfolio, not the shared pool", async
   expect(cleared[0]).toMatch(/^Experience 0 of [1-9]\d* roles in this portfolio/);
   expect(cleared[1]).toMatch(/^Projects 0 of [1-9]\d* projects in this portfolio/);
 });
+
+test("each portfolio owns its content, so editing one leaves the others alone", async ({
+  page,
+}) => {
+  await openDemoBuilder(page);
+
+  const namesInState = () =>
+    page.evaluate(() =>
+      Object.fromEntries(
+        JSON.parse(
+          window.localStorage.getItem("folioblocks:workspace")!
+        ).variants.map((variant: { id: string; data: { profile: { name: string } } }) => [
+          variant.id,
+          variant.data.profile.name,
+        ])
+      )
+    );
+
+  const before = await namesInState();
+  const ids = Object.keys(before);
+  expect(ids.length).toBeGreaterThan(1);
+
+  // The profile name field of the portfolio currently open.
+  const nameField = page.locator("input").nth(2);
+  const originalOther = before[ids[1]];
+  await nameField.fill("ONLY THIS PORTFOLIO");
+
+  await expect.poll(namesInState).toMatchObject({
+    [ids[0]]: "ONLY THIS PORTFOLIO",
+    [ids[1]]: originalOther,
+  });
+
+  // Switching portfolios must swap the working copy, not carry the edit over.
+  const variantNames = await page.evaluate(() =>
+    JSON.parse(
+      window.localStorage.getItem("folioblocks:workspace")!
+    ).variants.map((variant: { name: string }) => variant.name)
+  );
+
+  await page.getByRole("button", { name: variantNames[1], exact: true }).click();
+  await expect.poll(() => nameField.inputValue()).toBe(originalOther);
+
+  await page.getByRole("button", { name: variantNames[0], exact: true }).click();
+  await expect.poll(() => nameField.inputValue()).toBe("ONLY THIS PORTFOLIO");
+});

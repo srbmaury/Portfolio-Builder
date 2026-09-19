@@ -6,6 +6,7 @@ import {
   slugify,
   snapshotForVariant,
   type BuilderState,
+  type PortfolioData,
   type PortfolioVariant,
 } from "@/lib/portfolio";
 
@@ -111,6 +112,13 @@ export async function loadBuilderState(
     id: row.variant_key,
     name: row.name,
     targetRole: row.target_role,
+    // Rows saved before content became per-portfolio have no data_config, so
+    // they fall back to the old shared tables. normalizeBuilderState then gives
+    // each portfolio its own copy, leaving published output unchanged.
+    data:
+      row.data_config && typeof row.data_config === "object"
+        ? (row.data_config as PortfolioData)
+        : data,
     config: {
       theme: row.theme,
       sections: Array.isArray(row.section_config) ? row.section_config : [],
@@ -188,6 +196,8 @@ export async function saveBuilderState(
       theme: variant.config.theme,
       sections: cloneConfig(variant.config).sections,
       content: variant.content,
+      // Each portfolio carries its own content now.
+      data: variant.data,
       branding: variant.branding,
       resume: variant.resume,
     })),
@@ -246,6 +256,7 @@ export async function publishVariant(
       theme: active.config.theme,
       section_config: cloneConfig(active.config).sections,
       content_config: active.content,
+      data_config: active.data,
       branding_config: active.branding,
       resume_config: active.resume,
       is_published: true,

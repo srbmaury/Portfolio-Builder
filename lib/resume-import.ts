@@ -4,6 +4,7 @@ import {
   type BuilderState,
   type Experience,
   type Project,
+  syncActiveData,
 } from "./portfolio.ts";
 import type { ResumeImportDraft } from "./resume-parser.ts";
 
@@ -94,7 +95,7 @@ export function mergeResumeImport(
     newSkills.push(skill);
   }
 
-  return normalizeBuilderState({
+  return normalizeBuilderState(syncActiveData({
     ...state,
     data: {
       ...state.data,
@@ -122,7 +123,7 @@ export function mergeResumeImport(
           }
         : variant
     ),
-  });
+  }));
 }
 
 function cleanExperience(item: Experience): Experience {

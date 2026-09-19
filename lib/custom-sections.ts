@@ -3,6 +3,7 @@ import {
   normalizeBuilderState,
   type BuilderState,
   type CustomSectionItem,
+  syncActiveData,
 } from "./portfolio.ts";
 
 export function addCustomSection(
@@ -13,7 +14,7 @@ export function addCustomSection(
   const id = createEntityId("custom-section");
   const cleanTitle = title.trim() || "Custom section";
 
-  return {
+  return syncActiveData({
     ...state,
     data: {
       ...state.data,
@@ -43,7 +44,7 @@ export function addCustomSection(
         ],
       },
     })),
-  };
+  });
 }
 
 export function removeCustomSection(
@@ -52,7 +53,7 @@ export function removeCustomSection(
 ): BuilderState {
   const state = normalizeBuilderState(input);
 
-  return {
+  return syncActiveData({
     ...state,
     data: {
       ...state.data,
@@ -69,7 +70,7 @@ export function removeCustomSection(
         ),
       },
     })),
-  };
+  });
 }
 
 export function updateCustomSectionTitle(
@@ -82,7 +83,7 @@ export function updateCustomSectionTitle(
     state.data.customSections.find((section) => section.id === customSectionId)
       ?.title || "";
 
-  return {
+  return syncActiveData({
     ...state,
     data: {
       ...state.data,
@@ -102,7 +103,7 @@ export function updateCustomSectionTitle(
         ),
       },
     })),
-  };
+  });
 }
 
 export function addCustomSectionItem(
@@ -120,7 +121,7 @@ export function addCustomSectionItem(
     linkUrl: "",
   };
 
-  return {
+  return syncActiveData({
     ...state,
     data: {
       ...state.data,
@@ -130,7 +131,7 @@ export function addCustomSectionItem(
           : section
       ),
     },
-  };
+  });
 }
 
 export function updateCustomSectionItem(
@@ -142,7 +143,7 @@ export function updateCustomSectionItem(
 ): BuilderState {
   const state = normalizeBuilderState(input);
 
-  return {
+  return syncActiveData({
     ...state,
     data: {
       ...state.data,
@@ -157,7 +158,7 @@ export function updateCustomSectionItem(
           : section
       ),
     },
-  };
+  });
 }
 
 export function removeCustomSectionItem(
@@ -167,7 +168,7 @@ export function removeCustomSectionItem(
 ): BuilderState {
   const state = normalizeBuilderState(input);
 
-  return {
+  return syncActiveData({
     ...state,
     data: {
       ...state.data,
@@ -180,5 +181,5 @@ export function removeCustomSectionItem(
           : section
       ),
     },
-  };
+  });
 }

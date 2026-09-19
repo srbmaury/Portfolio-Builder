@@ -28,6 +28,7 @@ import {
   type PortfolioResume,
   type Project,
   type ThemeName,
+  cloneData,
 } from "@/lib/portfolio";
 
 type SetBuilderState = Dispatch<SetStateAction<BuilderState>>;
@@ -572,6 +573,7 @@ export function usePortfolioEditorActions({
           id,
           name: input.name,
           targetRole: input.targetRole,
+          data: cloneData(activeVariant?.data ?? current.data),
           config: cloneConfig(currentConfig),
           content: cloneContentConfig(
             activeVariant?.content ?? fullContentConfig(current.data)
@@ -600,6 +602,7 @@ export function usePortfolioEditorActions({
           id,
           name: `${activeVariant.name} Copy`,
           targetRole: activeVariant.targetRole,
+          data: cloneData(activeVariant.data),
           config: cloneConfig(activeVariant.config),
           content: cloneContentConfig(activeVariant.content),
           branding: cloneBranding(activeVariant.branding),

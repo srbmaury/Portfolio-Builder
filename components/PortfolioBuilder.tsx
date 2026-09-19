@@ -549,7 +549,7 @@ export function PortfolioBuilder({
             <div className="variant-switcher-head">
               <div>
                 <span>Portfolio variants</span>
-                <small>One profile, multiple presentations</small>
+                <small>Each portfolio keeps its own content</small>
               </div>
               <button onClick={() => setCreateDialog("variant")}>+ New</button>
             </div>
@@ -601,11 +601,11 @@ export function PortfolioBuilder({
           {tab === "content" ? (
             <div className="panel-body">
               <div className="panel-intro">
-                <p className="panel-kicker">Shared profile</p>
-                <h2>Tell your story once.</h2>
+                <p className="panel-kicker">This portfolio</p>
+                <h2>Tailor it for the role.</h2>
                 <p>
-                  Content is shared across every portfolio variant. Change it here and
-                  each version stays up to date.
+                  This content belongs to the portfolio you have open. Editing it
+                  leaves your other portfolios untouched.
                 </p>
                 <div className="panel-intro-actions">
                   <button

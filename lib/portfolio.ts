@@ -114,13 +114,22 @@ export type PortfolioVariant = {
   id: string;
   name: string;
   targetRole: string;
+  /**
+   * Content belongs to the portfolio that shows it. Earlier versions kept one
+   * shared pool on the state and had every variant select from it, which meant
+   * editing one portfolio changed the others.
+   */
+  data: PortfolioData;
   config: PortfolioConfig;
+  /** Ordering and inclusion within this portfolio's own data. */
   content: VariantContentConfig;
   branding: PortfolioBranding;
   resume: PortfolioResume;
 };
 
 export type BuilderState = {
+  /** Seed for newly created portfolios, and the migration source for
+   *  workspaces saved before content became per-portfolio. */
   data: PortfolioData;
   variants: PortfolioVariant[];
   activeVariantId: string;
@@ -458,6 +467,36 @@ export function fullContentConfig(data: PortfolioData): VariantContentConfig {
   };
 }
 
+/** Deep copy so one portfolio's edits cannot reach another's content. */
+/**
+ * Keeps the invariant that state.data is the open portfolio's own data.
+ * Helpers that build a new state from scratch must go through this, or the
+ * edit lands on the working copy but never on the portfolio that owns it.
+ */
+export function syncActiveData(state: BuilderState): BuilderState {
+  return {
+    ...state,
+    variants: state.variants.map((variant) =>
+      variant.id === state.activeVariantId
+        ? { ...variant, data: state.data }
+        : variant
+    ),
+  };
+}
+
+export function cloneData(data: PortfolioData): PortfolioData {
+  return {
+    profile: { ...data.profile, socials: data.profile.socials.map((s) => ({ ...s })) },
+    experience: data.experience.map((item) => ({ ...item })),
+    projects: data.projects.map((item) => ({ ...item, stack: [...item.stack] })),
+    skills: [...data.skills],
+    customSections: data.customSections.map((section) => ({
+      ...section,
+      items: section.items.map((item) => ({ ...item })),
+    })),
+  };
+}
+
 export function cloneContentConfig(
   content: VariantContentConfig
 ): VariantContentConfig {
@@ -517,6 +556,7 @@ export const sampleBuilderState: BuilderState = {
       id: "backend-platform",
       name: "Backend & Platform",
       targetRole: "Backend & Platform Engineer",
+      data: sampleData,
       config: cloneConfig(sampleBackendConfig),
       content: {
         experienceIds: ["exp-meridian", "exp-relay", "exp-orbit"],
@@ -551,6 +591,7 @@ export const sampleBuilderState: BuilderState = {
       id: "product-engineer",
       name: "Product Engineer",
       targetRole: "Product Engineer",
+      data: sampleData,
       config: cloneConfig(sampleProductConfig),
       content: {
         experienceIds: ["exp-meridian", "exp-relay"],
@@ -606,6 +647,7 @@ export const emptyBuilderState: BuilderState = {
       id: "portfolio",
       name: "",
       targetRole: "",
+      data: emptyData,
       config: cloneConfig(defaultConfig),
       content: fullContentConfig(emptyData),
       branding: cloneBranding(),
@@ -638,13 +680,13 @@ export function snapshotForVariant(state: BuilderState): PortfolioSnapshot {
     };
   }
 
+  // The portfolio publishes its own content, not a shared pool.
+  const activeData = active.data;
   const experienceById = new Map(
-    normalized.data.experience.map((item) => [item.id, item])
+    activeData.experience.map((item) => [item.id, item])
   );
-  const projectById = new Map(
-    normalized.data.projects.map((item) => [item.id, item])
-  );
-  const validSkills = new Set(normalized.data.skills);
+  const projectById = new Map(activeData.projects.map((item) => [item.id, item]));
+  const validSkills = new Set(activeData.skills);
   const customIds = new Set(
     active.config.sections
       .filter((section) => sectionType(section) === "custom")
@@ -654,10 +696,10 @@ export function snapshotForVariant(state: BuilderState): PortfolioSnapshot {
 
   return {
     data: {
-      ...normalized.data,
+      ...activeData,
       profile: {
-        ...normalized.data.profile,
-        role: active.targetRole || normalized.data.profile.role,
+        ...activeData.profile,
+        role: active.targetRole || activeData.profile.role,
       },
       experience: active.content.experienceIds
         .map((id) => experienceById.get(id))
@@ -666,7 +708,7 @@ export function snapshotForVariant(state: BuilderState): PortfolioSnapshot {
         .map((id) => projectById.get(id))
         .filter((item): item is Project => Boolean(item)),
       skills: active.content.skills.filter((skill) => validSkills.has(skill)),
-      customSections: normalized.data.customSections.filter((section) =>
+      customSections: activeData.customSections.filter((section) =>
         customIds.has(section.id)
       ),
     },
@@ -691,16 +733,34 @@ export function normalizeBuilderState(input: BuilderState): BuilderState {
   const variants = rawVariants.map((variant, index) => {
     const rawContent = variant.content as VariantContentConfig | undefined;
 
+    // A workspace saved before content became per-portfolio has no data on its
+    // variants. Each one inherits a full copy of the old shared pool, so its
+    // published output is unchanged while its edits become independent.
+    const rawVariantData = (variant as { data?: PortfolioData }).data;
+    const variantData = rawVariantData ? normalizeData(rawVariantData) : data;
+
+    const variantValidExperience = new Set(
+      variantData.experience.map((item) => item.id)
+    );
+    const variantValidProjects = new Set(
+      variantData.projects.map((item) => item.id)
+    );
+    const variantValidSkills = new Set(variantData.skills);
+    const variantFallback = fullContentConfig(variantData);
+
     const experienceIds = rawContent?.experienceIds?.filter((id) =>
-      validExperience.has(id)
+      variantValidExperience.has(id)
     );
     const projectIds = rawContent?.projectIds?.filter((id) =>
-      validProjects.has(id)
+      variantValidProjects.has(id)
     );
-    const skills = rawContent?.skills?.filter((skill) => validSkills.has(skill));
+    const skills = rawContent?.skills?.filter((skill) =>
+      variantValidSkills.has(skill)
+    );
 
     return {
       ...variant,
+      data: variantData,
       id: variant.id || `portfolio-${index + 1}`,
       name:
         typeof variant.name === "string"
@@ -710,7 +770,7 @@ export function normalizeBuilderState(input: BuilderState): BuilderState {
         typeof variant.targetRole === "string"
           ? variant.targetRole
           : data.profile.role,
-      config: normalizePortfolioConfig(variant.config, data.customSections),
+      config: normalizePortfolioConfig(variant.config, variantData.customSections),
       branding: {
         faviconUrl:
           typeof variant.branding?.faviconUrl === "string"
@@ -755,13 +815,13 @@ export function normalizeBuilderState(input: BuilderState): BuilderState {
         experienceIds:
           rawContent?.experienceIds !== undefined
             ? experienceIds || []
-            : fallbackContent.experienceIds,
+            : variantFallback.experienceIds,
         projectIds:
           rawContent?.projectIds !== undefined
             ? projectIds || []
-            : fallbackContent.projectIds,
+            : variantFallback.projectIds,
         skills:
-          rawContent?.skills !== undefined ? skills || [] : fallbackContent.skills,
+          rawContent?.skills !== undefined ? skills || [] : variantFallback.skills,
       },
     };
   });
@@ -771,6 +831,7 @@ export function normalizeBuilderState(input: BuilderState): BuilderState {
       id: "general",
       name: "General",
       targetRole: data.profile.role,
+      data,
       config: normalizePortfolioConfig(defaultConfig, data.customSections),
       content: fallbackContent,
       branding: cloneBranding(),
@@ -784,8 +845,14 @@ export function normalizeBuilderState(input: BuilderState): BuilderState {
     ? input.activeVariantId
     : variants[0].id;
 
+  // The working data is always the open portfolio's own data, so every reader
+  // of state.data sees the portfolio currently being edited rather than a
+  // pool shared with the others.
+  const active =
+    variants.find((variant) => variant.id === activeVariantId) ?? variants[0];
+
   return {
-    data,
+    data: active.data,
     variants,
     activeVariantId,
   };

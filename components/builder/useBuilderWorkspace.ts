@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { trackProductEvent } from "@/lib/product-analytics";
 import {
   emptyBuilderState,
@@ -26,7 +27,43 @@ export function useBuilderWorkspace({
   startFresh: boolean;
   initialVariantId?: string;
 }) {
-  const [state, setState] = useState<BuilderState>(emptyBuilderState);
+  const [state, setStateInternal] = useState<BuilderState>(emptyBuilderState);
+
+  /**
+   * state.data is the open portfolio's own content. Mirror any edit onto that
+   * variant so it stays with the portfolio, and swap the working copy when a
+   * different portfolio is opened. Every caller goes through this, so no code
+   * path can quietly put the portfolios back on a shared pool.
+   */
+  const setState = useCallback<Dispatch<SetStateAction<BuilderState>>>(
+    (action) => {
+      setStateInternal((current) => {
+        const next =
+          typeof action === "function"
+            ? (action as (value: BuilderState) => BuilderState)(current)
+            : action;
+
+        if (next.activeVariantId !== current.activeVariantId) {
+          const opened = next.variants.find(
+            (variant) => variant.id === next.activeVariantId
+          );
+          return opened ? { ...next, data: opened.data } : next;
+        }
+
+        if (next.data === current.data) return next;
+
+        return {
+          ...next,
+          variants: next.variants.map((variant) =>
+            variant.id === next.activeVariantId
+              ? { ...variant, data: next.data }
+              : variant
+          ),
+        };
+      });
+    },
+    []
+  );
   const [hydrated, setHydrated] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [cloudUserId, setCloudUserId] = useState<string | null>(null);
@@ -52,7 +89,7 @@ export function useBuilderWorkspace({
             (variant) => variant.id === initialVariantId
           );
 
-        setState(
+        setStateInternal(
           initialVariantId && requestedExists
             ? { ...localState, activeVariantId: initialVariantId }
             : localState
@@ -63,7 +100,7 @@ export function useBuilderWorkspace({
       }
     } else if (startFresh) {
       window.localStorage.removeItem(WORKSPACE_STORAGE_KEY);
-      setState(emptyBuilderState);
+      setStateInternal(emptyBuilderState);
     }
 
     setHydrated(true);
@@ -130,7 +167,7 @@ export function useBuilderWorkspace({
             !initialVariantId ||
             remote.variants.some((variant) => variant.id === initialVariantId);
 
-          setState(
+          setStateInternal(
             initialVariantId && requestedExists
               ? { ...remote, activeVariantId: initialVariantId }
               : remote
