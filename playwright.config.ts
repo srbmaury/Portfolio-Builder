@@ -6,12 +6,15 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "github" : "list",
   use: {
-    baseURL: "http://127.0.0.1:3000",
+    // Next dev only trusts "localhost" as a same-origin dev host. Browsing
+    // 127.0.0.1 makes it block its own /_next/static chunks, so the app never
+    // hydrates and every interactive expectation fails.
+    baseURL: "http://localhost:3000",
     trace: "retain-on-failure",
   },
   webServer: {
     command: "npm run dev",
-    url: "http://127.0.0.1:3000",
+    url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },
