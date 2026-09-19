@@ -3,9 +3,9 @@ import Link from "next/link";
 import styles from "./docs.module.css";
 
 export const metadata: Metadata = {
-  title: "Docs — FolioBlocks",
+  title: "Docs — DevFolioX",
   description:
-    "Public documentation for FolioBlocks features, publishing, analytics, privacy, and data controls.",
+    "Public documentation for DevFolioX features, publishing, analytics, privacy, and data controls.",
 };
 
 const featureGroups = [
@@ -14,7 +14,7 @@ const featureGroups = [
     items: [
       "Maintain one shared professional profile with experience, projects, skills, social links, and custom sections.",
       "Start from a true blank workspace, use the demo, or import a PDF/DOCX resume up to 5 MB.",
-      "Import projects from a public GitHub profile by selecting repositories; FolioBlocks maps descriptions, language/topics, repository links, and homepage links into editable projects.",
+      "Import projects from a public GitHub profile by selecting repositories; DevFolioX maps descriptions, language/topics, repository links, and homepage links into editable projects.",
       "Run the active portfolio through a health check for identity/contact gaps, targeting, project completeness, links, resume readiness, and image-led layout requirements.",
       "Resume import is parsed in memory, is not stored, and lets you review/edit profile, experience, projects, and skills before applying.",
       "Use the advanced JSON editor to edit the complete workspace: shared content, variants, targeting, design, branding, resume data, and custom sections.",
@@ -73,7 +73,7 @@ export default function DocsPage() {
     <main className={styles.shell}>
       <header className={styles.header}>
         <Link className={styles.brand} href="/">
-          folio<span>blocks</span>
+          DevFolio<span>X</span>
         </Link>
         <nav className={styles.nav} aria-label="Docs navigation">
           <Link href="/">Home</Link>
@@ -86,9 +86,9 @@ export default function DocsPage() {
 
       <section className={styles.hero}>
         <p className={styles.kicker}>Public documentation</p>
-        <h1>Everything FolioBlocks can do.</h1>
+        <h1>Everything DevFolioX can do.</h1>
         <p className={styles.lead}>
-          FolioBlocks separates your professional content from its presentation, so one
+          DevFolioX separates your professional content from its presentation, so one
           profile can power multiple role-specific portfolios without rebuilding the
           same information again and again.
         </p>
@@ -157,7 +157,7 @@ export default function DocsPage() {
           <article className={styles.callout}>
             <h3>What analytics stores</h3>
             <p>
-              FolioBlocks uses opaque anonymous visitor/session UUIDs, event type,
+              DevFolioX uses opaque anonymous visitor/session UUIDs, event type,
               fixed content-free action targets, referrer host, device type, portfolio
               ID, and event time. Portfolio views are de-duplicated once per
               portfolio/session.
@@ -246,9 +246,9 @@ export default function DocsPage() {
 
       <footer className={styles.footer}>
         <Link className={styles.brand} href="/">
-          folio<span>blocks</span>
+          DevFolio<span>X</span>
         </Link>
-        <p>Public product documentation for the current FolioBlocks feature set.</p>
+        <p>Public product documentation for the current DevFolioX feature set.</p>
       </footer>
     </main>
   );

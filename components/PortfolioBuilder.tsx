@@ -373,7 +373,7 @@ export function PortfolioBuilder({
     <div className="builder-shell">
       <header className="builder-topbar">
         <a className="brand" href="/">
-          folio<span>blocks</span>
+          DevFolio<span>X</span>
         </a>
 
         <div className="builder-topbar-controls">

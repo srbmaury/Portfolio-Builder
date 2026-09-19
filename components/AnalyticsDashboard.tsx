@@ -16,7 +16,7 @@ export function AnalyticsDashboard({
     <main className="analytics-shell">
       <header className="analytics-topbar">
         <a className="brand" href="/">
-          folio<span>blocks</span>
+          DevFolio<span>X</span>
         </a>
         <nav>
           <a className="ghost-button" href="/portfolios">

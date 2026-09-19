@@ -1,6 +1,6 @@
-# FolioBlocks — Modular Portfolio Builder
+# DevFolioX — Modular Portfolio Builder
 
-FolioBlocks is a portfolio builder for developers and other professionals who need different portfolios for different roles.
+DevFolioX is a portfolio builder for developers and other professionals who need different portfolios for different roles.
 
 **One shared profile → multiple role-specific portfolios.** Content is stored separately from presentation, so the same experience, projects, skills, links, and custom content can be reused across variants while each portfolio keeps its own targeting, section order, layouts, theme, branding, resume, and public URL.
 
@@ -28,7 +28,7 @@ FolioBlocks is a portfolio builder for developers and other professionals who ne
 
 ### Design system
 
-FolioBlocks currently provides **75 section layouts**:
+DevFolioX currently provides **75 section layouts**:
 
 - Hero: 10
 - About: 10
@@ -73,7 +73,7 @@ It also includes:
 
 ### First-party analytics
 
-Creators can view first-party analytics directly inside FolioBlocks:
+Creators can view first-party analytics directly inside DevFolioX:
 
 - Views and unique visitors.
 - Engaged visitors and engagement rate.

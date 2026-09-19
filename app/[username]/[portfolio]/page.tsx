@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!snapshot) {
     return {
-      title: "Portfolio not found — FolioBlocks",
+      title: "Portfolio not found — DevFolioX",
     };
   }
 

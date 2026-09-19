@@ -37,7 +37,7 @@ export async function GET(request: Request) {
   const headers: Record<string, string> = {
     Accept: "application/vnd.github+json",
     "X-GitHub-Api-Version": "2026-03-10",
-    "User-Agent": "FolioBlocks",
+    "User-Agent": "DevFolioX",
   };
 
   if (process.env.GITHUB_TOKEN) {

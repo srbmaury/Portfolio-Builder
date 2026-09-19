@@ -207,7 +207,7 @@ export function PortfolioManager({
   return (
     <main className="portfolio-manager-shell">
       <header className="portfolio-manager-topbar">
-        <a className="brand" href="/">folio<span>blocks</span></a>
+        <a className="brand" href="/">DevFolio<span>X</span></a>
         <nav>
           {isAdmin ? (
             <a className="ghost-button" href="/admin/analytics">Admin analytics</a>

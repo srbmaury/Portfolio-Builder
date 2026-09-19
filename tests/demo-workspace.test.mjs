@@ -28,7 +28,7 @@ test("demo workspace showcases role-specific portfolio variants", () => {
   );
 });
 
-test("demo content is rich enough to showcase FolioBlocks", () => {
+test("demo content is rich enough to showcase DevFolioX", () => {
   assert.ok(sampleData.experience.length >= 3);
   assert.ok(sampleData.projects.length >= 4);
   assert.ok(sampleData.skills.length >= 10);

@@ -5,7 +5,7 @@ test("fresh builder supports keyboard-first editing without inaccessible control
 }) => {
   await page.goto("/builder?fresh=1");
 
-  await expect(page.getByRole("link", { name: /folioblocks/i })).toBeVisible();
+  await expect(page.getByRole("link", { name: /devfoliox/i })).toBeVisible();
   await expect(page.getByRole("button", { name: "Content" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Targeting" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Design" })).toBeVisible();

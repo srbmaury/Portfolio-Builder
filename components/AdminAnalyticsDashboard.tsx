@@ -53,7 +53,7 @@ export function AdminAnalyticsDashboard({
     <main className="analytics-shell admin-analytics-shell">
       <header className="analytics-topbar">
         <a className="brand" href="/">
-          folio<span>blocks</span>
+          DevFolio<span>X</span>
         </a>
         <nav>
           <a className="ghost-button" href="/analytics">
@@ -71,7 +71,7 @@ export function AdminAnalyticsDashboard({
       <section className="analytics-content">
         <div className="analytics-heading">
           <p className="panel-kicker">Admin</p>
-          <h1>FolioBlocks analytics</h1>
+          <h1>DevFolioX analytics</h1>
           <p>
             Product-level acquisition, publishing, traffic, and portfolio
             engagement. Visitor analytics remain anonymous.

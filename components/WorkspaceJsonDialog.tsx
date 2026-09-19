@@ -81,7 +81,7 @@ export function WorkspaceJsonDialog({
         </div>
 
         <p className="workspace-json-help">
-          This is the complete FolioBlocks workspace: shared content, variants,
+          This is the complete DevFolioX workspace: shared content, variants,
           targeting, design, branding, and custom sections. Invalid JSON is never
           applied.
         </p>

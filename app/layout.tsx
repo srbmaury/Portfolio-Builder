@@ -8,7 +8,7 @@ const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin()),
-  title: "FolioBlocks — Build a portfolio from pieces you love",
+  title: "DevFolioX — Build a portfolio from pieces you love",
   description:
     "Mix and match portfolio sections, keep your content structured, and publish a professional site in minutes.",
 };

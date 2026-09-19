@@ -6,7 +6,7 @@ export default function Home() {
   return (
     <main className="landing">
       <nav className="landing-nav">
-        <a className="brand brand-light" href="/">folio<span>blocks</span></a>
+        <a className="brand brand-light" href="/">DevFolio<span>X</span></a>
         <div className="landing-nav-links">
           <a href="#how">How it works</a>
           <a href="#why">Why it is different</a>
@@ -62,7 +62,7 @@ export default function Home() {
           <p className="landing-kicker">The core idea</p>
           <h2>Your content is not your template.</h2>
           <p>
-            Traditional builders lock your information into a page. FolioBlocks stores your professional profile separately,
+            Traditional builders lock your information into a page. DevFolioX stores your professional profile separately,
             then lets any compatible section render it. One shared profile can power several role-specific portfolios, each with its own design.
           </p>
           <Link className="landing-primary" href="/builder?fresh=1">Start from scratch →</Link>
@@ -81,7 +81,7 @@ export default function Home() {
       </section>
 
       <footer className="landing-footer">
-        <a className="brand brand-light" href="/">folio<span>blocks</span></a>
+        <a className="brand brand-light" href="/">DevFolio<span>X</span></a>
         <p>Modular portfolios for different roles.</p>
         <div className="landing-footer-actions">
           <Link href="/docs">Docs</Link>

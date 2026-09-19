@@ -71,7 +71,7 @@ export default function LoginPage() {
   return (
     <main className="auth-shell">
       <form className="auth-card" onSubmit={submit}>
-        <a className="brand" href="/">folio<span>blocks</span></a>
+        <a className="brand" href="/">DevFolio<span>X</span></a>
         <div>
           <p className="panel-kicker">Cloud workspace</p>
           <h1>
