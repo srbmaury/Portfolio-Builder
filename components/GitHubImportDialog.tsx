@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDialogFocusTrap } from "@/lib/accessibility";
 import {
   normalizeGitHubRepositoryUrl,
@@ -33,6 +33,11 @@ export function GitHubImportDialog({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const dialogRef = useDialogFocusTrap<HTMLDivElement>(onClose);
+
+  useEffect(() => {
+    document.body.classList.add("dialog-open");
+    return () => document.body.classList.remove("dialog-open");
+  }, []);
 
   const imported = useMemo(
     () =>
