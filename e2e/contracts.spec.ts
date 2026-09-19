@@ -171,16 +171,31 @@ test("password reset is offered and requests a recovery email", async ({ page })
   await expect(page.locator(".auth-message")).toHaveText(/if that address has an account/i);
 });
 
-test("auth callback rejects missing and invalid codes", async ({ request }) => {
+test("auth callback rejects missing and invalid codes on the public host", async ({
+  request,
+  baseURL,
+}) => {
+  const expectedHost = new URL(baseURL!).host;
+
   const missing = await request.get("/auth/callback", { maxRedirects: 0 });
   expect(missing.status()).toBe(307);
-  expect(missing.headers()["location"]).toContain("/login?error=missing_code");
+  const missingTarget = new URL(missing.headers()["location"]);
+  expect(missingTarget.pathname + missingTarget.search).toBe(
+    "/login?error=missing_code"
+  );
+  // Built from the internal bind address this became https://localhost:10000,
+  // which is unreachable for anyone following an emailed link.
+  expect(missingTarget.host, "redirect stays on the requesting host").toBe(
+    expectedHost
+  );
 
   const invalid = await request.get("/auth/callback?code=not-a-real-code", {
     maxRedirects: 0,
   });
   expect(invalid.status()).toBe(307);
-  expect(invalid.headers()["location"]).toContain("/login?error=expired_link");
+  const invalidTarget = new URL(invalid.headers()["location"]);
+  expect(invalidTarget.search).toContain("error=expired_link");
+  expect(invalidTarget.host).toBe(expectedHost);
 });
 
 test("reset password page refuses to submit without a recovery session", async ({
