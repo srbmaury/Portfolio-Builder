@@ -1,4 +1,4 @@
-import type { Project } from "@/lib/portfolio";
+import type { Project } from "./portfolio.ts";
 
 export type GitHubRepositorySummary = {
   id: number;
