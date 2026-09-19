@@ -14,8 +14,16 @@ import {
   TargetingSection,
   TargetRow,
 } from "@/components/builder/BuilderDialogs";
+import { GitHubImportDialog } from "@/components/GitHubImportDialog";
+import { PortfolioHealthDialog } from "@/components/PortfolioHealthDialog";
 import { ResumeImportDialog } from "@/components/ResumeImportDialog";
 import { WorkspaceJsonDialog } from "@/components/WorkspaceJsonDialog";
+import {
+  githubRepositoryToProject,
+  normalizeGitHubRepositoryUrl,
+  parseGitHubUsername,
+  type GitHubRepositorySummary,
+} from "@/lib/github-import";
 import { mergeResumeImport } from "@/lib/resume-import";
 import {
   useBuilderWorkspace,
@@ -76,6 +84,8 @@ export function PortfolioBuilder({
   const [createDialog, setCreateDialog] = useState<CreateDialogKind>(null);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [resumeImportOpen, setResumeImportOpen] = useState(false);
+  const [githubImportOpen, setGitHubImportOpen] = useState(false);
+  const [healthOpen, setHealthOpen] = useState(false);
   const [jsonEditorOpen, setJsonEditorOpen] = useState(false);
   const createVariantOpenedRef = useRef(false);
   const demoLoadedRef = useRef(false);
@@ -200,6 +210,21 @@ export function PortfolioBuilder({
   });
 
   const snapshot = useMemo(() => snapshotForVariant(state), [state]);
+  const initialGitHubUsername = useMemo(
+    () =>
+      state.data.profile.socials
+        .map((social) => parseGitHubUsername(social.url))
+        .find(Boolean) || "",
+    [state.data.profile.socials]
+  );
+  const existingGitHubUrls = useMemo(
+    () =>
+      state.data.projects
+        .map((project) => project.githubUrl || "")
+        .map(normalizeGitHubRepositoryUrl)
+        .filter(Boolean),
+    [state.data.projects]
+  );
   const builderResumeUrl = useMemo(() => {
     const resume = activeVariant?.resume;
     if (!resume?.url) return undefined;
@@ -256,6 +281,23 @@ export function PortfolioBuilder({
   function applyWorkspaceJson(next: BuilderState) {
     setState(normalizeBuilderState(next));
     setJsonEditorOpen(false);
+    setShareUrl("");
+  }
+
+  function importGitHubRepositories(
+    repositories: GitHubRepositorySummary[]
+  ) {
+    const existing = new Set(existingGitHubUrls);
+
+    repositories.forEach((repository) => {
+      const normalized = normalizeGitHubRepositoryUrl(repository.htmlUrl);
+      if (!normalized || existing.has(normalized)) return;
+
+      addProject(githubRepositoryToProject(repository));
+      existing.add(normalized);
+    });
+
+    setGitHubImportOpen(false);
     setShareUrl("");
   }
 
@@ -369,6 +411,14 @@ export function PortfolioBuilder({
                 Sign in
               </a>
             )}
+
+            <button
+              type="button"
+              className="topbar-link"
+              onClick={() => setHealthOpen(true)}
+            >
+              Health
+            </button>
 
             <div className="topbar-more" ref={moreMenuRef}>
               <button
@@ -557,6 +607,20 @@ export function PortfolioBuilder({
                     onClick={() => setResumeImportOpen(true)}
                   >
                     Import resume
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    onClick={() => setGitHubImportOpen(true)}
+                  >
+                    Import GitHub
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    onClick={() => setHealthOpen(true)}
+                  >
+                    Check health
                   </button>
                   <button
                     type="button"
@@ -1368,6 +1432,26 @@ export function PortfolioBuilder({
         <ResumeImportDialog
           onClose={() => setResumeImportOpen(false)}
           onApply={applyResumeImport}
+        />
+      ) : null}
+
+      {githubImportOpen ? (
+        <GitHubImportDialog
+          initialUsername={initialGitHubUsername}
+          existingGitHubUrls={existingGitHubUrls}
+          onClose={() => setGitHubImportOpen(false)}
+          onImport={importGitHubRepositories}
+        />
+      ) : null}
+
+      {healthOpen ? (
+        <PortfolioHealthDialog
+          state={state}
+          onClose={() => setHealthOpen(false)}
+          onNavigate={(nextTab) => {
+            setTab(nextTab);
+            setHealthOpen(false);
+          }}
         />
       ) : null}
 

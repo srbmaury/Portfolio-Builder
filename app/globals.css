@@ -4782,3 +4782,258 @@ body.dialog-open {
     border-radius: 14px;
   }
 }
+
+
+/* GitHub project import */
+.github-import-dialog,
+.portfolio-health-dialog {
+  width: min(760px, calc(100vw - 32px));
+  max-height: min(820px, calc(100vh - 32px));
+}
+
+.github-import-body,
+.portfolio-health-body {
+  overflow: auto;
+}
+
+.github-import-search label {
+  display: grid;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.github-import-search label > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.github-import-search input,
+.github-import-filter input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 11px 12px;
+  font: inherit;
+}
+
+.github-import-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.github-import-filter {
+  flex: 1;
+}
+
+.github-import-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.github-repository-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  max-height: 410px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.github-repository-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 11px;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.github-repository-row:hover {
+  border-color: var(--text);
+}
+
+.github-repository-row.imported {
+  opacity: 0.58;
+  cursor: default;
+}
+
+.github-repository-row > input {
+  margin-top: 3px;
+}
+
+.github-repository-copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.github-repository-copy > span {
+  overflow-wrap: anywhere;
+}
+
+.github-repository-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  color: var(--text);
+}
+
+.github-repository-title small {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 6px;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.github-import-actions {
+  justify-content: space-between;
+}
+
+/* Portfolio health */
+.portfolio-health-summary {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.portfolio-health-counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.portfolio-health-count {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  background: var(--surface);
+}
+
+.portfolio-health-count strong {
+  font-size: 1.35rem;
+}
+
+.portfolio-health-count span {
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.portfolio-health-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.portfolio-health-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 13px;
+  background: var(--surface);
+}
+
+.portfolio-health-item-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.portfolio-health-item-copy > span {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 2px 7px;
+  background: var(--surface-strong);
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.portfolio-health-item-copy strong {
+  font-size: 0.9rem;
+}
+
+.portfolio-health-item-copy p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.portfolio-health-empty {
+  margin-top: 18px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  padding: 18px;
+  text-align: center;
+}
+
+.portfolio-health-empty p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .github-import-search label > div {
+    grid-template-columns: 1fr;
+  }
+
+  .github-import-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .portfolio-health-counts {
+    grid-template-columns: 1fr;
+  }
+
+  .portfolio-health-item {
+    grid-template-columns: 1fr;
+  }
+
+  .portfolio-health-item .ghost-button {
+    width: 100%;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

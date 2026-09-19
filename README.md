@@ -11,6 +11,8 @@ FolioBlocks is a portfolio builder for developers and other professionals who ne
 - Shared professional profile with experience, projects, skills, social links, and custom sections.
 - True blank **Start fresh** mode plus a demo workspace.
 - **Resume import** from PDF or DOCX (maximum 5 MB). Import parsing happens in memory and the uploaded import file is not stored.
+- **GitHub project import** from any public GitHub profile. Select repositories and import descriptions, primary language/topics, repository links, and homepage/live links while skipping projects already imported.
+- **Portfolio health check** for the active variant, covering missing identity/contact data, targeting gaps, project completeness, broken links, resume readiness, and image-led layout requirements. Findings jump directly to Content, Targeting, or Design and never block publishing.
 - Review/edit imported profile, experience, projects, and skills before applying them.
 - **Edit workspace as JSON** for the complete structured workspace. Invalid JSON is never applied.
 - Local draft autosave plus authenticated Supabase cloud persistence through an atomic Postgres RPC, so a failed save cannot leave half-replaced experience/project/skill data.
@@ -132,6 +134,9 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
+
+# Optional, server-only; raises GitHub API limits for repository import.
+GITHUB_TOKEN=
 ```
 
 Then run:
