@@ -181,3 +181,41 @@ test("malformed model output is hardened rather than trusted", () => {
   assert.equal(draft.projects.length, 0, "a project with no title is dropped");
   assert.deepEqual(draft.skills, ["Java", "Redis"], "non-strings and repeats are dropped");
 });
+
+test("a transient 503 is retried, and a 4xx is not", async () => {
+  await withEnv("GEMINI_API_KEY", "test-key", async () => {
+    let attempts = 0;
+    const flaky = stubFetch(() => {
+      attempts += 1;
+      if (attempts < 3) {
+        return { ok: false, status: 503, statusText: "Service Unavailable", async json() { return {}; } };
+      }
+      return geminiResponse({
+        profile: { name: "Saurabh Maurya", socials: [] },
+        experience: [],
+        projects: [],
+        skills: ["Python"],
+      });
+    });
+
+    try {
+      const draft = await extractResumeWithAi("text");
+      assert.equal(attempts, 3, "it retries until the service answers");
+      assert.equal(draft.profile.name, "Saurabh Maurya");
+    } finally {
+      flaky.restore();
+    }
+
+    let quotaCalls = 0;
+    const quota = stubFetch(() => {
+      quotaCalls += 1;
+      return { ok: false, status: 429, statusText: "Too Many Requests", async json() { return {}; } };
+    });
+    try {
+      await assert.rejects(() => extractResumeWithAi("text"), /429/);
+      assert.equal(quotaCalls, 1, "a quota error is not retried");
+    } finally {
+      quota.restore();
+    }
+  });
+});

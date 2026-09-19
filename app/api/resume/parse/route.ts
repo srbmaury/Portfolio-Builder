@@ -118,7 +118,7 @@ export async function POST(request: Request) {
 async function draftFromText(text: string) {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 20_000);
+    const timeout = setTimeout(() => controller.abort(), 45_000);
     const draft = await extractResumeWithAi(text, {
       signal: controller.signal,
     }).finally(() => clearTimeout(timeout));

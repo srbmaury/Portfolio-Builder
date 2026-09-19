@@ -2,10 +2,16 @@ import { slugify, type Experience, type Project } from "./portfolio.ts";
 import type { ResumeImportDraft } from "./resume-parser.ts";
 
 const ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models";
-const DEFAULT_MODEL = "gemini-2.5-flash";
+// gemini-2.5-flash returns 404 "no longer available to new users" on keys
+// issued recently. gemini-3.6-flash is current but was serving a steady 503
+// ("experiencing high demand") when this was wired up, so the default is the
+// sibling that answers reliably. GEMINI_MODEL overrides it.
+const DEFAULT_MODEL = "gemini-3.5-flash";
 
 // A resume is small; the cap only guards against a pathological upload.
 const MAX_INPUT_CHARS = 24_000;
+
+const MAX_ATTEMPTS = 3;
 
 const RESPONSE_SCHEMA = {
   type: "OBJECT",
@@ -102,7 +108,31 @@ function str(value: unknown, max: number): string | undefined {
 
 function httpUrl(value: unknown): string | undefined {
   const candidate = str(value, 300);
-  return candidate && /^https?:\/\//i.test(candidate) ? candidate : undefined;
+  if (!candidate) return undefined;
+  if (/^https?:\/\//i.test(candidate)) return candidate;
+  // A resume prints "linkedin.com/in/name", not the scheme. Rejecting those
+  // outright drops every social link the model correctly found.
+  return /^[\w-]+(\.[\w-]+)+\//.test(candidate)
+    ? `https://${candidate}`
+    : undefined;
+}
+
+function delay(ms: number, signal?: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(signal.reason);
+      return;
+    }
+    const timer = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+    function onAbort() {
+      clearTimeout(timer);
+      reject(signal?.reason);
+    }
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
 }
 
 export function isAiResumeExtractionConfigured() {
@@ -212,10 +242,9 @@ export async function extractResumeWithAi(
   if (!apiKey) return null;
 
   const model = process.env.GEMINI_MODEL?.trim() || DEFAULT_MODEL;
+  const url = `${ENDPOINT}/${encodeURIComponent(model)}:generateContent`;
 
-  const response = await fetch(
-    `${ENDPOINT}/${encodeURIComponent(model)}:generateContent`,
-    {
+  const request = {
       method: "POST",
       signal: options.signal,
       headers: {
@@ -229,10 +258,21 @@ export async function extractResumeWithAi(
           temperature: 0,
           responseMimeType: "application/json",
           responseSchema: RESPONSE_SCHEMA,
+          // Extraction is copying, not reasoning, and the thinking budget is
+          // what pushed this past the request timeout.
+          thinkingConfig: { thinkingBudget: 0 },
         },
       }),
-    }
-  );
+  };
+
+  // The free tier returns 503 often enough that falling straight back to the
+  // parser would waste most calls. A 4xx will not clear, so it is not retried.
+  let response = await fetch(url, request);
+  for (let attempt = 1; attempt < MAX_ATTEMPTS && !response.ok; attempt += 1) {
+    if (response.status < 500) break;
+    await delay(400 * 2 ** (attempt - 1), options.signal);
+    response = await fetch(url, request);
+  }
 
   if (!response.ok) {
     throw new Error(
