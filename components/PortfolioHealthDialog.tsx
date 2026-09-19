@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useDialogFocusTrap } from "@/lib/accessibility";
 import {
   analyzePortfolioHealth,
@@ -26,6 +26,11 @@ export function PortfolioHealthDialog({
 }) {
   const report = useMemo(() => analyzePortfolioHealth(state), [state]);
   const dialogRef = useDialogFocusTrap<HTMLDivElement>(onClose);
+
+  useEffect(() => {
+    document.body.classList.add("dialog-open");
+    return () => document.body.classList.remove("dialog-open");
+  }, []);
 
   const statusTitle =
     report.status === "needs-attention"
