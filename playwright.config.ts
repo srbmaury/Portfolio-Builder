@@ -17,6 +17,11 @@ export default defineConfig({
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    // Resume import calls Gemini whenever a key is present, which made the
+    // suite depend on Google's latency: the parse test blew the 30s timeout
+    // under parallel load, and every run spent free-tier quota. Blanking the
+    // key pins the deterministic parser, which is what these tests assert.
+    env: { GEMINI_API_KEY: "" },
   },
   projects: [
     {

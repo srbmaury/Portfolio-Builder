@@ -248,7 +248,12 @@ test("asking for a portfolio that does not exist says so", async ({ page }) => {
 test("home exposes X card metadata and Ory verification", async ({ page }) => {
   await page.goto("/");
 
-  const expectedImage = new URL("/twitter-image", page.url()).href;
+  // Next appends a content hash to metadata image routes
+  // (/twitter-image?1de2661a...), so the URL is matched by prefix.
+  const imageUrl = (path: string) =>
+    new RegExp(
+      `^${new URL(path, page.url()).href.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\?.*)?$`
+    );
 
   await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute(
     "content",
@@ -256,11 +261,11 @@ test("home exposes X card metadata and Ory verification", async ({ page }) => {
   );
   await expect(page.locator('meta[name="twitter:image"]')).toHaveAttribute(
     "content",
-    expectedImage
+    imageUrl("/twitter-image")
   );
   await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
     "content",
-    new URL("/opengraph-image", page.url()).href
+    imageUrl("/opengraph-image")
   );
   await expect(page.locator('meta[name="ory-verify"]')).toHaveAttribute(
     "content",
