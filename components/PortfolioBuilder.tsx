@@ -545,6 +545,14 @@ export function PortfolioBuilder({
               is shown instead. Check the link, or pick a portfolio below.
             </p>
           )}
+          {cloudStatus === "error" && cloudMessage && (
+            // The status pill only has room for "Cloud error", and putting the
+            // reason in a title attribute meant a failed save looked identical
+            // to a network blip unless you happened to hover it.
+            <p className="builder-notice builder-notice-error" role="alert">
+              Save failed: {cloudMessage}
+            </p>
+          )}
           <div className="variant-switcher">
             <div className="variant-switcher-head">
               <div>

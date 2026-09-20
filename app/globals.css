@@ -5115,3 +5115,12 @@ body.dialog-open {
   font-weight: 650;
   line-height: 1.5;
 }
+
+/* A failed save carries the database's own message, which can be a long
+   unbroken constraint name, so it wraps rather than widening the panel. */
+.builder-notice-error {
+  border-color: #fda29b;
+  background: #fef3f2;
+  color: #b42318;
+  overflow-wrap: anywhere;
+}
