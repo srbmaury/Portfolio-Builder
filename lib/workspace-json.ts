@@ -41,6 +41,30 @@ export function parseWorkspaceJson(text: string): WorkspaceJsonResult {
     };
   }
 
+  const variantIds: string[] = [];
+  for (const variant of parsed.variants) {
+    if (!isObject(variant) || typeof variant.id !== "string" || !variant.id.trim()) {
+      return {
+        ok: false,
+        error: "Every portfolio in variants needs a non-empty string id.",
+      };
+    }
+    variantIds.push(variant.id.trim());
+  }
+
+  // Portfolios are saved with "on conflict (user_id, variant_key)", so two
+  // variants sharing an id do not fail loudly: the second overwrites the
+  // first and a portfolio disappears on the next save.
+  const duplicateId = variantIds.find(
+    (id, index) => variantIds.indexOf(id) !== index
+  );
+  if (duplicateId) {
+    return {
+      ok: false,
+      error: `Two portfolios share the id "${duplicateId}". Give each one a unique id.`,
+    };
+  }
+
   if (
     parsed.activeVariantId !== undefined &&
     typeof parsed.activeVariantId !== "string"

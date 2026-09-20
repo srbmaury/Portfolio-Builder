@@ -62,3 +62,36 @@ test("workspace JSON normalizes unsupported theme and layout values", () => {
   assert.equal(result.state.variants[0].config.theme, "ink");
   assert.equal(result.state.variants[0].config.sections[0].variant, "split");
 });
+
+test("workspace JSON rejects two portfolios sharing an id", () => {
+  const variant = {
+    id: "solo",
+    name: "Solo",
+    config: { theme: "ink", sections: [] },
+    content: { experienceIds: [], projectIds: [], skills: [] },
+  };
+
+  const result = parseWorkspaceJson(
+    JSON.stringify({
+      data: { profile: { name: "Ada" } },
+      variants: [variant, { ...variant }],
+    })
+  );
+
+  assert.equal(result.ok, false);
+  assert.match(result.error, /share the id "solo"/);
+});
+
+test("workspace JSON rejects a portfolio with no usable id", () => {
+  for (const broken of [{}, { id: "" }, { id: "   " }, { id: 7 }]) {
+    const result = parseWorkspaceJson(
+      JSON.stringify({
+        data: { profile: { name: "Ada" } },
+        variants: [broken],
+      })
+    );
+
+    assert.equal(result.ok, false, JSON.stringify(broken));
+    assert.match(result.error, /non-empty string id/);
+  }
+});
