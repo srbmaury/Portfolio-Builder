@@ -23,11 +23,23 @@ export const metadata: Metadata = {
     url: siteOrigin(),
     title: TITLE,
     description: DESCRIPTION,
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "DevFolioX — build a portfolio from pieces you love",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
+    images: ["/twitter-image"],
+  },
+  other: {
+    "ory-verify": "orynth-53d2c4c72e0141eaa85c34a83e54b1c2",
   },
 };
 
