@@ -12,15 +12,15 @@ const deleteAccount = await readFile(
 );
 
 test("Supabase auth uses the public DevFolioX domain", () => {
-  assert.match(authConfig, /site_url = "https:\/\/devfoliox\.qd\.je"/);
-  assert.match(authConfig, /"https:\/\/devfoliox\.qd\.je\/\*\*"/);
+  assert.match(authConfig, /site_url = "https:\/\/devfoliox\.srbmaury\.com"/);
+  assert.match(authConfig, /"https:\/\/devfoliox\.srbmaury\.com\/\*\*"/);
   assert.doesNotMatch(authConfig, /portfolio-builder-miia\.onrender\.com/);
 });
 
 test("account deletion falls back to the public DevFolioX domain", () => {
   assert.match(
     deleteAccount,
-    /https:\/\/devfoliox\.qd\.je\/api\/account\/assets/
+    /https:\/\/devfoliox\.srbmaury\.com\/api\/account\/assets/
   );
   assert.doesNotMatch(deleteAccount, /portfolio-builder-miia\.onrender\.com/);
 });

@@ -6,14 +6,10 @@ DevFolioX is a portfolio builder for developers and other professionals who need
 
 ## Demo
 
-<blockquote class="twitter-tweet" data-media-max-width="560">
-  <p lang="pt" dir="ltr">
-    A short demo — <a href="https://x.com/SrbMaury/status/2101552716082495656">watch it on X</a>.
-  </p>
-  &mdash; Saurabh Maurya (@SrbMaury), September 20, 2026
-</blockquote>
+- **Live app:** [devfoliox.srbmaury.com](https://devfoliox.srbmaury.com)
+- **Video walkthrough:** [Watch the short demo on X](https://x.com/SrbMaury/status/2101552716082495656)
 
-> GitHub does not execute third-party scripts in README files, so the demo links to the original X post instead of loading the interactive X widget.
+> GitHub README files do not run X's embed script, so the original video is provided as a direct link.
 
 ## What is included
 
