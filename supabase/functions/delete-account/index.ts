@@ -68,7 +68,7 @@ Deno.serve(async (request: Request) => {
 
   const cleanupUrl =
     Deno.env.get("ACCOUNT_CLEANUP_URL") ??
-    "https://portfolio-builder-miia.onrender.com/api/account/assets";
+    "https://devfoliox.qd.je/api/account/assets";
 
   const cleanupResponse = await fetch(cleanupUrl, {
     method: "DELETE",
