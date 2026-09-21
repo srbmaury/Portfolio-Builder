@@ -4,6 +4,17 @@ DevFolioX is a portfolio builder for developers and other professionals who need
 
 **One shared profile → multiple role-specific portfolios.** Content is stored separately from presentation, so the same experience, projects, skills, links, and custom content can be reused across variants while each portfolio keeps its own targeting, section order, layouts, theme, branding, resume, and public URL.
 
+## Demo
+
+<blockquote class="twitter-tweet" data-media-max-width="560">
+  <p lang="pt" dir="ltr">
+    A short demo — <a href="https://x.com/SrbMaury/status/2101552716082495656">watch it on X</a>.
+  </p>
+  &mdash; Saurabh Maurya (@SrbMaury), September 20, 2026
+</blockquote>
+
+> GitHub does not execute third-party scripts in README files, so the demo links to the original X post instead of loading the interactive X widget.
+
 ## What is included
 
 ### Content and authoring
