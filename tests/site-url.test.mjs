@@ -8,7 +8,7 @@ test("uses the public DevFolioX domain when no site URL is configured", () => {
   delete process.env.NEXT_PUBLIC_SITE_URL;
 
   try {
-    assert.equal(siteOrigin(), "https://devfoliox.qd.je");
+    assert.equal(siteOrigin(), "https://devfoliox.srbmaury.com");
   } finally {
     if (configuredOrigin === undefined) {
       delete process.env.NEXT_PUBLIC_SITE_URL;

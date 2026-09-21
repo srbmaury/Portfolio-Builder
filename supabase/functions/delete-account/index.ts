@@ -68,7 +68,7 @@ Deno.serve(async (request: Request) => {
 
   const cleanupUrl =
     Deno.env.get("ACCOUNT_CLEANUP_URL") ??
-    "https://devfoliox.qd.je/api/account/assets";
+    "https://devfoliox.srbmaury.com/api/account/assets";
 
   const cleanupResponse = await fetch(cleanupUrl, {
     method: "DELETE",
