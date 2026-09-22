@@ -280,9 +280,38 @@
 
 @media (max-width: 640px) {
   .header {
-    position: static;
-    align-items: flex-start;
-    flex-direction: column;
+    position: sticky;
+    min-height: 68px;
+    padding: 10px 14px;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+  }
+
+  .brand {
+    flex: 0 0 auto;
+    font-size: 1rem;
+  }
+
+  .nav {
+    min-width: 0;
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    gap: 7px;
+  }
+
+  .nav a {
+    white-space: nowrap;
+    font-size: 0.8rem;
+  }
+
+  .nav a:first-child {
+    display: none;
+  }
+
+  .primaryLink {
+    padding: 8px 10px;
   }
 
   .hero {
