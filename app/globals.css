@@ -5213,3 +5213,106 @@ body.dialog-open {
     width: min(190px, calc(100vw - 20px));
   }
 }
+
+
+/* Cross-app navigation polish */
+.analytics-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(16px);
+}
+
+@media (max-width: 760px) {
+  .landing-nav {
+    height: 68px;
+    padding-inline: 14px;
+  }
+  .landing-nav-links {
+    gap: 10px;
+  }
+  .landing-nav-links > a:not(.nav-cta):not(.landing-nav-mobile-link) {
+    display: none;
+  }
+  .landing-nav-mobile-link {
+    display: inline-flex !important;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 4px;
+  }
+  .nav-cta {
+    padding: 9px 12px;
+  }
+
+  .portfolio-manager-topbar {
+    min-height: 68px;
+    padding: 10px 14px;
+    align-items: center;
+    gap: 10px;
+  }
+  .portfolio-manager-topbar nav {
+    min-width: 0;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: 5px;
+  }
+  .portfolio-manager-topbar .portfolio-manager-nav-secondary {
+    display: none;
+  }
+  .portfolio-manager-topbar .portfolio-manager-nav-builder,
+  .portfolio-manager-topbar .primary-button {
+    min-height: 36px;
+    padding: 8px 11px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 640px) {
+  .analytics-topbar {
+    min-height: 68px;
+    padding: 10px 12px;
+    align-items: center;
+    flex-direction: row;
+    gap: 8px;
+  }
+  .analytics-topbar .brand {
+    flex: 0 0 auto;
+    font-size: 18px;
+  }
+  .analytics-topbar nav {
+    min-width: 0;
+    width: auto;
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    gap: 5px;
+  }
+  .analytics-topbar .analytics-nav-secondary {
+    display: none;
+  }
+  .analytics-topbar .ghost-button,
+  .analytics-topbar .primary-button {
+    flex: 0 0 auto;
+    min-height: 36px;
+    padding: 8px 10px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 390px) {
+  .landing-nav .brand,
+  .portfolio-manager-topbar .brand {
+    font-size: 18px;
+  }
+  .landing-nav-mobile-link {
+    display: none !important;
+  }
+  .portfolio-manager-topbar .portfolio-manager-nav-builder {
+    padding-inline: 8px;
+  }
+  .analytics-topbar .analytics-nav-portfolios {
+    padding-inline: 8px;
+  }
+}
