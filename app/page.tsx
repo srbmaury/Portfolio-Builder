@@ -10,7 +10,7 @@ export default function Home() {
         <div className="landing-nav-links">
           <a href="#how">How it works</a>
           <a href="#why">Why it is different</a>
-          <Link href="/docs">Docs</Link>
+          <Link className="landing-nav-mobile-link" href="/docs">Docs</Link>
           <Link className="nav-cta" href="/builder?fresh=1">Start fresh</Link>
         </div>
       </nav>
