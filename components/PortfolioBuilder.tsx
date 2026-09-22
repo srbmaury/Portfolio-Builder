@@ -70,6 +70,7 @@ export function PortfolioBuilder({
     setCloudMessage,
     cloudResolved,
     requestedVariantMissing,
+    hasUnsavedChanges,
     saveToCloud,
     publish,
     signOut,
@@ -379,34 +380,29 @@ export function PortfolioBuilder({
 
         <div className="builder-topbar-controls">
           <div className="builder-status" title={cloudMessage || undefined} aria-live="polite">
-            <span className={`save-dot cloud-${cloudStatus}`} />
+            <span
+              className={`save-dot cloud-${cloudStatus}${hasUnsavedChanges ? " cloud-dirty" : ""}`}
+            />
             <span>
               {cloudUserId
                 ? cloudStatus === "loading"
                   ? "Syncing…"
                   : cloudStatus === "error"
                     ? "Cloud error"
-                    : cloudStatus === "saved"
-                      ? "Saved"
-                      : "Cloud ready"
+                    : hasUnsavedChanges
+                      ? "Unsaved changes"
+                      : cloudStatus === "saved"
+                        ? "Saved"
+                        : "Cloud ready"
                 : "Local"}
             </span>
           </div>
 
           <div className="topbar-actions">
             {cloudUserId ? (
-              <>
-                <a className="topbar-link portfolio-manager-link" href="/portfolios">
-                  Portfolios
-                </a>
-                <button
-                  className="topbar-link"
-                  onClick={saveToCloud}
-                  disabled={cloudStatus === "loading"}
-                >
-                  Save
-                </button>
-              </>
+              <a className="topbar-link portfolio-manager-link" href="/portfolios">
+                Portfolios
+              </a>
             ) : (
               <a className="topbar-link cloud-login-link" href="/login">
                 Sign in
@@ -415,7 +411,7 @@ export function PortfolioBuilder({
 
             <button
               type="button"
-              className="topbar-link"
+              className="topbar-link topbar-health"
               onClick={() => setHealthOpen(true)}
             >
               Health
@@ -437,26 +433,13 @@ export function PortfolioBuilder({
               {moreMenuOpen ? (
                 <div className="topbar-menu" role="menu">
                   {cloudUserId ? (
-                    <>
-                      <a
-                        className="topbar-menu-mobile-action"
-                        href="/portfolios"
-                        role="menuitem"
-                      >
-                        Portfolios
-                      </a>
-                      <button
-                        className="topbar-menu-mobile-action"
-                        role="menuitem"
-                        disabled={cloudStatus === "loading"}
-                        onClick={() => {
-                          setMoreMenuOpen(false);
-                          void saveToCloud();
-                        }}
-                      >
-                        Save
-                      </button>
-                    </>
+                    <a
+                      className="topbar-menu-mobile-action"
+                      href="/portfolios"
+                      role="menuitem"
+                    >
+                      Portfolios
+                    </a>
                   ) : (
                     <a
                       className="topbar-menu-mobile-action"
@@ -466,6 +449,17 @@ export function PortfolioBuilder({
                       Sign in
                     </a>
                   )}
+
+                  <button
+                    className="topbar-menu-mobile-action"
+                    role="menuitem"
+                    onClick={() => {
+                      setMoreMenuOpen(false);
+                      setHealthOpen(true);
+                    }}
+                  >
+                    Portfolio health
+                  </button>
 
                   <button
                     role="menuitem"
@@ -500,13 +494,52 @@ export function PortfolioBuilder({
               ) : null}
             </div>
 
+            {cloudUserId ? (
+              <button
+                className={
+                  hasUnsavedChanges
+                    ? "primary-button topbar-save topbar-save-dirty"
+                    : "topbar-link topbar-save"
+                }
+                onClick={saveToCloud}
+                disabled={cloudStatus === "loading" || !hasUnsavedChanges}
+                title={
+                  hasUnsavedChanges
+                    ? "Save changes to cloud"
+                    : "All changes are saved"
+                }
+              >
+                Save
+              </button>
+            ) : null}
+
             <button
               className="primary-button topbar-publish"
               onClick={publish}
-              disabled={cloudStatus === "loading"}
-              title={cloudUserId ? "Publish and copy public link" : undefined}
+              disabled={
+                cloudStatus === "loading" ||
+                Boolean(cloudUserId && hasUnsavedChanges)
+              }
+              title={
+                cloudUserId
+                  ? hasUnsavedChanges
+                    ? "Save changes before publishing"
+                    : "Publish and copy public link"
+                  : undefined
+              }
             >
-              {cloudUserId ? "Publish" : "Sign in to publish"}
+              {cloudUserId ? (
+                hasUnsavedChanges ? (
+                  <>
+                    <span className="publish-label-desktop">Save changes first</span>
+                    <span className="publish-label-mobile">Save first</span>
+                  </>
+                ) : (
+                  "Publish"
+                )
+              ) : (
+                "Sign in to publish"
+              )}
             </button>
           </div>
         </div>

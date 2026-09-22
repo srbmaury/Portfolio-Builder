@@ -19,8 +19,8 @@ export function AnalyticsDashboard({
           DevFolio<span>X</span>
         </a>
         <nav>
-          <a className="ghost-button" href="/portfolios">
-            My Portfolios
+          <a className="ghost-button analytics-nav-portfolios" href="/portfolios">
+            Portfolios
           </a>
           <a className="primary-button" href="/builder">
             Builder

@@ -259,10 +259,10 @@ export function PortfolioManager({
         <a className="brand" href="/">DevFolio<span>X</span></a>
         <nav>
           {isAdmin ? (
-            <a className="ghost-button" href="/admin/analytics">Admin analytics</a>
+            <a className="ghost-button portfolio-manager-nav-secondary" href="/admin/analytics">Admin analytics</a>
           ) : null}
-          <a className="ghost-button" href="/analytics">Analytics</a>
-          <a className="ghost-button" href="/builder">Back to builder</a>
+          <a className="ghost-button portfolio-manager-nav-secondary" href="/analytics">Analytics</a>
+          <a className="ghost-button portfolio-manager-nav-builder" href="/builder">Builder</a>
           <a className="primary-button" href="/builder?create=1">New portfolio</a>
         </nav>
       </header>
