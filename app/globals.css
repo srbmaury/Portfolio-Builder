@@ -5261,6 +5261,7 @@ body.dialog-open {
   }
   .portfolio-manager-topbar .portfolio-manager-nav-builder,
   .portfolio-manager-topbar .primary-button {
+    display: inline-flex;
     min-height: 36px;
     padding: 8px 11px;
     font-size: 11px;
