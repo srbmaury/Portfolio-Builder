@@ -20,6 +20,13 @@ const LOCAL_DRAFT_DELAY_MS = 200;
 
 type CloudStatus = "local" | "loading" | "saved" | "error";
 
+function workspaceContentSignature(state: BuilderState) {
+  // activeVariantId is navigation state, not an edit. Every content/config
+  // change is mirrored into variants, so this signature only changes for data
+  // that actually needs to be saved.
+  return JSON.stringify(state.variants);
+}
+
 export function useBuilderWorkspace({
   startFresh,
   initialVariantId,
@@ -70,6 +77,7 @@ export function useBuilderWorkspace({
   const [cloudStatus, setCloudStatus] = useState<CloudStatus>("local");
   const [cloudMessage, setCloudMessage] = useState("");
   const [cloudResolved, setCloudResolved] = useState(false);
+  const [lastSavedSignature, setLastSavedSignature] = useState<string | null>(null);
   // Set when a portfolio was asked for by id but no longer exists. Without
   // this the builder silently opened whichever portfolio was edited last,
   // which reads as Edit loading the wrong portfolio's details.
@@ -178,8 +186,10 @@ export function useBuilderWorkspace({
               ? "Loaded from cloud"
               : "That portfolio no longer exists. Showing your most recent one."
           );
+          setLastSavedSignature(workspaceContentSignature(remote));
           setCloudStatus("saved");
         } else {
+          setLastSavedSignature(null);
           setCloudMessage("Signed in · local draft not saved yet");
           setCloudStatus("local");
         }
@@ -230,6 +240,7 @@ export function useBuilderWorkspace({
 
     try {
       await saveBuilderState(supabase, data.user, state);
+      setLastSavedSignature(workspaceContentSignature(state));
       setCloudUserId(data.user.id);
       setCloudStatus("saved");
       setCloudMessage("Saved to cloud");
@@ -242,7 +253,15 @@ export function useBuilderWorkspace({
     }
   }
 
+  const hasUnsavedChanges =
+    Boolean(cloudUserId) && workspaceContentSignature(state) !== lastSavedSignature;
+
   async function publish() {
+    if (hasUnsavedChanges) {
+      setCloudMessage("Save changes before publishing");
+      return;
+    }
+
     const supabase = createClient();
     const { data, error } = await supabase.auth.getUser();
 
@@ -255,7 +274,6 @@ export function useBuilderWorkspace({
     setCloudMessage("Publishing…");
 
     try {
-      await saveBuilderState(supabase, data.user, state);
       const publicPath = await publishVariant(supabase, data.user, state);
       const url = `${window.location.origin}/${publicPath}`;
 
@@ -300,6 +318,7 @@ export function useBuilderWorkspace({
     setCloudMessage,
     cloudResolved,
     requestedVariantMissing,
+    hasUnsavedChanges,
     saveToCloud,
     publish,
     signOut,
