@@ -14,8 +14,19 @@ export default function LoginPage() {
   // Before hydration the submit handler is not attached, so a click would fall
   // through to a native GET and Supabase would answer "missing email or phone".
   const [ready, setReady] = useState(false);
+  const [signedOut, setSignedOut] = useState(false);
 
-  useEffect(() => setReady(true), []);
+  useEffect(() => {
+    setReady(true);
+    // Sign-out anywhere in the app lands here with ?signed_out=1. Confirm it,
+    // then drop the flag so a refresh does not repeat the message.
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("signed_out") === "1") {
+      setSignedOut(true);
+      url.searchParams.delete("signed_out");
+      window.history.replaceState(null, "", url.pathname + url.search);
+    }
+  }, []);
 
   async function signInWithGoogle() {
     setBusy(true);
@@ -25,7 +36,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/builder`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/builder?signed_in=1")}`,
       },
     });
 
@@ -84,7 +95,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/builder");
+    router.push("/builder?signed_in=1");
     router.refresh();
   }
 
@@ -92,8 +103,12 @@ export default function LoginPage() {
     <main className="auth-shell">
       <form className="auth-card" onSubmit={submit}>
         <a className="brand" href="/">DevFolio<span>X</span></a>
+        {signedOut ? (
+          <p className="auth-notice" role="status">
+            You have been signed out. Your browser draft is still in the builder.
+          </p>
+        ) : null}
         <div>
-          <p className="panel-kicker">Cloud workspace</p>
           <h1>
             {mode === "login"
               ? "Sign in"
@@ -101,7 +116,11 @@ export default function LoginPage() {
                 ? "Create account"
                 : "Reset password"}
           </h1>
-          <p>Save your profile, portfolio variants, and published links across devices.</p>
+          <p>
+            {mode === "reset"
+              ? "Enter your email and we will send you a link to set a new password."
+              : "Publish your portfolio to a live link and see how many people open it."}
+          </p>
         </div>
 
         {mode !== "reset" && (

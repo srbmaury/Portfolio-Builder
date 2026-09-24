@@ -37,6 +37,9 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
   }
 
   return (
-    <AdminAnalyticsDashboard data={analytics as AdminAnalyticsData} />
+    <AdminAnalyticsDashboard
+      data={analytics as AdminAnalyticsData}
+      email={data.user.email ?? null}
+    />
   );
 }

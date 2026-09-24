@@ -5,6 +5,11 @@ import type {
   AnalyticsDeviceType,
   AnalyticsEventType,
 } from "@/lib/analytics";
+import {
+  SHARE_TAG_PARAM,
+  SHARE_TAG_PREFIX,
+  normalizeShareTag,
+} from "@/lib/share-links";
 
 const VISITOR_KEY = "folioblocks:analytics:visitor";
 const SESSION_KEY = "folioblocks:analytics:session";
@@ -20,7 +25,7 @@ export function PortfolioAnalyticsTracker({
     const visitorId = getOrCreateId(window.localStorage, VISITOR_KEY);
     const sessionId = getOrCreateId(window.sessionStorage, SESSION_KEY);
     const deviceType = detectDeviceType();
-    const referrerHost = safeReferrerHost(document.referrer);
+    const referrerHost = sourceFromLink() || safeReferrerHost(document.referrer);
 
     recordEvent({
       portfolioId,
@@ -92,6 +97,19 @@ function getOrCreateId(storage: Storage, key: string) {
   } catch {
     return crypto.randomUUID();
   }
+}
+
+// A tagged link (?via=linkedin) names its own source. Read it once, then drop
+// it from the address bar so a visitor who re-shares the page does not pass
+// the owner's tag along.
+function sourceFromLink() {
+  const url = new URL(window.location.href);
+  const tag = normalizeShareTag(url.searchParams.get(SHARE_TAG_PARAM));
+  if (url.searchParams.has(SHARE_TAG_PARAM)) {
+    url.searchParams.delete(SHARE_TAG_PARAM);
+    window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+  }
+  return tag ? `${SHARE_TAG_PREFIX}${tag}` : "";
 }
 
 function safeReferrerHost(value: string) {

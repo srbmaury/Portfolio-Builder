@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import { siteOrigin } from "@/lib/site-url";
 
 export const alt =
-  "DevFolioX — build a portfolio from pieces you love";
+  "DevFolioX — a live portfolio link, no code, with analytics";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -11,11 +11,11 @@ export const contentType = "image/png";
 // the brand's tight letter-spacing do it instead.
 const INK = "#0e1116";
 const PAPER = "#f5f4ef";
-const ACCENT = "#7c5cff";
+const ACCENT = "#2563eb";
 const MUTED = "#a6aeba";
 const STROKE = "rgba(255,255,255,0.14)";
 
-const SECTIONS = ["Hero", "About", "Experience", "Projects", "Résumé"];
+const SECTIONS = ["Fill details", "Publish", "Share URL", "Count the views"];
 
 function Bar({ rotate }: { rotate: number }) {
   return (
@@ -49,7 +49,7 @@ export default function Image() {
           padding: 76,
           background: INK,
           backgroundImage:
-            "radial-gradient(900px 520px at 8% -14%, rgba(124,92,255,0.30), transparent 62%), radial-gradient(760px 460px at 104% 112%, rgba(124,92,255,0.16), transparent 60%)",
+            "radial-gradient(900px 520px at 8% -14%, rgba(37,99,235,0.22), transparent 62%), radial-gradient(760px 460px at 104% 112%, rgba(37,99,235,0.12), transparent 60%)",
           color: PAPER,
           fontFamily: "Geist",
         }}
@@ -99,7 +99,7 @@ export default function Image() {
               color: MUTED,
             }}
           >
-            Build a portfolio from pieces you love
+            Live portfolio link. No code. Built-in analytics.
           </div>
         </div>
 

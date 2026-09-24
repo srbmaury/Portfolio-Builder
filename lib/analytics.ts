@@ -1,3 +1,5 @@
+import { isTaggedSource } from "./share-links.ts";
+
 export const ANALYTICS_EVENT_TYPES = [
   "portfolio_view",
   "resume_opened",
@@ -129,7 +131,11 @@ export function normalizeAnalyticsEventInput(
     return { ok: false, error: "Invalid analytics target." };
   }
 
-  if (rawHost && (rawHost.length > 255 || !HOST_RE.test(rawHost))) {
+  if (
+    rawHost &&
+    !isTaggedSource(rawHost) &&
+    (rawHost.length > 255 || !HOST_RE.test(rawHost))
+  ) {
     return { ok: false, error: "Invalid referrer host." };
   }
 

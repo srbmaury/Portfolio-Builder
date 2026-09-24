@@ -1,8 +1,11 @@
 "use client";
 
+import { errorMessage } from "@/lib/error-message";
 import { useState } from "react";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
+import { AppNav } from "@/components/AppNav";
+import { ShareLinks } from "@/components/ShareLinks";
 import { trackProductEvent } from "@/lib/product-analytics";
 import { formatPortfolioDate } from "@/lib/date-format";
 import {
@@ -16,11 +19,17 @@ import {
   restorePublishedSnapshot,
 } from "@/lib/supabase/portfolio-store";
 
+type ViewCounts = Record<string, { views: number; uniqueVisitors: number }>;
+
 export function PortfolioManager({
   initialPortfolios,
+  viewCounts = null,
+  email,
   isAdmin = false,
 }: {
   initialPortfolios: PortfolioSummary[];
+  viewCounts?: ViewCounts | null;
+  email: string | null;
   isAdmin?: boolean;
 }) {
   const [portfolios, setPortfolios] = useState(initialPortfolios);
@@ -75,7 +84,7 @@ export function PortfolioManager({
       setEditingKey(null);
       setMessage("Portfolio renamed. Its public URL stays the same.");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Rename failed.");
+      setMessage(errorMessage(error, "Rename failed."));
     }
   }
 
@@ -91,7 +100,7 @@ export function PortfolioManager({
         window.location.href = `/builder?portfolio=${encodeURIComponent(newKey)}`;
       }
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Duplicate failed.");
+      setMessage(errorMessage(error, "Duplicate failed."));
     }
   }
 
@@ -119,7 +128,7 @@ export function PortfolioManager({
       setMessage("Restored this portfolio to its published version.");
     } catch (error) {
       setMessage(
-        error instanceof Error ? error.message : "Could not restore the published version."
+        errorMessage(error, "Could not restore the published version.")
       );
     }
   }
@@ -139,7 +148,7 @@ export function PortfolioManager({
       );
       setMessage("Public page updated with your latest edits.");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Could not update the public page.");
+      setMessage(errorMessage(error, "Could not update the public page."));
     }
   }
 
@@ -177,7 +186,7 @@ export function PortfolioManager({
         trackProductEvent("portfolio_published", item.variantKey);
       }
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Publish action failed.");
+      setMessage(errorMessage(error, "Publish action failed."));
     }
   }
 
@@ -205,7 +214,7 @@ export function PortfolioManager({
         setMessage("Portfolio and its unreferenced uploaded assets were deleted.");
       }
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Delete failed.");
+      setMessage(errorMessage(error, "Delete failed."));
     }
   }
 
@@ -241,7 +250,7 @@ export function PortfolioManager({
       window.location.href = "/";
     } catch (error) {
       setMessage(
-        error instanceof Error ? error.message : "Account deletion failed."
+        errorMessage(error, "Account deletion failed.")
       );
       setAccountBusy(false);
     }
@@ -255,23 +264,21 @@ export function PortfolioManager({
 
   return (
     <main className="portfolio-manager-shell">
-      <header className="portfolio-manager-topbar">
-        <a className="brand" href="/">DevFolio<span>X</span></a>
-        <nav>
-          {isAdmin ? (
-            <a className="ghost-button portfolio-manager-nav-secondary" href="/admin/analytics">Admin analytics</a>
-          ) : null}
-          <a className="ghost-button portfolio-manager-nav-secondary" href="/analytics">Analytics</a>
-          <a className="ghost-button portfolio-manager-nav-builder" href="/builder">Builder</a>
-          <a className="primary-button" href="/builder?create=1">New portfolio</a>
-        </nav>
-      </header>
+      <AppNav
+        current="portfolios"
+        email={email}
+        isAdmin={isAdmin}
+        actions={
+          <a className="primary-button app-nav-action" href="/builder?create=1">
+            New portfolio
+          </a>
+        }
+      />
 
       <section className="portfolio-manager-content">
         <div className="portfolio-manager-heading">
-          <p className="panel-kicker">Cloud workspace</p>
-          <h1>My Portfolios</h1>
-          <p>Edit, duplicate, publish, unpublish, open, or delete each saved portfolio without changing its public URL unexpectedly.</p>
+          <h1>Your portfolios</h1>
+          <p>Each portfolio has its own link and its own view counts. Republishing keeps the same link.</p>
         </div>
 
         {message && <p className="portfolio-manager-message">{message}</p>}
@@ -281,6 +288,7 @@ export function PortfolioManager({
             {portfolios.map((item) => {
               const isBusy = busyKey === item.variantKey;
               const publicUrl = item.publicPath ? `/${item.publicPath}` : null;
+              const counts = viewCounts?.[item.variantKey] ?? { views: 0, uniqueVisitors: 0 };
               // Publishing freezes a snapshot. Later edits to the shared
               // profile or this variant do not reach the public page until it
               // is published again, which is why a live page can show content
@@ -323,7 +331,7 @@ export function PortfolioManager({
                   </div>
 
                   <div className="portfolio-manager-meta">
-                    {publicUrl ? <code>{publicUrl}</code> : <span>Publish to create a public link.</span>}
+                    {publicUrl ? <code>{publicUrl}</code> : <span>Not live yet. Publish to get a link.</span>}
                     {item.publishedAt && (
                       <span>Published {formatPortfolioDate(item.publishedAt)}</span>
                     )}
@@ -334,15 +342,21 @@ export function PortfolioManager({
                     )}
                   </div>
 
-                  <div className="portfolio-manager-actions primary-actions">
-                    <a className="primary-button" href={`/builder?portfolio=${encodeURIComponent(item.variantKey)}`}>
-                      Edit
+                  {item.isPublished && viewCounts ? (
+                    <a
+                      className="portfolio-manager-views"
+                      href={`/analytics?portfolio=${encodeURIComponent(item.variantKey)}&days=30`}
+                    >
+                      <strong>{counts.views}</strong>
+                      <span>
+                        {counts.views === 1 ? "view" : "views"} · {counts.uniqueVisitors}{" "}
+                        {counts.uniqueVisitors === 1 ? "visitor" : "visitors"} in the last 30 days
+                      </span>
+                      <em>Analytics →</em>
                     </a>
-                    {item.isPublished && item.publicPath ? (
-                      <a className="ghost-button" href={`/${item.publicPath}`} target="_blank" rel="noreferrer">
-                        Open ↗
-                      </a>
-                    ) : null}
+                  ) : null}
+
+                  <div className="portfolio-manager-actions primary-actions">
                     {publishedIsStale ? (
                       <>
                         <button
@@ -361,21 +375,42 @@ export function PortfolioManager({
                         </button>
                       </>
                     ) : null}
-                    <button className="ghost-button" disabled={isBusy} onClick={() => togglePublish(item)}>
-                      {item.isPublished ? "Unpublish" : "Publish"}
-                    </button>
-                    {item.isPublished && item.publicPath ? (
-                      <button className="ghost-button" onClick={() => copyLink(item)}>
+                    {!item.isPublished ? (
+                      <button className="primary-button" disabled={isBusy} onClick={() => togglePublish(item)}>
+                        Publish
+                      </button>
+                    ) : item.publicPath ? (
+                      <button
+                        className={publishedIsStale ? "ghost-button" : "primary-button"}
+                        onClick={() => copyLink(item)}
+                      >
                         Copy link
                       </button>
                     ) : null}
-                    <a
-                      className="ghost-button"
-                      href={`/analytics?portfolio=${encodeURIComponent(item.variantKey)}&days=30`}
-                    >
-                      Analytics
+                    {item.isPublished && item.publicPath ? (
+                      <a className="ghost-button" href={`/${item.publicPath}`} target="_blank" rel="noreferrer">
+                        Open ↗
+                      </a>
+                    ) : null}
+                    <a className="ghost-button" href={`/builder?portfolio=${encodeURIComponent(item.variantKey)}`}>
+                      Edit
                     </a>
+                    {!item.isPublished || !viewCounts ? (
+                      <a
+                        className="ghost-button"
+                        href={`/analytics?portfolio=${encodeURIComponent(item.variantKey)}&days=30`}
+                      >
+                        Analytics
+                      </a>
+                    ) : null}
                   </div>
+
+                  {item.isPublished && item.publicPath ? (
+                    <details className="portfolio-share">
+                      <summary>Tracked links for LinkedIn, résumé, email…</summary>
+                      <ShareLinks path={`/${item.publicPath}`} />
+                    </details>
+                  ) : null}
 
                   <div className="portfolio-manager-actions secondary-actions">
                     <button
@@ -387,6 +422,9 @@ export function PortfolioManager({
                       Rename
                     </button>
                     <button disabled={isBusy} onClick={() => duplicate(item)}>Duplicate</button>
+                    {item.isPublished ? (
+                      <button disabled={isBusy} onClick={() => togglePublish(item)}>Unpublish</button>
+                    ) : null}
                     <button className="danger-link" disabled={isBusy} onClick={() => remove(item)}>Delete</button>
                   </div>
                 </article>

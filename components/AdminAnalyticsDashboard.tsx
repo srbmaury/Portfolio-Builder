@@ -1,3 +1,6 @@
+import { AppNav } from "@/components/AppNav";
+import { sourceLabel } from "@/lib/share-links";
+
 export type AdminAnalyticsData = {
   days: 7 | 30 | 90;
   summary: {
@@ -44,29 +47,16 @@ export type AdminAnalyticsData = {
 
 export function AdminAnalyticsDashboard({
   data,
+  email,
 }: {
   data: AdminAnalyticsData;
+  email: string | null;
 }) {
   const maxViews = Math.max(1, ...data.daily.map((row) => row.views));
 
   return (
     <main className="analytics-shell admin-analytics-shell">
-      <header className="analytics-topbar">
-        <a className="brand" href="/">
-          DevFolio<span>X</span>
-        </a>
-        <nav>
-          <a className="ghost-button analytics-nav-secondary" href="/analytics">
-            Creator analytics
-          </a>
-          <a className="ghost-button analytics-nav-portfolios" href="/portfolios">
-            Portfolios
-          </a>
-          <a className="primary-button" href="/builder">
-            Builder
-          </a>
-        </nav>
-      </header>
+      <AppNav current="admin" email={email} isAdmin />
 
       <section className="analytics-content">
         <div className="analytics-heading">
@@ -203,7 +193,12 @@ export function AdminAnalyticsDashboard({
               <h2>Traffic sources</h2>
               <span>Hostname only</span>
             </div>
-            <AdminBreakdown items={data.referrers} />
+            <AdminBreakdown
+              items={data.referrers.map((item) => ({
+                ...item,
+                label: sourceLabel(item.label),
+              }))}
+            />
           </section>
 
           <section className="analytics-panel">

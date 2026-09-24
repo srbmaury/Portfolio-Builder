@@ -321,7 +321,7 @@ test("each portfolio owns its content, so editing one leaves the others alone", 
   expect(ids.length).toBeGreaterThan(1);
 
   // The profile name field of the portfolio currently open.
-  const nameField = page.locator("input").nth(2);
+  const nameField = page.getByRole("textbox", { name: "Name", exact: true });
   const originalOther = before[ids[1]];
   await nameField.fill("ONLY THIS PORTFOLIO");
 

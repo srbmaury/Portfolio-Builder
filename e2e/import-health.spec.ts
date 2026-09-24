@@ -77,7 +77,7 @@ test("portfolio health reports actionable issues and navigates to the right edit
   page,
 }) => {
   await page.goto("/builder?fresh=1");
-  await page.getByRole("button", { name: "Check health" }).click();
+  await page.getByRole("button", { name: "Health", exact: true }).click();
 
   const dialog = page.getByRole("dialog", { name: /things need attention/i });
   await expect(dialog).toBeVisible();

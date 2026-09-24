@@ -1,12 +1,20 @@
 import type { OwnerAnalyticsData } from "@/lib/supabase/analytics-store";
+import { AppNav } from "@/components/AppNav";
+import { sourceLabel } from "@/lib/share-links";
 
 export function AnalyticsDashboard({
   data,
+  email,
+  isAdmin = false,
 }: {
   data: OwnerAnalyticsData;
+  email: string | null;
+  isAdmin?: boolean;
 }) {
   const { analytics, comparison, portfolios, selectedVariantKey, days } = data;
   const metrics = analytics.summary;
+  // Label roughly eight evenly spaced days so 90-day ranges stay readable.
+  const labelStep = Math.max(1, Math.ceil(analytics.daily.length / 8));
   const maxDailyViews = Math.max(
     1,
     ...analytics.daily.map((item) => item.views)
@@ -14,27 +22,14 @@ export function AnalyticsDashboard({
 
   return (
     <main className="analytics-shell">
-      <header className="analytics-topbar">
-        <a className="brand" href="/">
-          DevFolio<span>X</span>
-        </a>
-        <nav>
-          <a className="ghost-button analytics-nav-portfolios" href="/portfolios">
-            Portfolios
-          </a>
-          <a className="primary-button" href="/builder">
-            Builder
-          </a>
-        </nav>
-      </header>
+      <AppNav current="analytics" email={email} isAdmin={isAdmin} />
 
       <section className="analytics-content">
         <div className="analytics-heading">
-          <p className="panel-kicker">First-party analytics</p>
-          <h1>Portfolio analytics</h1>
+          <h1>Analytics</h1>
           <p>
-            See how visitors discover and engage with your published portfolios.
-            No portfolio content or visitor IP addresses are stored in analytics.
+            How many people opened your portfolios, which sites sent them, and what
+            they clicked. Visitor IP addresses are never stored.
           </p>
         </div>
 
@@ -95,7 +90,7 @@ export function AnalyticsDashboard({
             />
             {analytics.daily.length ? (
               <div className="analytics-chart">
-                {analytics.daily.map((item) => (
+                {analytics.daily.map((item, index) => (
                   <div className="analytics-bar-column" key={item.date}>
                     <div
                       className="analytics-bar"
@@ -107,7 +102,12 @@ export function AnalyticsDashboard({
                       }}
                       title={`${item.views} views · ${item.uniqueVisitors} unique · ${item.engagements} engagements`}
                     />
-                    <span>{shortDate(item.date)}</span>
+                    <span>
+                      {index % labelStep === 0 ||
+                      index === analytics.daily.length - 1
+                        ? shortDate(item.date)
+                        : ""}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -127,9 +127,12 @@ export function AnalyticsDashboard({
 
         <div className="analytics-grid">
           <section className="analytics-panel">
-            <PanelHeading title="Traffic sources" note="Referrer hostname only" />
+            <PanelHeading title="Traffic sources" note="Untagged email, PDF, and app visits count as Direct" />
             <BreakdownList
-              items={analytics.referrers}
+              items={analytics.referrers.map((item) => ({
+                ...item,
+                label: sourceLabel(item.label),
+              }))}
               empty="No referrer data yet."
             />
           </section>

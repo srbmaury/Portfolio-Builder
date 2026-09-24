@@ -508,9 +508,9 @@ export function cloneContentConfig(
 }
 
 const sampleBackendConfig: PortfolioConfig = {
-  theme: "cobalt",
+  theme: "mono",
   sections: [
-    { id: "hero", type: "hero", variant: "spotlight", visible: true, title: "Backend & Platform" },
+    { id: "hero", type: "hero", variant: "split", visible: true, title: "Backend & Platform" },
     { id: "about", type: "about", variant: "dossier", visible: true, title: "Profile" },
     { id: "experience", type: "experience", variant: "ledger", visible: true, title: "Experience" },
     { id: "projects", type: "projects", variant: "github", visible: true, title: "Selected systems" },
@@ -659,6 +659,46 @@ export const emptyBuilderState: BuilderState = {
 
 export const sampleSnapshot: PortfolioSnapshot =
   snapshotForVariant(sampleBuilderState);
+
+/**
+ * Experience and project ids are primary keys shared by every account in the
+ * database, so a workspace that reuses fixed ids (the demo) collides as soon
+ * as a second account saves it. Give each loaded copy its own ids, remapped
+ * everywhere they are referenced.
+ */
+export function withFreshContentIds(
+  state: BuilderState,
+  suffix: string = crypto.randomUUID().slice(0, 8)
+): BuilderState {
+  const ids = new Map<string, string>();
+  const fresh = (id: string) => {
+    let next = ids.get(id);
+    if (!next) {
+      next = `${id}-${suffix}`;
+      ids.set(id, next);
+    }
+    return next;
+  };
+  const remapData = (data: PortfolioData): PortfolioData => ({
+    ...data,
+    experience: data.experience.map((item) => ({ ...item, id: fresh(item.id) })),
+    projects: data.projects.map((item) => ({ ...item, id: fresh(item.id) })),
+  });
+
+  return {
+    ...state,
+    data: remapData(state.data),
+    variants: state.variants.map((variant) => ({
+      ...variant,
+      data: remapData(variant.data),
+      content: {
+        ...variant.content,
+        experienceIds: variant.content.experienceIds.map(fresh),
+        projectIds: variant.content.projectIds.map(fresh),
+      },
+    })),
+  };
+}
 
 export function snapshotForVariant(state: BuilderState): PortfolioSnapshot {
   const normalized = normalizeBuilderState(state);
