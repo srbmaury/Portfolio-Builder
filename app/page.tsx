@@ -59,7 +59,7 @@ export default async function Home() {
           <Link className="lp-nav-docs" href="/docs">Docs</Link>
           <AccountCta
             className="lp-button lp-button-small"
-            signedOutHref="/builder?fresh=1"
+            signedOutHref="/builder?fresh=1&quick=1"
             signedOutLabel="Get your link"
           />
         </div>
@@ -79,7 +79,7 @@ export default async function Home() {
             which sites sent them, and how many opened your résumé.
           </p>
           <div className="lp-actions">
-            <Link className="lp-button" href="/builder?fresh=1">Build my portfolio</Link>
+            <Link className="lp-button" href="/builder?fresh=1&quick=1">Build my portfolio</Link>
             <Link className="lp-link" href="/builder?demo=1">See a finished example →</Link>
           </div>
           <ul className="lp-promises">
@@ -247,7 +247,7 @@ export default async function Home() {
 
       <section className="lp-cta">
         <h2>Your portfolio link could be live before your coffee cools.</h2>
-        <Link className="lp-button" href="/builder?fresh=1">Build my portfolio</Link>
+        <Link className="lp-button" href="/builder?fresh=1&quick=1">Build my portfolio</Link>
       </section>
 
       <footer className="lp-footer">
