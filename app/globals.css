@@ -6511,3 +6511,178 @@ a.lp-live-pill:hover { background: #d3f0de; }
 .hero-spotlight .spotlight-meta { text-transform: none; letter-spacing: 0; }
 .lp-browser-scaled { position: absolute; inset: 0; }
 .lp-browser-scaled .skip-link { display: none; }
+
+
+/* Activation flow --------------------------------------------------------- */
+.quick-start-dialog {
+  width: min(720px, calc(100vw - 32px));
+}
+.quick-start-heading {
+  display: grid;
+  gap: 8px;
+}
+.quick-start-heading h2,
+.quick-start-heading p {
+  margin: 0;
+}
+.quick-start-heading > p:last-child {
+  max-width: 560px;
+  color: #6b7280;
+  line-height: 1.55;
+}
+.quick-start-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 24px;
+}
+.quick-start-option {
+  position: relative;
+  min-height: 168px;
+  padding: 20px;
+  border: 1px solid #dfe3e8;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.quick-start-option:hover {
+  border-color: #aeb7c4;
+  background: #fafbfc;
+}
+.quick-start-option.primary {
+  border-color: #b9cdfd;
+  background: var(--accent-wash);
+}
+.quick-start-option strong {
+  font-size: 17px;
+}
+.quick-start-option small {
+  color: #69717e;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.quick-start-option-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--accent-tint);
+  color: var(--accent-strong);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.quick-start-foot {
+  margin: 18px 0 0;
+  color: #7a818d;
+  font-size: 12px;
+}
+
+/* Publishing stays compact; tracked-link controls are opt-in. */
+.published-tracking {
+  margin-top: 14px;
+  border-top: 1px solid #eceef1;
+  border-bottom: 1px solid #eceef1;
+}
+.published-tracking-toggle {
+  width: 100%;
+  padding: 14px 2px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  text-align: left;
+  cursor: pointer;
+}
+.published-tracking-toggle span {
+  display: grid;
+  gap: 3px;
+}
+.published-tracking-toggle strong {
+  font-size: 13px;
+}
+.published-tracking-toggle small {
+  color: #737b88;
+  font-size: 12px;
+  font-weight: 400;
+}
+.published-tracking-toggle b {
+  font-size: 20px;
+  font-weight: 400;
+  color: #7b8491;
+}
+.published-tracking .share-links {
+  padding: 2px 0 16px;
+}
+
+/* Analytics: move from raw counters to useful conversion signals. */
+.analytics-conversions {
+  margin-top: 20px;
+}
+.analytics-conversion-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.analytics-conversion-card {
+  padding: 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fafbfc;
+  display: grid;
+  gap: 5px;
+}
+.analytics-conversion-card span,
+.analytics-conversion-card small {
+  color: #6b7280;
+}
+.analytics-conversion-card span {
+  font-size: 12px;
+  font-weight: 650;
+}
+.analytics-conversion-card strong {
+  font-size: 30px;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+}
+.analytics-conversion-card small {
+  font-size: 11px;
+}
+.analytics-source-performance {
+  margin-top: 20px;
+}
+.analytics-source-table td small {
+  display: block;
+  margin-top: 2px;
+  color: #8a9099;
+  font-size: 10px;
+}
+.lp-feature-note {
+  margin: 26px 0 0;
+  color: var(--lp-faint);
+  font-size: 13px;
+}
+
+@media (max-width: 760px) {
+  .quick-start-options,
+  .analytics-conversion-grid {
+    grid-template-columns: 1fr;
+  }
+  .quick-start-option {
+    min-height: 124px;
+  }
+  .analytics-source-table {
+    min-width: 620px;
+  }
+}
