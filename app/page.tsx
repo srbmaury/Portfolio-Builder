@@ -71,7 +71,7 @@ export default async function Home() {
           <h1>
             A live portfolio link.
             <span> No code. </span>
-            <span>See how many opened it.</span>
+            <span>See every open, and where it came from.</span>
           </h1>
           <p className="lp-lede">
             Fill in your details, press publish, and share one URL with recruiters.

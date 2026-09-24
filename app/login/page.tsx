@@ -119,7 +119,7 @@ export default function LoginPage() {
           <p>
             {mode === "reset"
               ? "Enter your email and we will send you a link to set a new password."
-              : "Publish your portfolio to a live link and see how many people open it."}
+              : "Publish your portfolio to a live link and see every open, and where it came from."}
           </p>
         </div>
 

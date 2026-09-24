@@ -97,7 +97,7 @@ export function PublishedDialog({
         <p className="published-dialog-foot">
           Every visit is counted.{" "}
           <a href={`/analytics?portfolio=${encodeURIComponent(variantKey)}&days=30`}>
-            See how many people open it →
+            See every open →
           </a>
         </p>
       </div>
