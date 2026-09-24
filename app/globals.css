@@ -6304,8 +6304,21 @@ a.lp-live-pill:hover { background: #d3f0de; }
 .portfolio h2 { letter-spacing: calc(var(--p-display-tracking) * .6); }
 .portfolio h3 { letter-spacing: -0.01em; }
 
-.p-section { padding: 96px 72px; }
+/* Sections span the full width (backgrounds, dividers and cover photos reach
+   the edges); only their content is held to a 1120px column, via padding that
+   grows with the viewport. Percentages here resolve against the full-width
+   frame. */
+.portfolio-frame { width: 100%; }
+.p-section { padding: 96px max(72px, calc((100% - 1120px) / 2 + 72px)); }
 .portfolio-compact .p-section { padding: 72px 56px; }
+@media (max-width: 980px) {
+  .p-section,
+  .portfolio-compact .p-section { padding: 72px 40px; }
+}
+@media (max-width: 760px) {
+  .p-section,
+  .portfolio-compact .p-section { padding: 56px 22px; }
+}
 
 .eyebrow {
   margin-bottom: 20px;
@@ -6827,3 +6840,7 @@ a.lp-live-pill:hover { background: #d3f0de; }
   .quick-start-option { padding-top: 18px; }
   .quick-start-option.primary { padding-top: 44px; }
 }
+/* Keep the portfolio nav's name in line with the section content */
+.portfolio-nav-inner { padding: 0 72px; }
+@media (max-width: 980px) { .portfolio-nav-inner { padding: 0 40px; } }
+@media (max-width: 760px) { .portfolio-nav-inner { padding: 0 22px; } }
