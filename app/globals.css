@@ -6305,11 +6305,11 @@ a.lp-live-pill:hover { background: #d3f0de; }
 .portfolio h3 { letter-spacing: -0.01em; }
 
 /* Sections span the full width (backgrounds, dividers and cover photos reach
-   the edges); only their content is held to a 1120px column, via padding that
+   the edges); only their content is held to a 1200px column, via padding that
    grows with the viewport. Percentages here resolve against the full-width
    frame. */
 .portfolio-frame { width: 100%; }
-.p-section { padding: 96px max(72px, calc((100% - 1120px) / 2 + 72px)); }
+.p-section { padding: 96px max(48px, calc((100% - 1200px) / 2)); }
 .portfolio-compact .p-section { padding: 72px 56px; }
 @media (max-width: 980px) {
   .p-section,
@@ -6841,6 +6841,6 @@ a.lp-live-pill:hover { background: #d3f0de; }
   .quick-start-option.primary { padding-top: 44px; }
 }
 /* Keep the portfolio nav's name in line with the section content */
-.portfolio-nav-inner { padding: 0 72px; }
+.portfolio-nav-inner { width: 100%; padding: 0 max(48px, calc((100% - 1200px) / 2)); }
 @media (max-width: 980px) { .portfolio-nav-inner { padding: 0 40px; } }
 @media (max-width: 760px) { .portfolio-nav-inner { padding: 0 22px; } }
