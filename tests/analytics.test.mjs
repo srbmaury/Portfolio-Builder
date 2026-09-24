@@ -131,8 +131,11 @@ test("analytics summary calculates views, unique and engaged visitors", () => {
   assert.equal(result.summary.engagedVisitors, 1);
   assert.equal(result.summary.engagementRate, 50);
   assert.equal(result.summary.resumeOpens, 1);
+  assert.equal(result.summary.resumeOpenRate, 50);
   assert.equal(result.summary.contactClicks, 1);
+  assert.equal(result.summary.contactClickRate, 50);
   assert.equal(result.summary.projectClicks, 1);
+  assert.equal(result.summary.projectClickRate, 50);
   assert.equal(result.summary.socialClicks, 0);
 });
 
@@ -156,6 +159,34 @@ test("analytics summary groups daily trend, referrers, devices and actions", () 
     { label: "Project clicks", count: 1 },
     { label: "Resume opens", count: 1 },
     { label: "Contact clicks", count: 1 },
+  ]);
+});
+
+test("analytics summary connects traffic sources to downstream actions", () => {
+  const result = summarizeAnalytics(events, portfolios);
+
+  assert.deepEqual(result.sourcePerformance, [
+    {
+      label: "linkedin.com",
+      visitors: 1,
+      resumeOpenVisitors: 1,
+      projectClickVisitors: 1,
+      contactClickVisitors: 0,
+    },
+    {
+      label: "x.com",
+      visitors: 1,
+      resumeOpenVisitors: 0,
+      projectClickVisitors: 0,
+      contactClickVisitors: 0,
+    },
+    {
+      label: "Direct",
+      visitors: 1,
+      resumeOpenVisitors: 0,
+      projectClickVisitors: 0,
+      contactClickVisitors: 1,
+    },
   ]);
 });
 
