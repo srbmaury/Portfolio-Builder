@@ -150,6 +150,12 @@ test("tablet and mobile preserve photo hero hierarchy by layout", async ({ page 
         (section: { id: string }) => section.id === "hero"
       );
       hero.variant = variant;
+      // The column checks below are about the GitHub project layout; set it
+      // here rather than depend on whichever layout the demo happens to use.
+      const projects = active.config.sections.find(
+        (section: { id: string }) => section.id === "projects"
+      );
+      projects.variant = "github";
       window.localStorage.setItem(key, JSON.stringify(state));
     }, layout);
 

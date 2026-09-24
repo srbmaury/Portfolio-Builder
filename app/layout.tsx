@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
+import { Geist, Geist_Mono, IBM_Plex_Mono, IBM_Plex_Sans, Inter, Newsreader } from "next/font/google";
 import { siteOrigin } from "@/lib/site-url";
 import "./globals.css";
 
@@ -8,6 +8,27 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const geist = Geist({ subsets: ["latin"], variable: "--font-portfolio" });
 const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
+// Portfolio theme fonts. preload: false so pages that do not use a theme
+// (the app itself, other themes) never download them.
+const serif = Newsreader({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
+  variable: "--font-serif",
+  preload: false,
+});
+const plexSans = IBM_Plex_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-plex",
+  preload: false,
+});
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-plex-mono",
+  preload: false,
+});
 
 const TITLE = "DevFolioX — A live portfolio link, no code, with analytics";
 const DESCRIPTION =
@@ -49,7 +70,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${geist.variable} ${mono.variable}`}>{children}</body>
+      <body className={`${inter.variable} ${geist.variable} ${mono.variable} ${serif.variable} ${plexSans.variable} ${plexMono.variable}`}>{children}</body>
     </html>
   );
 }

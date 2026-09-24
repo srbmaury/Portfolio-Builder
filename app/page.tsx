@@ -1,8 +1,28 @@
 import Link from "next/link";
 import { PortfolioRenderer } from "@/components/PortfolioRenderer";
 import { sampleSnapshot } from "@/lib/portfolio";
+import { loadPublishedSnapshot } from "@/lib/supabase/public-portfolio";
 import { siteOrigin } from "@/lib/site-url";
 import { AccountCta } from "@/components/AccountCta";
+import { ScaledPreview } from "@/components/ScaledPreview";
+
+// A real published portfolio shown in the hero. It is rendered from its
+// published snapshot rather than embedded, so home-page visits are not counted
+// as views of that portfolio. If it is ever unpublished the bundled demo is
+// shown instead.
+const LIVE_EXAMPLE_PATH = "saurabh-maurya-aaa5bf/backend-platform";
+
+// Static page, refreshed from the database at most every 10 minutes.
+export const revalidate = 600;
+
+async function loadLiveExample() {
+  try {
+    const [username, portfolio] = LIVE_EXAMPLE_PATH.split("/");
+    return await loadPublishedSnapshot(username, portfolio);
+  } catch {
+    return null;
+  }
+}
 
 // Illustrative numbers for the analytics mock-ups. They are labelled as
 // sample data on the page so nobody mistakes them for real traffic.
@@ -19,9 +39,13 @@ const SAMPLE_ACTIONS = [
   { label: "Clicked contact", count: 11 },
 ];
 
-export default function Home() {
-  const host = siteOrigin().replace(/^https?:\/\//, "");
-  const samplePath = "mayachen/backend";
+export default async function Home() {
+  const origin = siteOrigin();
+  const host = origin.replace(/^https?:\/\//, "");
+  const liveExample = await loadLiveExample();
+  const heroSnapshot = liveExample ?? sampleSnapshot;
+  const samplePath = liveExample ? LIVE_EXAMPLE_PATH : "mayachen/backend";
+  const liveUrl = liveExample ? `${origin}/${LIVE_EXAMPLE_PATH}` : null;
   const maxViews = Math.max(...SAMPLE_DAILY_VIEWS);
   const maxReferrer = SAMPLE_REFERRERS[0].count;
 
@@ -69,15 +93,34 @@ export default function Home() {
           <div className="lp-browser">
             <div className="lp-browser-bar">
               <span className="lp-url"><i aria-hidden="true" />{host}/<b>{samplePath}</b></span>
-              <span className="lp-live-pill">Live</span>
+              {liveUrl ? (
+                <a className="lp-live-pill" href={liveUrl} target="_blank" rel="noreferrer">
+                  Live · Open ↗
+                </a>
+              ) : (
+                <span className="lp-live-pill">Live</span>
+              )}
             </div>
             <div className="lp-browser-body">
-              <PortfolioRenderer snapshot={sampleSnapshot} compact />
+              <ScaledPreview className="lp-browser-scaled">
+                <PortfolioRenderer snapshot={heroSnapshot} />
+              </ScaledPreview>
+              {liveUrl ? (
+                // A sibling overlay, not a wrapper: the portfolio has its own
+                // links and anchors cannot be nested.
+                <a
+                  className="lp-browser-link"
+                  href={liveUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Open this live portfolio in a new tab"
+                />
+              ) : null}
             </div>
           </div>
 
           <div className="lp-stat-card">
-            <p className="lp-stat-label">Last 14 days</p>
+            <p className="lp-stat-label">Example · last 14 days</p>
             <div className="lp-stat-row">
               <div><strong>238</strong><span>views</span></div>
               <div><strong>37</strong><span>résumé opens</span></div>

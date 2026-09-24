@@ -6267,3 +6267,247 @@ body.app-sidebar-open { overflow: hidden; }
   }
   .preview-stage { scroll-margin-top: 68px; }
 }
+
+/* Hero example links to the real live portfolio */
+.lp-browser-body { position: relative; }
+.lp-browser-link { position: absolute; inset: 0; z-index: 1; pointer-events: auto; }
+.lp-browser-link:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+a.lp-live-pill:hover { background: #d3f0de; }
+
+/* ===========================================================================
+   Portfolio templates v2
+   - Shared: readable type scale, calmer headings, spaced hero links,
+     monogram instead of an "upload" box, no glow/glass/grid decoration.
+   - Themes: each has its own type pairing and a flat palette, so switching
+     theme changes the character of the page, not only its colours.
+   Theme names are unchanged, so saved and published portfolios keep working.
+   =========================================================================== */
+.portfolio {
+  --p-font-display: var(--font-portfolio), Arial, sans-serif;
+  --p-font-body: var(--font-portfolio), Arial, sans-serif;
+  --p-display-weight: 700;
+  --p-display-tracking: -0.04em;
+  --p-display-case: none;
+  --p-radius: 12px;
+  font-family: var(--p-font-body);
+  font-size: 17px;
+  line-height: 1.6;
+}
+.portfolio h1,
+.portfolio h2,
+.portfolio h3 {
+  font-family: var(--p-font-display);
+  font-weight: var(--p-display-weight);
+  text-transform: var(--p-display-case);
+}
+.portfolio h1 { letter-spacing: var(--p-display-tracking); }
+.portfolio h2 { letter-spacing: calc(var(--p-display-tracking) * .6); }
+.portfolio h3 { letter-spacing: -0.01em; }
+
+.p-section { padding: 96px 72px; }
+.portfolio-compact .p-section { padding: 72px 56px; }
+
+.eyebrow {
+  margin-bottom: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .08em;
+}
+
+/* Hero names: large, but no longer a wall of type */
+.hero-split h1,
+.hero-minimal h1,
+.hero-spotlight h1,
+.hero-photo h1,
+.hero-media-content h1 {
+  font-size: clamp(52px, 7vw, 104px);
+  line-height: .96;
+}
+.portfolio-compact .hero-split h1,
+.portfolio-compact .hero-minimal h1,
+.portfolio-compact .hero-photo h1,
+.portfolio-compact .hero-spotlight h1,
+.portfolio-compact .hero-media-content h1 { font-size: clamp(44px, 6vw, 80px); }
+.hero-poster h1 { letter-spacing: var(--p-display-tracking); }
+.hero-copy {
+  margin-top: 24px;
+  font-size: clamp(19px, 1.7vw, 23px);
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+}
+.hero-actions { margin-top: 32px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; }
+.hero-actions .social-row { margin-top: 0; }
+.social-row { gap: 12px 22px; }
+.social-row a { font-size: 15px; font-weight: 600; padding-bottom: 3px; }
+.hero-card { border-radius: var(--p-radius); }
+.hero-card p { font-size: 17px; }
+.hero-meta { font-size: 14px; }
+.hero-media-meta,
+.hero-photo-meta,
+.spotlight-meta { font-size: 14px; }
+
+/* Section headings: a clear label, not a poster */
+.section-heading { display: block; margin-bottom: 40px; }
+.section-heading h2 { font-size: clamp(30px, 3.4vw, 42px); line-height: 1.1; }
+.editorial-copy,
+.timeline { margin-left: 0; }
+.editorial-copy p,
+.about-v-stats > p { font-size: clamp(21px, 2.2vw, 28px); line-height: 1.45; letter-spacing: -0.015em; }
+
+/* Body text and small print */
+.muted { font-size: 14px; }
+.tag-row span { font-size: 13px; padding: 4px 10px; }
+.timeline h3,
+.experience-card h3 { font-size: 22px; }
+.project-card h3 { font-size: 24px; letter-spacing: -0.02em; }
+.project-list-row h3 { font-size: 22px; }
+.project-footer > a { font-size: 15px; }
+.stats-grid span { font-size: 14px; }
+.project-card,
+.experience-card,
+.stats-grid div,
+.skill-cloud span { border-radius: var(--p-radius); }
+.contact-panel h2 { font-size: clamp(40px, 6vw, 76px); line-height: 1; letter-spacing: var(--p-display-tracking); }
+.contact-button { font-size: 15px; font-weight: 600; }
+
+/* No decoration standing in for design */
+.spotlight-orb { display: none; }
+.hero-glass .hero-media-content { backdrop-filter: none; border-radius: var(--p-radius); }
+
+/* Initials when there is no photo yet */
+.media-monogram {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: var(--surface);
+  border: 1px solid var(--stroke);
+  color: var(--p-accent);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.media-monogram span {
+  font-family: var(--p-font-display);
+  font-weight: var(--p-display-weight);
+  font-size: clamp(64px, 9vw, 128px);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+/* Cover and Glass without a photo: the page itself becomes the backdrop */
+.hero-media:not(.has-image) > .media-placeholder { border: 0; background: var(--bg); }
+.hero-media:not(.has-image) > .media-placeholder span { display: none; }
+.hero-media:not(.has-image) .hero-media-overlay { display: none; }
+.hero-media:not(.has-image) .hero-media-content { color: var(--text); }
+.hero-media:not(.has-image) .hero-media-content .hero-copy,
+.hero-media:not(.has-image) .hero-media-meta { color: var(--soft); }
+.hero-media:not(.has-image) .hero-media-content .eyebrow { color: var(--p-accent); }
+.hero-media:not(.has-image) .hero-media-content .social-row a { color: var(--text); border-color: var(--stroke); }
+.hero-glass:not(.has-image) .hero-media-content { background: var(--surface); border-color: var(--stroke); }
+.hero-media:not(.has-image) { min-height: 560px; }
+
+/* ---- Themes -------------------------------------------------------------- */
+
+/* Ink: quiet dark, warm accent */
+.portfolio {
+  --bg: #111318; --text: #f3f4f6; --soft: #a1a7b3; --surface: #191c23;
+  --stroke: rgba(255,255,255,.1); --p-accent: #f2b35b;
+}
+/* Sand: editorial serif on warm paper */
+.portfolio.theme-sand {
+  --bg: #f4eee3; --text: #2a231e; --soft: #6a5f55; --surface: #fbf7f0;
+  --stroke: rgba(60,45,35,.14); --p-accent: #b0441c;
+  --p-font-display: var(--font-serif), Georgia, serif;
+  --p-display-weight: 500; --p-display-tracking: -0.02em;
+}
+/* Moss: humanist sans, calm green */
+.portfolio.theme-moss {
+  --bg: #eef1ea; --text: #1d2e26; --soft: #55655c; --surface: #f7f9f4;
+  --stroke: rgba(30,60,48,.13); --p-accent: #2f6b52;
+  --p-font-display: var(--font-plex), Arial, sans-serif;
+  --p-font-body: var(--font-plex), Arial, sans-serif;
+  --p-display-weight: 600; --p-display-tracking: -0.025em;
+}
+/* Aurora: deep navy, teal accent (flat, no glow) */
+.portfolio.theme-aurora {
+  --bg: #0e1628; --text: #e8edf6; --soft: #9aa8c0; --surface: #152038;
+  --stroke: rgba(170,190,230,.14); --p-accent: #5eead4;
+  --p-font-display: var(--font-sans), Arial, sans-serif;
+  --p-font-body: var(--font-sans), Arial, sans-serif;
+  background: var(--bg);
+}
+/* Cobalt: clean white, strong blue (no grid) */
+.portfolio.theme-cobalt {
+  --bg: #ffffff; --text: #0b1b3f; --soft: #4a5a7a; --surface: #f4f7fd;
+  --stroke: rgba(11,27,63,.12); --p-accent: #1d4ed8;
+  --p-font-display: var(--font-sans), Arial, sans-serif;
+  --p-font-body: var(--font-sans), Arial, sans-serif;
+  --p-display-weight: 800; --p-display-tracking: -0.045em;
+  background: var(--bg);
+}
+/* Rose: warm white, serif display, deep rose */
+.portfolio.theme-rose {
+  --bg: #fbf6f3; --text: #3a1d24; --soft: #7c5a62; --surface: #ffffff;
+  --stroke: rgba(90,30,45,.12); --p-accent: #be185d;
+  --p-font-display: var(--font-serif), Georgia, serif;
+  --p-font-body: var(--font-sans), Arial, sans-serif;
+  --p-display-weight: 500; --p-display-tracking: -0.02em;
+  background: var(--bg);
+}
+/* Mono: typewriter headings, plain body, hard edges */
+.portfolio.theme-mono {
+  --bg: #f5f5f2; --text: #111111; --soft: #5b5b5b; --surface: #ffffff;
+  --stroke: rgba(0,0,0,.16); --p-accent: #111111;
+  --p-font-display: var(--font-plex-mono), monospace;
+  --p-font-body: var(--font-plex), Arial, sans-serif;
+  --p-display-weight: 600; --p-display-tracking: -0.04em;
+  --p-radius: 0px;
+}
+/* Sunset: warm dark, serif display, orange accent (flat) */
+.portfolio.theme-sunset {
+  --bg: #1b1411; --text: #f6ece5; --soft: #c2aa9b; --surface: #251b17;
+  --stroke: rgba(255,230,210,.12); --p-accent: #fb923c;
+  --p-font-display: var(--font-serif), Georgia, serif;
+  --p-display-weight: 500; --p-display-tracking: -0.02em;
+  background: var(--bg);
+}
+/* Ice: crisp light, cool teal, humanist sans */
+.portfolio.theme-ice {
+  --bg: #f3f8fb; --text: #0c2233; --soft: #4d6677; --surface: #ffffff;
+  --stroke: rgba(12,60,90,.12); --p-accent: #0e7490;
+  --p-font-display: var(--font-plex), Arial, sans-serif;
+  --p-font-body: var(--font-plex), Arial, sans-serif;
+  --p-display-weight: 600; --p-display-tracking: -0.03em;
+  background: var(--bg);
+}
+/* Noir: black and white, uppercase display */
+.portfolio.theme-noir {
+  --bg: #0a0a0a; --text: #fafafa; --soft: #a3a3a3; --surface: #141414;
+  --stroke: rgba(255,255,255,.16); --p-accent: #fafafa;
+  --p-display-weight: 800; --p-display-tracking: -0.03em;
+  --p-display-case: uppercase;
+}
+
+/* Builder swatches match the themes */
+.swatch-ink span { background: linear-gradient(135deg,#111318 55%,#f2b35b 55%); }
+.swatch-sand span { background: linear-gradient(135deg,#f4eee3 55%,#b0441c 55%); }
+.swatch-moss span { background: linear-gradient(135deg,#eef1ea 55%,#2f6b52 55%); }
+.swatch-aurora span { background: linear-gradient(135deg,#0e1628 55%,#5eead4 55%); }
+.swatch-cobalt span { background: linear-gradient(135deg,#ffffff 55%,#1d4ed8 55%); box-shadow: inset 0 0 0 1px #e5e7eb; }
+.swatch-rose span { background: linear-gradient(135deg,#fbf6f3 55%,#be185d 55%); box-shadow: inset 0 0 0 1px #e5e7eb; }
+.swatch-mono span { background: linear-gradient(135deg,#f5f5f2 55%,#111111 55%); box-shadow: inset 0 0 0 1px #e5e7eb; }
+.swatch-sunset span { background: linear-gradient(135deg,#1b1411 55%,#fb923c 55%); }
+.swatch-ice span { background: linear-gradient(135deg,#f3f8fb 55%,#0e7490 55%); box-shadow: inset 0 0 0 1px #e5e7eb; }
+.swatch-noir span { background: linear-gradient(135deg,#0a0a0a 55%,#fafafa 55%); box-shadow: inset 0 0 0 1px #e5e7eb; }
+
+/* Monogram fills the photo frame, centred, whatever the frame's shape */
+.hero-photo-frame > .media-monogram {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  border: 0;
+  align-self: stretch;
+}
+/* Spotlight is centred, so its links are too */
+.hero-spotlight .hero-actions { justify-content: center; }
+.hero-spotlight .spotlight-meta { text-transform: none; letter-spacing: 0; }
+.lp-browser-scaled { position: absolute; inset: 0; }
+.lp-browser-scaled .skip-link { display: none; }
