@@ -3,6 +3,7 @@
 import { errorMessage } from "@/lib/error-message";
 import { AppNav } from "@/components/AppNav";
 import { PublishedDialog } from "@/components/PublishedDialog";
+import { QuickStartDialog } from "@/components/QuickStartDialog";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import type { CreateDialogKind, PreviewMode } from "@/components/builder/types";
 import { useEditorResize } from "@/components/builder/useEditorResize";
@@ -95,6 +96,7 @@ export function PortfolioBuilder({
   const [healthOpen, setHealthOpen] = useState(false);
   const [jsonEditorOpen, setJsonEditorOpen] = useState(false);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
+  const [quickStartOpen, setQuickStartOpen] = useState(false);
   const [previewInView, setPreviewInView] = useState(false);
   const previewStageRef = useRef<HTMLElement>(null);
 
@@ -112,6 +114,7 @@ export function PortfolioBuilder({
   }, []);
   const createVariantOpenedRef = useRef(false);
   const demoLoadedRef = useRef(false);
+  const quickStartShownRef = useRef(false);
   const previewFrameRef = useRef<HTMLIFrameElement>(null);
 
 
@@ -133,6 +136,40 @@ export function PortfolioBuilder({
     createVariantOpenedRef.current = true;
     setCreateDialog("variant");
   }, [cloudResolved, hydrated, openCreateVariant]);
+
+  // A fresh workspace starts with one focused choice instead of dropping a
+  // first-time user into the full editor. Existing drafts, explicit demos and
+  // create-variant links skip this prompt.
+  useEffect(() => {
+    if (
+      !startFresh ||
+      !hydrated ||
+      !cloudResolved ||
+      startWithDemo ||
+      openCreateVariant ||
+      quickStartShownRef.current
+    ) {
+      return;
+    }
+
+    quickStartShownRef.current = true;
+    const { profile, experience, projects, skills, customSections } = state.data;
+    const hasContent =
+      Boolean(profile.name.trim() || profile.role.trim() || profile.tagline.trim()) ||
+      experience.length > 0 ||
+      projects.length > 0 ||
+      skills.length > 0 ||
+      customSections.length > 0;
+
+    if (!hasContent) setQuickStartOpen(true);
+  }, [
+    cloudResolved,
+    hydrated,
+    openCreateVariant,
+    startFresh,
+    startWithDemo,
+    state.data,
+  ]);
 
   // The landing page's "Explore 2-role demo" link used to point at a bare
   // /builder, which for a first-time visitor is an empty workspace: the demo
@@ -1385,6 +1422,20 @@ export function PortfolioBuilder({
       >
         {previewInView ? "↑ Edit" : "Preview ↓"}
       </button>
+
+      {quickStartOpen ? (
+        <QuickStartDialog
+          onResume={() => {
+            setQuickStartOpen(false);
+            setResumeImportOpen(true);
+          }}
+          onGitHub={() => {
+            setQuickStartOpen(false);
+            setGitHubImportOpen(true);
+          }}
+          onManual={() => setQuickStartOpen(false)}
+        />
+      ) : null}
 
       {publishedUrl && activeVariant ? (
         <PublishedDialog
