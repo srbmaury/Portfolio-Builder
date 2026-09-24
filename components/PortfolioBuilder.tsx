@@ -56,6 +56,7 @@ export function PortfolioBuilder({
   initialVariantId,
   openCreateVariant = false,
   startWithDemo = false,
+  quickStart = false,
   accountEmail = null,
   isAdmin = false,
 }: {
@@ -63,6 +64,7 @@ export function PortfolioBuilder({
   initialVariantId?: string;
   openCreateVariant?: boolean;
   startWithDemo?: boolean;
+  quickStart?: boolean;
   accountEmail?: string | null;
   isAdmin?: boolean;
 }) {
@@ -142,6 +144,7 @@ export function PortfolioBuilder({
   // create-variant links skip this prompt.
   useEffect(() => {
     if (
+      !quickStart ||
       !startFresh ||
       !hydrated ||
       !cloudResolved ||
@@ -166,6 +169,7 @@ export function PortfolioBuilder({
     cloudResolved,
     hydrated,
     openCreateVariant,
+    quickStart,
     startFresh,
     startWithDemo,
     state.data,
