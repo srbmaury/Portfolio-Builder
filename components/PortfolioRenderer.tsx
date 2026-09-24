@@ -99,20 +99,6 @@ function PortfolioNavigation({
             </a>
           ))}
         </div>
-
-        <details className="portfolio-nav-mobile">
-          <summary aria-label="Open portfolio navigation">
-            <span>Sections</span>
-            <b aria-hidden="true">+</b>
-          </summary>
-          <div>
-            {items.map((item) => (
-              <a key={item.id} href={`#${item.id}`}>
-                {item.label}
-              </a>
-            ))}
-          </div>
-        </details>
       </div>
     </nav>
   );
