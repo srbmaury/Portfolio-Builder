@@ -82,6 +82,30 @@ export function AnalyticsDashboard({
           <MetricCard label="Social clicks" value={metrics.socialClicks} />
         </div>
 
+        <section className="analytics-panel analytics-conversions">
+          <PanelHeading
+            title="Visitor conversion"
+            note="Percent of unique visitors who took each action"
+          />
+          <div className="analytics-conversion-grid">
+            <ConversionMetric
+              label="Opened résumé"
+              count={metrics.resumeOpens}
+              rate={metrics.resumeOpenRate}
+            />
+            <ConversionMetric
+              label="Clicked a project"
+              count={metrics.projectClicks}
+              rate={metrics.projectClickRate}
+            />
+            <ConversionMetric
+              label="Clicked contact"
+              count={metrics.contactClicks}
+              rate={metrics.contactClickRate}
+            />
+          </div>
+        </section>
+
         <div className="analytics-grid analytics-grid-wide">
           <section className="analytics-panel analytics-trend-panel">
             <PanelHeading
@@ -146,6 +170,62 @@ export function AnalyticsDashboard({
           </section>
         </div>
 
+        <section className="analytics-panel analytics-source-performance">
+          <PanelHeading
+            title="What visitors did by source"
+            note="Unique visitors who took each action"
+          />
+          {analytics.sourcePerformance.length ? (
+            <div className="analytics-table-wrap">
+              <table className="analytics-table analytics-source-table">
+                <thead>
+                  <tr>
+                    <th>Source</th>
+                    <th>Visitors</th>
+                    <th>Résumé</th>
+                    <th>Projects</th>
+                    <th>Contact</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {analytics.sourcePerformance.map((source) => (
+                    <tr key={source.label}>
+                      <td>{sourceLabel(source.label)}</td>
+                      <td>{source.visitors}</td>
+                      <td>
+                        {source.resumeOpenVisitors}
+                        <small>
+                          {source.visitors
+                            ? `${Math.round((source.resumeOpenVisitors / source.visitors) * 100)}%`
+                            : "0%"}
+                        </small>
+                      </td>
+                      <td>
+                        {source.projectClickVisitors}
+                        <small>
+                          {source.visitors
+                            ? `${Math.round((source.projectClickVisitors / source.visitors) * 100)}%`
+                            : "0%"}
+                        </small>
+                      </td>
+                      <td>
+                        {source.contactClickVisitors}
+                        <small>
+                          {source.visitors
+                            ? `${Math.round((source.contactClickVisitors / source.visitors) * 100)}%`
+                            : "0%"}
+                        </small>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyAnalytics message="Share your portfolio to see which sources drive meaningful actions." />
+          )}
+        </section>
+
         <section className="analytics-panel analytics-comparison">
           <PanelHeading
             title="Portfolio performance"
@@ -195,6 +275,24 @@ export function AnalyticsDashboard({
         </section>
       </section>
     </main>
+  );
+}
+
+function ConversionMetric({
+  label,
+  count,
+  rate,
+}: {
+  label: string;
+  count: number;
+  rate: number;
+}) {
+  return (
+    <div className="analytics-conversion-card">
+      <span>{label}</span>
+      <strong>{rate}%</strong>
+      <small>{count} total actions</small>
+    </div>
   );
 }
 
