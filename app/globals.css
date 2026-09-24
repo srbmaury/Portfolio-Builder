@@ -6686,3 +6686,107 @@ a.lp-live-pill:hover { background: #d3f0de; }
     min-width: 620px;
   }
 }
+
+
+/* Portfolio section navigation ------------------------------------------- */
+.portfolio-nav {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  border-bottom: 1px solid var(--stroke);
+  background: var(--bg);
+  color: var(--text);
+}
+.portfolio-nav-inner {
+  width: min(1120px, 100%);
+  min-height: 58px;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.portfolio-nav-name {
+  flex: 0 0 auto;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  font-family: var(--p-font-display);
+  font-size: 15px;
+  font-weight: var(--p-display-weight);
+  letter-spacing: -0.02em;
+}
+.portfolio-nav-links {
+  min-width: 0;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 20px;
+}
+.portfolio-nav-links a {
+  position: relative;
+  flex: 0 0 auto;
+  padding: 20px 0 18px;
+  color: var(--soft);
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.portfolio-nav-links a:hover,
+.portfolio-nav-links a:focus-visible {
+  color: var(--text);
+}
+.portfolio-nav-links a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 13px;
+  height: 1px;
+  background: var(--p-accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .16s ease;
+}
+.portfolio-nav-links a:hover::after,
+.portfolio-nav-links a:focus-visible::after {
+  transform: scaleX(1);
+}
+.portfolio-section-anchor {
+  scroll-margin-top: 72px;
+}
+
+@media (max-width: 760px) {
+  .portfolio-nav-inner {
+    min-height: 54px;
+    padding: 0 18px;
+    gap: 16px;
+  }
+  .portfolio-nav-name {
+    max-width: 132px;
+    font-size: 13px;
+  }
+  .portfolio-nav-links {
+    overflow-x: auto;
+    justify-content: flex-start;
+    gap: 16px;
+    scrollbar-width: none;
+    overscroll-behavior-inline: contain;
+  }
+  .portfolio-nav-links::-webkit-scrollbar {
+    display: none;
+  }
+  .portfolio-nav-links a {
+    padding: 18px 0 16px;
+    font-size: 11px;
+  }
+  .portfolio-nav-links a::after {
+    bottom: 11px;
+  }
+  .portfolio-section-anchor {
+    scroll-margin-top: 66px;
+  }
+}
