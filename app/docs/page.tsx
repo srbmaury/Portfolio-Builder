@@ -47,8 +47,9 @@ export default function DocsPage() {
           <header className={styles.intro}>
             <h1>DevFolioX docs</h1>
             <p className={styles.lead}>
-              DevFolioX gives you a live portfolio link without writing code, and counts
-              how many people open it. This page covers everything it can do today.
+              DevFolioX gives you a live portfolio link without writing code, and shows
+              you every open and where it came from. This page covers everything
+              it can do today.
             </p>
           </header>
 

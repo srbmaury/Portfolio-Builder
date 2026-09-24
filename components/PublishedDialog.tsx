@@ -19,6 +19,7 @@ export function PublishedDialog({
   const dialogRef = useDialogFocusTrap<HTMLDivElement>(onClose);
   // publish() already tried the clipboard; this only reflects later copies.
   const [copied, setCopied] = useState(false);
+  const [trackingOpen, setTrackingOpen] = useState(false);
   const path = new URL(url).pathname;
 
   useEffect(() => {
@@ -77,12 +78,26 @@ export function PublishedDialog({
           </a>
         </div>
 
-        <ShareLinks path={path} />
+        <div className="published-tracking">
+          <button
+            type="button"
+            className="published-tracking-toggle"
+            onClick={() => setTrackingOpen((current) => !current)}
+            aria-expanded={trackingOpen}
+          >
+            <span>
+              <strong>Track where you share it</strong>
+              <small>Create source-tagged links for LinkedIn, your résumé, or an application.</small>
+            </span>
+            <b aria-hidden="true">{trackingOpen ? "−" : "+"}</b>
+          </button>
+          {trackingOpen ? <ShareLinks path={path} /> : null}
+        </div>
 
         <p className="published-dialog-foot">
           Every visit is counted.{" "}
           <a href={`/analytics?portfolio=${encodeURIComponent(variantKey)}&days=30`}>
-            See how many people open it →
+            See every open →
           </a>
         </p>
       </div>

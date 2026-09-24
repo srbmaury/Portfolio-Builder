@@ -8,11 +8,12 @@ type Props = {
     portfolio?: string;
     create?: string;
     demo?: string;
+    quick?: string;
   }>;
 };
 
 export default async function BuilderPage({ searchParams }: Props) {
-  const { fresh, portfolio, create, demo } = await searchParams;
+  const { fresh, portfolio, create, demo, quick } = await searchParams;
   // The builder works signed out too; this only tells the navbar who is
   // signed in so it can show the account and sign-out controls.
   const supabase = await createClient();
@@ -25,6 +26,7 @@ export default async function BuilderPage({ searchParams }: Props) {
       initialVariantId={portfolio}
       openCreateVariant={create === "1"}
       startWithDemo={demo === "1"}
+      quickStart={quick === "1"}
       accountEmail={email}
       isAdmin={isAdminEmail(email)}
     />

@@ -118,6 +118,54 @@ function contrast(a: number[], b: number[]) {
   return (light + 0.05) / (dark + 0.05);
 }
 
+test("portfolio nav mirrors only rendered sections and their custom headings", async ({
+  page,
+}) => {
+  await openDemoBuilder(page);
+
+  await patchWorkspace(
+    page,
+    (state) => {
+      const active = state.variants.find(
+        (variant: { id: string }) => variant.id === state.activeVariantId
+      );
+
+      active.content.projectIds = [];
+
+      for (const section of active.config.sections) {
+        if (section.id === "experience") section.title = "Career";
+        if (section.id === "custom-impact") section.title = "Proof points";
+        if (section.id === "skills") section.title = "Stack";
+        if (section.id === "resume") section.visible = true;
+        if (section.id === "contact") section.visible = false;
+      }
+    },
+    null
+  );
+
+  const preview = page.frameLocator(".preview-device-frame");
+  const nav = preview.getByRole("navigation", { name: "Portfolio sections" });
+
+  await expect(nav).toBeVisible();
+  await expect(nav.locator(".portfolio-nav-name")).toHaveText("Maya Chen");
+
+  await expect(nav.locator(".portfolio-nav-links a")).toHaveText([
+    "Profile",
+    "Career",
+    "Proof points",
+    "Stack",
+  ]);
+
+  await expect(nav.getByRole("link", { name: "Selected systems" })).toHaveCount(0);
+  await expect(nav.getByRole("link", { name: /résumé/i })).toHaveCount(0);
+  await expect(nav.getByRole("link", { name: "Let’s build" })).toHaveCount(0);
+
+  const proofLink = nav.getByRole("link", { name: "Proof points" });
+  await expect(proofLink).toHaveAttribute("href", "#portfolio-section-custom-impact");
+  await proofLink.click();
+  await expect(preview.locator("#portfolio-section-custom-impact")).toBeVisible();
+});
+
 test("every theme renders readable muted and accent text", async ({ page }) => {
   await openDemoBuilder(page);
   const preview: FrameLocator = page.frameLocator(".preview-device-frame");

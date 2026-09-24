@@ -46,8 +46,11 @@ export type AnalyticsMetricSummary = {
   engagedVisitors: number;
   engagementRate: number;
   resumeOpens: number;
+  resumeOpenRate: number;
   contactClicks: number;
+  contactClickRate: number;
   projectClicks: number;
+  projectClickRate: number;
   socialClicks: number;
   customLinkClicks: number;
 };
@@ -55,6 +58,14 @@ export type AnalyticsMetricSummary = {
 export type AnalyticsBreakdown = {
   label: string;
   count: number;
+};
+
+export type AnalyticsSourcePerformance = {
+  label: string;
+  visitors: number;
+  resumeOpenVisitors: number;
+  projectClickVisitors: number;
+  contactClickVisitors: number;
 };
 
 export type AnalyticsDailyRow = {
@@ -77,6 +88,7 @@ export type AnalyticsSummary = {
   referrers: AnalyticsBreakdown[];
   devices: AnalyticsBreakdown[];
   actions: AnalyticsBreakdown[];
+  sourcePerformance: AnalyticsSourcePerformance[];
   portfolios: PortfolioAnalyticsRow[];
 };
 
@@ -210,6 +222,7 @@ export function summarizeAnalytics(
     referrers: mapBreakdown(referrerMap),
     devices: mapBreakdown(deviceMap),
     actions: actionBreakdown(events),
+    sourcePerformance: sourcePerformance(events),
     portfolios: perPortfolio,
   };
 }
@@ -231,6 +244,9 @@ function summarizeMetricBlock(events: AnalyticsEventRow[]): AnalyticsMetricSumma
   let projectClicks = 0;
   let socialClicks = 0;
   let customLinkClicks = 0;
+  const resumeVisitors = new Set<string>();
+  const contactVisitors = new Set<string>();
+  const projectVisitors = new Set<string>();
 
   for (const event of events) {
     if (event.event_type === "portfolio_view") {
@@ -244,12 +260,15 @@ function summarizeMetricBlock(events: AnalyticsEventRow[]): AnalyticsMetricSumma
     switch (event.event_type) {
       case "resume_opened":
         resumeOpens += 1;
+        resumeVisitors.add(event.visitor_id);
         break;
       case "contact_clicked":
         contactClicks += 1;
+        contactVisitors.add(event.visitor_id);
         break;
       case "project_clicked":
         projectClicks += 1;
+        projectVisitors.add(event.visitor_id);
         break;
       case "social_clicked":
         socialClicks += 1;
@@ -269,16 +288,83 @@ function summarizeMetricBlock(events: AnalyticsEventRow[]): AnalyticsMetricSumma
     views,
     uniqueVisitors,
     engagedVisitors: engagedVisitorCount,
-    engagementRate:
-      uniqueVisitors === 0
-        ? 0
-        : Math.round((engagedVisitorCount / uniqueVisitors) * 1000) / 10,
+    engagementRate: conversionRate(engagedVisitorCount, uniqueVisitors),
     resumeOpens,
+    resumeOpenRate: conversionRate(
+      [...resumeVisitors].filter((visitorId) => viewVisitors.has(visitorId)).length,
+      uniqueVisitors
+    ),
     contactClicks,
+    contactClickRate: conversionRate(
+      [...contactVisitors].filter((visitorId) => viewVisitors.has(visitorId)).length,
+      uniqueVisitors
+    ),
     projectClicks,
+    projectClickRate: conversionRate(
+      [...projectVisitors].filter((visitorId) => viewVisitors.has(visitorId)).length,
+      uniqueVisitors
+    ),
     socialClicks,
     customLinkClicks,
   };
+}
+
+function conversionRate(converted: number, visitors: number) {
+  return visitors === 0
+    ? 0
+    : Math.round((converted / visitors) * 1000) / 10;
+}
+
+function sourcePerformance(
+  events: AnalyticsEventRow[]
+): AnalyticsSourcePerformance[] {
+  const groups = new Map<
+    string,
+    {
+      visitors: Set<string>;
+      resume: Set<string>;
+      projects: Set<string>;
+      contact: Set<string>;
+    }
+  >();
+
+  for (const event of events) {
+    const label = event.referrer_host?.trim() || "Direct";
+    let group = groups.get(label);
+    if (!group) {
+      group = {
+        visitors: new Set(),
+        resume: new Set(),
+        projects: new Set(),
+        contact: new Set(),
+      };
+      groups.set(label, group);
+    }
+
+    if (event.event_type === "portfolio_view") {
+      group.visitors.add(event.visitor_id);
+      continue;
+    }
+
+    if (event.event_type === "resume_opened") {
+      group.resume.add(event.visitor_id);
+    } else if (event.event_type === "project_clicked") {
+      group.projects.add(event.visitor_id);
+    } else if (event.event_type === "contact_clicked") {
+      group.contact.add(event.visitor_id);
+    }
+  }
+
+  return [...groups.entries()]
+    .map(([label, group]) => ({
+      label,
+      visitors: group.visitors.size,
+      resumeOpenVisitors: [...group.resume].filter((id) => group.visitors.has(id)).length,
+      projectClickVisitors: [...group.projects].filter((id) => group.visitors.has(id)).length,
+      contactClickVisitors: [...group.contact].filter((id) => group.visitors.has(id)).length,
+    }))
+    .filter((item) => item.visitors > 0)
+    .sort((left, right) => right.visitors - left.visitors);
 }
 
 function actionBreakdown(events: AnalyticsEventRow[]): AnalyticsBreakdown[] {

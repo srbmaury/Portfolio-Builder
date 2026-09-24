@@ -286,3 +286,10 @@ test("social card image routes are directly fetchable by crawlers", async ({
     expect((await response.body()).byteLength, path).toBeGreaterThan(10_000);
   }
 });
+
+test("health endpoint answers for uptime checks without caching", async ({ request }) => {
+  const response = await request.get("/api/health");
+  expect(response.status()).toBe(200);
+  expect(response.headers()["cache-control"]).toContain("no-store");
+  expect(await response.json()).toMatchObject({ status: "ok" });
+});

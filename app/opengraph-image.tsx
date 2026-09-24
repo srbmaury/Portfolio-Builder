@@ -4,7 +4,7 @@ import { ImageResponse } from "next/og";
 import { siteOrigin } from "@/lib/site-url";
 
 export const alt =
-  "DevFolioX — A live portfolio link. No code. See how many opened it.";
+  "DevFolioX — A live portfolio link. No code. See every open, and where it came from.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -26,7 +26,7 @@ const LIVE_TINT = "#e8f6ee";
 
 // Illustrative numbers, as on the landing page's example card.
 const BARS = [4, 7, 5, 12, 9, 18, 14, 22, 16, 27, 21, 31, 24, 29];
-const STEPS = ["Fill details", "Publish", "Share URL", "Count the views"];
+const STEPS = ["Fill details", "Publish", "Share URL", "See every open"];
 
 function Mark() {
   return (
@@ -94,15 +94,18 @@ export default function Image() {
             style={{
               display: "flex",
               flexDirection: "column",
-              fontSize: 58,
+              flex: 1,
+              minWidth: 0,
+              fontSize: 54,
               fontWeight: 700,
-              lineHeight: 1.06,
+              lineHeight: 1.08,
               letterSpacing: "-0.035em",
             }}
           >
             <span>A live portfolio link.</span>
             <span>No code.</span>
-            <span style={{ color: MUTED }}>See how many opened it.</span>
+            <span style={{ color: MUTED }}>See every open,</span>
+            <span style={{ color: MUTED }}>and where it came from.</span>
           </div>
 
           <div
@@ -161,6 +164,20 @@ export default function Image() {
                   }}
                 />
               ))}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                paddingTop: 12,
+                borderTop: `1px solid ${RULE}`,
+                fontSize: 16,
+                fontWeight: 500,
+                color: MUTED,
+              }}
+            >
+              <span>Top source</span>
+              <span style={{ color: INK }}>LinkedIn (your link)</span>
             </div>
           </div>
         </div>
