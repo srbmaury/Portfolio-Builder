@@ -5,7 +5,8 @@ export async function proxy(request: NextRequest) {
   // Public crawler entry points do not need an auth refresh. Keeping them out
   // of the Supabase round trip makes social-card fetches deterministic,
   // especially when a free Render instance is waking from idle.
-  if (request.nextUrl.pathname === "/") {
+  // The health check is pinged by cron jobs and must not depend on auth.
+  if (request.nextUrl.pathname === "/" || request.nextUrl.pathname === "/api/health") {
     return NextResponse.next();
   }
 
