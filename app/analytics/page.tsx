@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
 import { createClient } from "@/lib/supabase/server";
+import { isAdminEmail } from "@/lib/admin";
 import {
   loadOwnerAnalytics,
   normalizeAnalyticsDays,
@@ -35,5 +36,11 @@ export default async function AnalyticsPage({ searchParams }: Props) {
     portfolioValue || null
   );
 
-  return <AnalyticsDashboard data={analytics} />;
+  return (
+    <AnalyticsDashboard
+      data={analytics}
+      email={data.user.email ?? null}
+      isAdmin={isAdminEmail(data.user.email)}
+    />
+  );
 }

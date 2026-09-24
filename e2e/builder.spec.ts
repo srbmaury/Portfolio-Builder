@@ -118,8 +118,7 @@ test("tablet and mobile preserve photo hero hierarchy by layout", async ({ page 
 
   // A fresh workspace has no profile content, so every section is filtered out
   // of the preview and there is no hero to measure. Load the demo first.
-  await page.locator("button.topbar-more-trigger").click();
-  await page.getByRole("menuitem", { name: "Load demo" }).click();
+  await page.getByRole("button", { name: "Load demo" }).click();
 
   await expect
     .poll(() =>
@@ -151,6 +150,12 @@ test("tablet and mobile preserve photo hero hierarchy by layout", async ({ page 
         (section: { id: string }) => section.id === "hero"
       );
       hero.variant = variant;
+      // The column checks below are about the GitHub project layout; set it
+      // here rather than depend on whichever layout the demo happens to use.
+      const projects = active.config.sections.find(
+        (section: { id: string }) => section.id === "projects"
+      );
+      projects.variant = "github";
       window.localStorage.setItem(key, JSON.stringify(state));
     }, layout);
 
@@ -270,8 +275,7 @@ test("section ordering and hero resume modal work from saved builder state", asy
   // profile content, so every section is filtered out and nothing renders;
   // load the demo to give the hero and résumé sections something to show.
   await page.getByRole("button", { name: "Content", exact: true }).click();
-  await page.locator("button.topbar-more-trigger").click();
-  await page.getByRole("menuitem", { name: "Load demo" }).click();
+  await page.getByRole("button", { name: "Load demo" }).click();
 
   await expect
     .poll(() =>

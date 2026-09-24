@@ -1,5 +1,8 @@
 "use client";
 
+import { errorMessage } from "@/lib/error-message";
+import { AppNav } from "@/components/AppNav";
+import { PublishedDialog } from "@/components/PublishedDialog";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import type { CreateDialogKind, PreviewMode } from "@/components/builder/types";
 import { useEditorResize } from "@/components/builder/useEditorResize";
@@ -36,6 +39,7 @@ import {
   emptyBuilderState,
   normalizeBuilderState,
   sampleBuilderState,
+  withFreshContentIds,
   sectionHasContent,
   sectionType,
   snapshotForVariant,
@@ -51,17 +55,20 @@ export function PortfolioBuilder({
   initialVariantId,
   openCreateVariant = false,
   startWithDemo = false,
+  accountEmail = null,
+  isAdmin = false,
 }: {
   startFresh?: boolean;
   initialVariantId?: string;
   openCreateVariant?: boolean;
   startWithDemo?: boolean;
+  accountEmail?: string | null;
+  isAdmin?: boolean;
 }) {
   const {
     state,
     setState,
     hydrated,
-    shareUrl,
     setShareUrl,
     cloudUserId,
     cloudStatus,
@@ -73,7 +80,6 @@ export function PortfolioBuilder({
     hasUnsavedChanges,
     saveToCloud,
     publish,
-    signOut,
   } = useBuilderWorkspace({ startFresh, initialVariantId });
   const [tab, setTab] = useState<"content" | "targeting" | "design">("content");
   const [previewMode, setPreviewMode] = useState<PreviewMode>("desktop");
@@ -84,46 +90,34 @@ export function PortfolioBuilder({
     resetEditorWidth,
   } = useEditorResize();
   const [createDialog, setCreateDialog] = useState<CreateDialogKind>(null);
-  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [resumeImportOpen, setResumeImportOpen] = useState(false);
   const [githubImportOpen, setGitHubImportOpen] = useState(false);
   const [healthOpen, setHealthOpen] = useState(false);
   const [jsonEditorOpen, setJsonEditorOpen] = useState(false);
+  const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
+  const [previewInView, setPreviewInView] = useState(false);
+  const previewStageRef = useRef<HTMLElement>(null);
+
+  // On phones the preview sits below the whole editor. Track whether it is on
+  // screen so the floating button can jump to it, or back to the editor.
+  useEffect(() => {
+    const stage = previewStageRef.current;
+    if (!stage || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setPreviewInView(entry.isIntersecting),
+      { threshold: 0.15 }
+    );
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, []);
   const createVariantOpenedRef = useRef(false);
   const demoLoadedRef = useRef(false);
-  const moreMenuRef = useRef<HTMLDivElement>(null);
   const previewFrameRef = useRef<HTMLIFrameElement>(null);
 
 
 
 
 
-  useEffect(() => {
-    if (!moreMenuOpen) return;
-
-    function handlePointerDown(event: PointerEvent) {
-      if (
-        moreMenuRef.current &&
-        !moreMenuRef.current.contains(event.target as Node)
-      ) {
-        setMoreMenuOpen(false);
-      }
-    }
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setMoreMenuOpen(false);
-      }
-    }
-
-    document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [moreMenuOpen]);
 
 
   useEffect(() => {
@@ -161,7 +155,7 @@ export function PortfolioBuilder({
       customSections.length > 0;
 
     if (!hasContent) {
-      setState(sampleBuilderState);
+      setState(withFreshContentIds(sampleBuilderState));
       setShareUrl("");
     }
   }, [cloudResolved, hydrated, startWithDemo, state.data, setState, setShareUrl]);
@@ -328,7 +322,7 @@ export function PortfolioBuilder({
         setCloudStatus("saved");
       } catch (deleteError) {
         setCloudMessage(
-          deleteError instanceof Error ? deleteError.message : "Could not delete portfolio"
+          errorMessage(deleteError, "Could not delete portfolio")
         );
         setCloudStatus("error");
         return;
@@ -367,48 +361,37 @@ export function PortfolioBuilder({
   }
 
   function loadDemo() {
-    setState(sampleBuilderState);
+    setState(withFreshContentIds(sampleBuilderState));
     setShareUrl("");
   }
 
   return (
     <div className="builder-shell">
-      <header className="builder-topbar">
-        <a className="brand" href="/">
-          DevFolio<span>X</span>
-        </a>
-
-        <div className="builder-topbar-controls">
-          <div className="builder-status" title={cloudMessage || undefined} aria-live="polite">
-            <span
-              className={`save-dot cloud-${cloudStatus}${hasUnsavedChanges ? " cloud-dirty" : ""}`}
-            />
-            <span>
-              {cloudUserId
-                ? cloudStatus === "loading"
-                  ? "Syncing…"
-                  : cloudStatus === "error"
-                    ? "Cloud error"
-                    : hasUnsavedChanges
-                      ? "Unsaved changes"
-                      : cloudStatus === "saved"
-                        ? "Saved"
-                        : "Cloud ready"
-                : "Local"}
-            </span>
-          </div>
-
-          <div className="topbar-actions">
-            {cloudUserId ? (
-              <a className="topbar-link portfolio-manager-link" href="/portfolios">
-                Portfolios
-              </a>
-            ) : (
-              <a className="topbar-link cloud-login-link" href="/login">
-                Sign in
-              </a>
-            )}
-
+      <AppNav
+        current="builder"
+        className="builder-topbar"
+        email={accountEmail}
+        isAdmin={isAdmin}
+        actions={
+          <>
+            <div className="builder-status" title={cloudMessage || undefined} aria-live="polite">
+              <span
+                className={`save-dot cloud-${cloudStatus}${hasUnsavedChanges ? " cloud-dirty" : ""}`}
+              />
+              <span>
+                {cloudUserId
+                  ? cloudStatus === "loading"
+                    ? "Syncing…"
+                    : cloudStatus === "error"
+                      ? "Cloud error"
+                      : hasUnsavedChanges
+                        ? "Unsaved changes"
+                        : cloudStatus === "saved"
+                          ? "Saved"
+                          : "Cloud ready"
+                  : "Local"}
+              </span>
+            </div>
             <button
               type="button"
               className="topbar-link topbar-health"
@@ -416,84 +399,6 @@ export function PortfolioBuilder({
             >
               Health
             </button>
-
-            <div className="topbar-more" ref={moreMenuRef}>
-              <button
-                type="button"
-                className="topbar-more-trigger"
-                aria-label="More builder actions"
-                aria-expanded={moreMenuOpen}
-                aria-haspopup="menu"
-                title="More actions"
-                onClick={() => setMoreMenuOpen((open) => !open)}
-              >
-                <span aria-hidden="true">•••</span>
-              </button>
-
-              {moreMenuOpen ? (
-                <div className="topbar-menu" role="menu">
-                  {cloudUserId ? (
-                    <a
-                      className="topbar-menu-mobile-action"
-                      href="/portfolios"
-                      role="menuitem"
-                    >
-                      Portfolios
-                    </a>
-                  ) : (
-                    <a
-                      className="topbar-menu-mobile-action"
-                      href="/login"
-                      role="menuitem"
-                    >
-                      Sign in
-                    </a>
-                  )}
-
-                  <button
-                    className="topbar-menu-mobile-action"
-                    role="menuitem"
-                    onClick={() => {
-                      setMoreMenuOpen(false);
-                      setHealthOpen(true);
-                    }}
-                  >
-                    Portfolio health
-                  </button>
-
-                  <button
-                    role="menuitem"
-                    onClick={() => {
-                      setMoreMenuOpen(false);
-                      startFreshWorkspace();
-                    }}
-                  >
-                    Start fresh
-                  </button>
-                  <button
-                    role="menuitem"
-                    onClick={() => {
-                      setMoreMenuOpen(false);
-                      loadDemo();
-                    }}
-                  >
-                    Load demo
-                  </button>
-                  {cloudUserId ? (
-                    <button
-                      role="menuitem"
-                      onClick={() => {
-                        setMoreMenuOpen(false);
-                        void signOut();
-                      }}
-                    >
-                      Sign out
-                    </button>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-
             {cloudUserId ? (
               <button
                 className={
@@ -515,7 +420,10 @@ export function PortfolioBuilder({
 
             <button
               className="primary-button topbar-publish"
-              onClick={publish}
+              onClick={async () => {
+                const url = await publish();
+                if (url) setPublishedUrl(url);
+              }}
               disabled={
                 cloudStatus === "loading" ||
                 Boolean(cloudUserId && hasUnsavedChanges)
@@ -541,9 +449,14 @@ export function PortfolioBuilder({
                 "Sign in to publish"
               )}
             </button>
-          </div>
-        </div>
-      </header>
+          </>
+        }
+        sidebarExtras={
+          <button type="button" onClick={() => setHealthOpen(true)}>
+            Portfolio health
+          </button>
+        }
+      />
 
       <div
         className="builder-grid"
@@ -589,7 +502,7 @@ export function PortfolioBuilder({
           <div className="variant-switcher">
             <div className="variant-switcher-head">
               <div>
-                <span>Portfolio variants</span>
+                <span>Portfolios</span>
                 <small>Each portfolio keeps its own content</small>
               </div>
               <button onClick={() => setCreateDialog("variant")}>+ New</button>
@@ -616,14 +529,9 @@ export function PortfolioBuilder({
             {activeVariant && (
               <div className="variant-meta-grid">
                 <Field
-                  label="Variant name"
+                  label="Portfolio name"
                   value={activeVariant.name}
                   onChange={(value) => updateVariantMeta("name", value)}
-                />
-                <Field
-                  label="Target role"
-                  value={activeVariant.targetRole}
-                  onChange={(value) => updateVariantMeta("targetRole", value)}
                 />
                 <div className="variant-meta-actions">
                   <button onClick={duplicateVariant}>Duplicate</button>
@@ -642,11 +550,10 @@ export function PortfolioBuilder({
           {tab === "content" ? (
             <div className="panel-body">
               <div className="panel-intro">
-                <p className="panel-kicker">This portfolio</p>
-                <h2>Tailor it for the role.</h2>
+                <h2>Your details</h2>
                 <p>
-                  This content belongs to the portfolio you have open. Editing it
-                  leaves your other portfolios untouched.
+                  Fill in what this portfolio shows, or import it. Your other
+                  portfolios are not affected.
                 </p>
                 <div className="panel-intro-actions">
                   <button
@@ -666,16 +573,23 @@ export function PortfolioBuilder({
                   <button
                     type="button"
                     className="ghost-button"
-                    onClick={() => setHealthOpen(true)}
+                    onClick={() => setJsonEditorOpen(true)}
                   >
-                    Check health
+                    Edit as JSON
                   </button>
                   <button
                     type="button"
                     className="ghost-button"
-                    onClick={() => setJsonEditorOpen(true)}
+                    onClick={loadDemo}
                   >
-                    Edit as JSON
+                    Load demo
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    onClick={startFreshWorkspace}
+                  >
+                    Start over
                   </button>
                 </div>
               </div>
@@ -686,10 +600,16 @@ export function PortfolioBuilder({
                   value={state.data.profile.name}
                   onChange={(value) => updateProfile("name", value)}
                 />
+                {/* One field for the role this portfolio targets. The published
+                    page shows the portfolio's target role over the profile
+                    role, so both are kept in step rather than asking twice. */}
                 <Field
                   label="Role"
-                  value={state.data.profile.role}
-                  onChange={(value) => updateProfile("role", value)}
+                  value={activeVariant?.targetRole || state.data.profile.role}
+                  onChange={(value) => {
+                    updateProfile("role", value);
+                    updateVariantMeta("targetRole", value);
+                  }}
                 />
                 <Field
                   label="Tagline"
@@ -1061,11 +981,10 @@ export function PortfolioBuilder({
           ) : tab === "targeting" ? (
             <div className="panel-body">
               <div className="panel-intro">
-                <p className="panel-kicker">Role targeting</p>
-                <h2>Show the strongest evidence.</h2>
+                <h2>What to show</h2>
                 <p>
-                  Choose exactly what {activeVariant?.name || "this portfolio"} shows.
-                  Selected items can be reordered independently from the shared profile.
+                  Tick what {activeVariant?.name || "this portfolio"} shows and use the
+                  arrows to set the order.
                 </p>
               </div>
 
@@ -1168,11 +1087,10 @@ export function PortfolioBuilder({
             <div className="panel-body">
               <div className="panel-intro design-intro">
                 <div>
-                  <p className="panel-kicker">Design system</p>
-                  <h2>Swap the pieces.</h2>
+                  <h2>Layout and theme</h2>
                   <p>
                     {visibleSections} sections are visible in {activeVariant?.name || "this portfolio"}.
-                    Shared content never changes when the layout does.
+                    Changing the design never changes your content.
                   </p>
                 </div>
                 <button className="shuffle-button" onClick={shuffleDesign}>
@@ -1382,19 +1300,6 @@ export function PortfolioBuilder({
             </div>
           )}
 
-          {shareUrl && (
-            <div className="publish-toast">
-              <div>
-                <strong>{activeVariant?.name || "Portfolio"} link ready</strong>
-                <p>
-                  Copied to clipboard. This is a clean public link backed by Supabase.
-                </p>
-              </div>
-              <a href={shareUrl} target="_blank" rel="noreferrer">
-                Open ↗
-              </a>
-            </div>
-          )}
           </div>
         </aside>
 
@@ -1410,7 +1315,7 @@ export function PortfolioBuilder({
           <span />
         </button>
 
-        <section className="preview-stage">
+        <section className="preview-stage" ref={previewStageRef}>
           <div className="preview-toolbar">
             <div>
               <span>Live preview</span>
@@ -1447,9 +1352,48 @@ export function PortfolioBuilder({
               title={`${previewMode} portfolio preview`}
               onLoad={sendPreviewPayload}
             />
+            {visibleSections === 0 && (
+              <div className="preview-empty" role="status">
+                <strong>Your portfolio will appear here</strong>
+                <p>
+                  Add your name and role on the left, or import your résumé to
+                  fill most of it in one step.
+                </p>
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={() => {
+                    setTab("content");
+                    setResumeImportOpen(true);
+                  }}
+                >
+                  Import résumé
+                </button>
+              </div>
+            )}
           </div>
         </section>
       </div>
+
+      <button
+        type="button"
+        className="mobile-preview-jump"
+        onClick={() => {
+          if (previewInView) window.scrollTo({ top: 0, behavior: "smooth" });
+          else previewStageRef.current?.scrollIntoView({ behavior: "smooth" });
+        }}
+      >
+        {previewInView ? "↑ Edit" : "Preview ↓"}
+      </button>
+
+      {publishedUrl && activeVariant ? (
+        <PublishedDialog
+          url={publishedUrl}
+          portfolioName={activeVariant.name || "Your portfolio"}
+          variantKey={activeVariant.id}
+          onClose={() => setPublishedUrl(null)}
+        />
+      ) : null}
 
       {createDialog && (
         <CreateItemDialog

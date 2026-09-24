@@ -325,7 +325,7 @@ export const sampleData: PortfolioData = {
     email: "maya@example.com",
     location: "Bengaluru, India",
     availability: "Open to backend, platform, and product engineering opportunities",
-    heroImageUrl: "",
+    heroImageUrl: "https://res.cloudinary.com/dnimsxcmh/image/upload/v1790211857/devfoliox-demo/hero-workspace.jpg",
     socials: [
       { label: "GitHub", url: "https://github.com" },
       { label: "LinkedIn", url: "https://linkedin.com" },
@@ -364,7 +364,7 @@ export const sampleData: PortfolioData = {
       description:
         "A developer investigation workspace that brings logs, traces, source context, and deployment history into one searchable timeline for faster incident triage.",
       stack: ["Java", "PostgreSQL", "Redis", "OpenTelemetry"],
-      imageUrl: "",
+      imageUrl: "https://res.cloudinary.com/dnimsxcmh/image/upload/v1790211858/devfoliox-demo/project-traceflow.jpg",
       githubUrl: "https://github.com",
       liveUrl: "",
     },
@@ -374,7 +374,7 @@ export const sampleData: PortfolioData = {
       description:
         "A multi-tenant retrieval service with hybrid search, request-level caching, ingestion jobs, and observable ranking experiments behind a simple API.",
       stack: ["Go", "PostgreSQL", "Redis", "Kafka"],
-      imageUrl: "",
+      imageUrl: "https://res.cloudinary.com/dnimsxcmh/image/upload/v1790211861/devfoliox-demo/project-vector-gateway.jpg",
       githubUrl: "https://github.com",
       liveUrl: "",
     },
@@ -384,7 +384,7 @@ export const sampleData: PortfolioData = {
       description:
         "A collaborative schema editor that turns structured configuration into explorable diagrams, reviewable changes, and shareable developer documentation.",
       stack: ["TypeScript", "React", "WebSockets", "D3"],
-      imageUrl: "",
+      imageUrl: "https://res.cloudinary.com/dnimsxcmh/image/upload/v1790211862/devfoliox-demo/project-schema-studio.jpg",
       githubUrl: "https://github.com",
       liveUrl: "",
     },
@@ -394,7 +394,7 @@ export const sampleData: PortfolioData = {
       description:
         "An operations console for delayed jobs and event pipelines with replay controls, failure grouping, throughput trends, and guardrails for production recovery.",
       stack: ["Java", "Kafka", "React", "Observability"],
-      imageUrl: "",
+      imageUrl: "https://res.cloudinary.com/dnimsxcmh/image/upload/v1790211864/devfoliox-demo/project-queuescope.jpg",
       githubUrl: "https://github.com",
       liveUrl: "",
     },
@@ -508,12 +508,12 @@ export function cloneContentConfig(
 }
 
 const sampleBackendConfig: PortfolioConfig = {
-  theme: "cobalt",
+  theme: "mono",
   sections: [
-    { id: "hero", type: "hero", variant: "spotlight", visible: true, title: "Backend & Platform" },
+    { id: "hero", type: "hero", variant: "image-split", visible: true, title: "Backend & Platform" },
     { id: "about", type: "about", variant: "dossier", visible: true, title: "Profile" },
     { id: "experience", type: "experience", variant: "ledger", visible: true, title: "Experience" },
-    { id: "projects", type: "projects", variant: "github", visible: true, title: "Selected systems" },
+    { id: "projects", type: "projects", variant: "image-grid", visible: true, title: "Selected systems" },
     {
       id: "custom-impact",
       type: "custom",
@@ -659,6 +659,46 @@ export const emptyBuilderState: BuilderState = {
 
 export const sampleSnapshot: PortfolioSnapshot =
   snapshotForVariant(sampleBuilderState);
+
+/**
+ * Experience and project ids are primary keys shared by every account in the
+ * database, so a workspace that reuses fixed ids (the demo) collides as soon
+ * as a second account saves it. Give each loaded copy its own ids, remapped
+ * everywhere they are referenced.
+ */
+export function withFreshContentIds(
+  state: BuilderState,
+  suffix: string = crypto.randomUUID().slice(0, 8)
+): BuilderState {
+  const ids = new Map<string, string>();
+  const fresh = (id: string) => {
+    let next = ids.get(id);
+    if (!next) {
+      next = `${id}-${suffix}`;
+      ids.set(id, next);
+    }
+    return next;
+  };
+  const remapData = (data: PortfolioData): PortfolioData => ({
+    ...data,
+    experience: data.experience.map((item) => ({ ...item, id: fresh(item.id) })),
+    projects: data.projects.map((item) => ({ ...item, id: fresh(item.id) })),
+  });
+
+  return {
+    ...state,
+    data: remapData(state.data),
+    variants: state.variants.map((variant) => ({
+      ...variant,
+      data: remapData(variant.data),
+      content: {
+        ...variant.content,
+        experienceIds: variant.content.experienceIds.map(fresh),
+        projectIds: variant.content.projectIds.map(fresh),
+      },
+    })),
+  };
+}
 
 export function snapshotForVariant(state: BuilderState): PortfolioSnapshot {
   const normalized = normalizeBuilderState(state);

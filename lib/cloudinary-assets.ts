@@ -121,3 +121,25 @@ export function selectUnreferencedAssetUrls(
     (url) => !remaining.has(url)
   );
 }
+
+/**
+ * Every upload lives in the shared folioblocks/uploads folder, so a URL in a
+ * user's content does not prove that user uploaded it: anyone can copy an
+ * image URL from someone else's public portfolio into their own. Deletion must
+ * only touch assets carrying the deleting user's upload tag.
+ */
+export function selectOwnedAssetUrls(
+  candidates: string[],
+  ownedUrls: string[],
+  cloudName: string
+) {
+  const key = (url: string) => {
+    const ref = parseCloudinaryAssetUrl(url, cloudName);
+    return ref ? `${ref.resourceType}:${ref.publicId}` : null;
+  };
+  const owned = new Set(ownedUrls.map(key).filter(Boolean));
+  return candidates.filter((url) => {
+    const candidate = key(url);
+    return candidate !== null && owned.has(candidate);
+  });
+}

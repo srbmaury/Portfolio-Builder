@@ -93,3 +93,19 @@ test("Cloudinary ownership tags are deterministic and scoped", () => {
     "fb-portfolio-c0e01d99000000000000000000000000-backend-platform-0b515d0c"
   );
 });
+
+test("asset cleanup only keeps assets the deleting user uploaded", async () => {
+  const { selectOwnedAssetUrls } = await import("../lib/cloudinary-assets.ts");
+  const cloud = "demo-cloud";
+  const mine = `https://res.cloudinary.com/${cloud}/image/upload/v1/folioblocks/uploads/mine.png`;
+  const theirs = `https://res.cloudinary.com/${cloud}/image/upload/v2/folioblocks/uploads/theirs.png`;
+  // Same asset as `mine`, different version and a transformation.
+  const mineAgain = `https://res.cloudinary.com/${cloud}/image/upload/c_fill,w_400/v9/folioblocks/uploads/mine.png`;
+  const owned = [`https://res.cloudinary.com/${cloud}/image/upload/v1/folioblocks/uploads/mine.png`];
+
+  assert.deepEqual(
+    selectOwnedAssetUrls([mine, theirs, mineAgain], owned, cloud),
+    [mine, mineAgain]
+  );
+  assert.deepEqual(selectOwnedAssetUrls([theirs], [], cloud), []);
+});

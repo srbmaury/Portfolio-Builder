@@ -1,5 +1,6 @@
 "use client";
 
+import { errorMessage } from "@/lib/error-message";
 import { useCallback, useEffect, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { trackProductEvent } from "@/lib/product-analytics";
@@ -248,7 +249,7 @@ export function useBuilderWorkspace({
     } catch (saveError) {
       setCloudStatus("error");
       setCloudMessage(
-        saveError instanceof Error ? saveError.message : "Cloud save failed"
+        errorMessage(saveError, "Cloud save failed")
       );
     }
   }
@@ -256,10 +257,11 @@ export function useBuilderWorkspace({
   const hasUnsavedChanges =
     Boolean(cloudUserId) && workspaceContentSignature(state) !== lastSavedSignature;
 
-  async function publish() {
+  /** Returns the public URL on success, or null. */
+  async function publish(): Promise<string | null> {
     if (hasUnsavedChanges) {
       setCloudMessage("Save changes before publishing");
-      return;
+      return null;
     }
 
     const supabase = createClient();
@@ -267,7 +269,7 @@ export function useBuilderWorkspace({
 
     if (error || !data.user) {
       window.location.href = "/login";
-      return;
+      return null;
     }
 
     setCloudStatus("loading");
@@ -288,20 +290,14 @@ export function useBuilderWorkspace({
       } catch {
         // Clipboard can be blocked in some preview environments.
       }
+      return url;
     } catch (publishError) {
       setCloudStatus("error");
       setCloudMessage(
-        publishError instanceof Error ? publishError.message : "Publish failed"
+        errorMessage(publishError, "Publish failed")
       );
+      return null;
     }
-  }
-
-  async function signOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    setCloudUserId(null);
-    setCloudStatus("local");
-    setCloudMessage("Signed out · local draft preserved");
   }
 
   return {
@@ -321,6 +317,5 @@ export function useBuilderWorkspace({
     hasUnsavedChanges,
     saveToCloud,
     publish,
-    signOut,
   };
 }

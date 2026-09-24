@@ -250,7 +250,7 @@ export function CreateItemDialog({
           {kind === "variant" && (
             <>
               <DialogField label="Portfolio name" placeholder="Backend, AI, General..." value={values.name} onChange={(value) => update("name", value)} autoFocus required />
-              <DialogField label="Target role" placeholder="Backend Engineer" value={values.targetRole} onChange={(value) => update("targetRole", value)} required />
+              <DialogField label="Role" placeholder="Backend Engineer" value={values.targetRole} onChange={(value) => update("targetRole", value)} required />
               <p className="dialog-hint">
                 The new variant starts with the current portfolio's design and targeted content. You can customize both afterward.
               </p>

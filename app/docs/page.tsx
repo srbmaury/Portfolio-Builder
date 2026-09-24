@@ -1,71 +1,26 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import styles from "./docs.module.css";
+import { DocsToc } from "./DocsToc";
+import { AccountCta } from "@/components/AccountCta";
 
 export const metadata: Metadata = {
   title: "Docs — DevFolioX",
   description:
-    "Public documentation for DevFolioX features, publishing, analytics, privacy, and data controls.",
+    "How to fill in, publish, and share a DevFolioX portfolio, and how its first-party analytics, privacy, and data controls work.",
 };
 
-const featureGroups = [
-  {
-    title: "Build from structured content",
-    items: [
-      "Maintain one shared professional profile with experience, projects, skills, social links, and custom sections.",
-      "Start from a true blank workspace, use the demo, or import a PDF/DOCX resume up to 5 MB.",
-      "Import projects from a public GitHub profile by selecting repositories; DevFolioX maps descriptions, language/topics, repository links, and homepage links into editable projects.",
-      "Run the active portfolio through a health check for identity/contact gaps, targeting, project completeness, links, resume readiness, and image-led layout requirements.",
-      "Resume import is parsed in memory, is not stored, and lets you review/edit profile, experience, projects, and skills before applying.",
-      "Use the advanced JSON editor to edit the complete workspace: shared content, variants, targeting, design, branding, resume data, and custom sections.",
-    ],
-  },
-  {
-    title: "Create role-specific portfolios",
-    items: [
-      "Create multiple named portfolio variants from the same shared profile.",
-      "Set a target role per variant and independently choose/reorder experience, projects, and skills.",
-      "Duplicate, rename, publish, unpublish, and manage each portfolio without unexpectedly changing an existing public URL.",
-      "Empty sections are automatically suppressed on the rendered portfolio.",
-    ],
-  },
-  {
-    title: "Design without coding",
-    items: [
-      "Choose from 10 themes: Ink, Sand, Moss, Aurora, Cobalt, Rose, Mono, Sunset, Ice, and Noir.",
-      "Use 60 layouts across Hero, About, Experience, Projects, Skills, and Contact, plus 7 Resume layouts and 8 Custom Section layouts.",
-      "Rename sections, show/hide them, reorder them, and shuffle designs.",
-      "Preview desktop, tablet, and mobile layouts while editing, with an adjustable editor/preview split on desktop.",
-    ],
-  },
-  {
-    title: "Images, branding, and sharing",
-    items: [
-      "Upload hero and project images through signed Cloudinary uploads; Cloudinary secrets stay server-side.",
-      "Add separate GitHub and Live Demo links to projects and skill-logo layouts with text fallbacks.",
-      "Set per-portfolio favicon, social share title, share description, and share image.",
-      "Publish to clean public URLs in the form /<username>/<portfolio> using immutable published snapshots.",
-      "Published pages include canonical and social metadata, JSON-LD profile data, robots/sitemap discovery, skip navigation, and reduced-motion support.",
-    ],
-  },
-  {
-    title: "Resume and custom sections",
-    items: [
-      "Attach a public resume to an individual portfolio without forcing the same resume onto every variant.",
-      "Choose from seven résumé treatments, including embedded, card, compact, split, spotlight, minimal, and terminal layouts.",
-      "Create flexible custom sections for certifications, awards, education, writing, speaking, open source, or anything else.",
-      "Custom sections support eight layouts, including list, cards, timeline, grid, compact, split, spotlight, and badges.",
-    ],
-  },
-  {
-    title: "First-party analytics",
-    items: [
-      "See views, unique visitors, engaged visitors, engagement rate, resume opens, contact clicks, project clicks, social clicks, and custom-link clicks.",
-      "Inspect 7, 30, or 90 day windows, daily traffic, referrer-host breakdowns, device breakdowns, action breakdowns, and per-portfolio comparisons.",
-      "Admins can access aggregate product analytics including creator activation, active/returning creators, publish rate, variants per account, time-to-first-publish, resume-import success, traffic, signups, top actions, devices, referrers, and portfolios.",
-      "Analytics failures never block the public portfolio experience.",
-    ],
-  },
+const contents = [
+  { id: "start", label: "Get started" },
+  { id: "details", label: "Fill in your details" },
+  { id: "publish", label: "Publish and share" },
+  { id: "design", label: "Design" },
+  { id: "versions", label: "Versions per role" },
+  { id: "analytics", label: "Analytics" },
+  { id: "tracked-links", label: "Tracked links" },
+  { id: "privacy", label: "Analytics privacy" },
+  { id: "data", label: "Your data" },
+  { id: "architecture", label: "How publishing works" },
 ];
 
 export default function DocsPage() {
@@ -76,180 +31,258 @@ export default function DocsPage() {
           DevFolio<span>X</span>
         </Link>
         <nav className={styles.nav} aria-label="Docs navigation">
-          <Link href="/">Home</Link>
-          <Link href="/builder?fresh=1">Start fresh</Link>
-          <Link className={styles.primaryLink} href="/builder">
-            Open builder
-          </Link>
+          <Link className={styles.navSecondary} href="/">Home</Link>
+          <AccountCta
+            className={styles.primaryLink}
+            signedOutHref="/builder?fresh=1"
+            signedOutLabel="Build my portfolio"
+          />
         </nav>
       </header>
 
-      <section className={styles.hero}>
-        <p className={styles.kicker}>Public documentation</p>
-        <h1>Everything DevFolioX can do.</h1>
-        <p className={styles.lead}>
-          DevFolioX separates your professional content from its presentation, so one
-          profile can power multiple role-specific portfolios without rebuilding the
-          same information again and again.
-        </p>
-        <div className={styles.quickFacts}>
-          <span>75 section layouts</span>
-          <span>10 themes</span>
-          <span>Role-specific variants</span>
-          <span>First-party analytics</span>
-        </div>
-      </section>
+      <div className={styles.layout}>
+        <DocsToc items={contents} />
 
-      <section className={styles.section} id="workflow">
-        <div className={styles.sectionHeading}>
-          <p>Core workflow</p>
-          <h2>One profile → many focused portfolios.</h2>
-        </div>
-        <div className={styles.steps}>
-          <article>
-            <span>01</span>
-            <h3>Add your content</h3>
-            <p>Enter it manually, import a resume or GitHub projects, then run a portfolio health check before publishing.</p>
-          </article>
-          <article>
-            <span>02</span>
-            <h3>Target the role</h3>
-            <p>Choose exactly which evidence appears in each portfolio and in what order.</p>
-          </article>
-          <article>
-            <span>03</span>
-            <h3>Choose the presentation</h3>
-            <p>Pick a theme and a layout independently for every section.</p>
-          </article>
-          <article>
-            <span>04</span>
-            <h3>Publish and measure</h3>
-            <p>Share a stable public URL and review first-party engagement analytics.</p>
-          </article>
-        </div>
-      </section>
-
-      <section className={styles.section} id="features">
-        <div className={styles.sectionHeading}>
-          <p>Feature reference</p>
-          <h2>What is available today.</h2>
-        </div>
-        <div className={styles.featureGrid}>
-          {featureGroups.map((group) => (
-            <article className={styles.featureCard} key={group.title}>
-              <h3>{group.title}</h3>
-              <ul>
-                {group.items.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className={styles.section} id="privacy">
-        <div className={styles.sectionHeading}>
-          <p>Analytics privacy</p>
-          <h2>Useful metrics without collecting portfolio content.</h2>
-        </div>
-        <div className={styles.split}>
-          <article className={styles.callout}>
-            <h3>What analytics stores</h3>
-            <p>
-              DevFolioX uses opaque anonymous visitor/session UUIDs, event type,
-              fixed content-free action targets, referrer host, device type, portfolio
-              ID, and event time. Portfolio views are de-duplicated once per
-              portfolio/session.
+        <article className={styles.article}>
+          <header className={styles.intro}>
+            <h1>DevFolioX docs</h1>
+            <p className={styles.lead}>
+              DevFolioX gives you a live portfolio link without writing code, and counts
+              how many people open it. This page covers everything it can do today.
             </p>
-          </article>
-          <article className={styles.callout}>
-            <h3>What analytics does not store</h3>
-            <p>
-              Public visitor analytics do not record IP addresses, names, email addresses,
-              resume text, profile text, project descriptions, custom-section names,
-              or full referrer URLs. Browser Do Not Track is honored. Authenticated
-              creator-product events contain only user ID, event type, optional
-              portfolio variant key, and timestamp.
-            </p>
-          </article>
-        </div>
-      </section>
+          </header>
 
-      <section className={styles.section} id="data">
-        <div className={styles.sectionHeading}>
-          <p>Storage and deletion</p>
-          <h2>Your saved data has explicit lifecycle controls.</h2>
-        </div>
-        <div className={styles.split}>
-          <article className={styles.callout}>
+          <section id="start" className={styles.section}>
+            <h2>Get started</h2>
+            <p>The whole flow is four steps, and only the first one takes real time.</p>
+            <ol className={styles.steps}>
+              <li>
+                <strong>Fill in your details.</strong> Type them in, import a résumé,
+                or pull projects from GitHub.
+              </li>
+              <li>
+                <strong>Publish.</strong> Sign in and press Publish. Your portfolio goes
+                live at <code>/&lt;username&gt;/&lt;portfolio&gt;</code>.
+              </li>
+              <li>
+                <strong>Share the URL.</strong> Put it on LinkedIn, your résumé, or in
+                job applications.
+              </li>
+              <li>
+                <strong>Watch the numbers.</strong> The analytics page shows views,
+                visitors, sources, and clicks for every published portfolio.
+              </li>
+            </ol>
+            <div className={styles.actions}>
+              <Link className={styles.primaryButton} href="/builder?fresh=1">
+                Start from a blank portfolio
+              </Link>
+              <Link className={styles.textLink} href="/builder?demo=1">
+                Open the demo →
+              </Link>
+            </div>
+          </section>
+
+          <section id="details" className={styles.section}>
+            <h2>Fill in your details</h2>
+            <p>
+              Your profile holds your experience, projects, skills, social links, and
+              custom sections. Start from a truly blank workspace, load the demo, or use
+              one of the importers below.
+            </p>
+
+            <h3>Resume import</h3>
+            <p>
+              Upload a PDF or DOCX résumé up to 5 MB. It is parsed in memory and never
+              stored. You review and edit the extracted profile, experience, projects,
+              and skills before anything is applied.
+            </p>
+
+            <h3>GitHub import</h3>
+            <p>
+              Enter a public GitHub profile and choose repositories. Descriptions,
+              languages and topics, repository links, and homepage links become
+              editable projects.
+            </p>
+
+            <h3>Health check</h3>
+            <p>
+              Before publishing, run the health check. It flags missing identity or
+              contact details, weak targeting, incomplete projects, link issues,
+              résumé readiness, and layouts that need an image you have not added.
+            </p>
+
+            <h3>Custom sections</h3>
+            <p>
+              Add custom sections for certifications, awards, education, writing,
+              speaking, open source, or anything else. They support eight layouts:
+              list, cards, timeline, grid, compact, split, spotlight, and badges.
+            </p>
+
+            <h3>JSON editor</h3>
+            <p>
+              For bulk edits, the advanced JSON editor exposes the complete workspace:
+              content, portfolio versions, targeting, design, branding, résumé data,
+              and custom sections.
+            </p>
+          </section>
+
+          <section id="publish" className={styles.section}>
+            <h2>Publish and share</h2>
+            <p>
+              Publishing creates an immutable snapshot of your portfolio at a clean URL
+              in the form <code>/&lt;username&gt;/&lt;portfolio&gt;</code>. Keep editing
+              afterwards; visitors see the published version until you publish again,
+              and the URL does not change.
+            </p>
+            <ul>
+              <li>Publish, unpublish, duplicate, and delete each portfolio from the portfolio manager; rename it in the builder.</li>
+              <li>Set a per-portfolio favicon, share title, share description, and share image for link previews.</li>
+              <li>Attach a public résumé to an individual portfolio, shown in one of seven treatments: embedded, card, compact, split, spotlight, minimal, or terminal.</li>
+              <li>Published pages include canonical and social metadata, JSON-LD profile data, sitemap discovery, skip navigation, and reduced-motion support.</li>
+            </ul>
+          </section>
+
+          <section id="design" className={styles.section}>
+            <h2>Design</h2>
+            <p>
+              Every section has its own layout, chosen independently of the theme. None
+              of it requires code.
+            </p>
+            <table className={styles.table}>
+              <tbody>
+                <tr><th scope="row">Themes</th><td>10: Ink, Sand, Moss, Aurora, Cobalt, Rose, Mono, Sunset, Ice, and Noir</td></tr>
+                <tr><th scope="row">Core sections</th><td>60 layouts across Hero, About, Experience, Projects, Skills, and Contact</td></tr>
+                <tr><th scope="row">Résumé</th><td>7 layouts</td></tr>
+                <tr><th scope="row">Custom sections</th><td>8 layouts</td></tr>
+              </tbody>
+            </table>
+            <ul>
+              <li>Rename, show or hide, reorder, and shuffle sections. Empty sections are hidden automatically.</li>
+              <li>Preview desktop, tablet, and mobile while editing, with an adjustable editor and preview split.</li>
+              <li>Upload hero and project images through signed Cloudinary uploads. Secrets stay on the server.</li>
+              <li>Projects can have separate GitHub and live demo links. Skill-logo layouts fall back to text.</li>
+            </ul>
+          </section>
+
+          <section id="versions" className={styles.section}>
+            <h2>Versions per role</h2>
+            <p>
+              Create several named portfolios, for example one for backend roles and one
+              for product engineering. Each has its own target role, its own content,
+              its own choice and order of experience, projects, and skills, and its own
+              URL and analytics. Editing one leaves the others untouched.
+            </p>
+          </section>
+
+          <section id="analytics" className={styles.section}>
+            <h2>First-party analytics</h2>
+            <p>
+              Every published portfolio is counted automatically. There is nothing to
+              install or connect.
+            </p>
+            <table className={styles.table}>
+              <tbody>
+                <tr><th scope="row">Reach</th><td>Views, unique visitors, engaged visitors, engagement rate</td></tr>
+                <tr><th scope="row">Actions</th><td>Résumé opens and clicks on contact, project, social, and custom links</td></tr>
+                <tr><th scope="row">Sources</th><td>Your tracked link’s name, or the referring site’s hostname such as github.com, plus device type</td></tr>
+                <tr><th scope="row">Time</th><td>Daily traffic over 7, 30, or 90 days</td></tr>
+                <tr><th scope="row">Comparison</th><td>All portfolios side by side</td></tr>
+              </tbody>
+            </table>
+            <p>
+              Analytics never block the public page: if recording fails, the portfolio
+              still loads normally. Site administrators also see aggregate product
+              metrics such as sign-ups, publish rate, and time to first publish.
+            </p>
+          </section>
+
+          <section id="tracked-links" className={styles.section}>
+            <h2>Tracked links</h2>
+            <p>
+              Browsers usually hide where a visit came from when the link is opened
+              from an email app, a PDF résumé, or a chat app, so those visits would
+              otherwise count as Direct. Tracked links fix that: each one adds{" "}
+              <code>?via=&lt;name&gt;</code> to your URL, and visits through it are
+              labelled with that name in analytics.
+            </p>
+            <ul>
+              <li>Copy them from the portfolio manager or right after you publish: LinkedIn, Résumé, Email, GitHub, X, or any name you type, such as a company you are applying to.</li>
+              <li>The tag is removed from the address bar once the page loads, so a visitor who re-shares the page does not pass your tag along.</li>
+              <li>A tag is only the name you chose. It says nothing about the visitor.</li>
+            </ul>
+          </section>
+
+          <section id="privacy" className={styles.section}>
+            <h2>Analytics privacy</h2>
+            <p>
+              Analytics count visits. They are not built to identify the people behind them.
+            </p>
+            <div className={styles.split}>
+              <div>
+                <h3>What is stored</h3>
+                <p>
+                  Random visitor and session IDs, the event type, a fixed action target,
+                  referrer host, device type, portfolio ID, and time. A view is counted
+                  once per portfolio per session.
+                </p>
+              </div>
+              <div>
+                <h3>What is not stored</h3>
+                <p>
+                  IP addresses, names, email addresses, résumé or profile text, project
+                  descriptions, custom-section names, or full referrer URLs. Browser Do
+                  Not Track is honoured. Signed-in creator events contain only a user
+                  ID, event type, optional portfolio key, and time.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section id="data" className={styles.section}>
+            <h2>Your data</h2>
             <h3>Portfolio deletion</h3>
             <p>
-              Deleting a portfolio removes its saved/published data, target-only
-              content, attached resume, analytics events, and uploaded assets that are
-              no longer referenced by another portfolio. Deleting the final portfolio
-              also removes the shared workspace data.
+              Deleting a portfolio removes its saved and published data, its own
+              content, attached résumé, analytics events, and any uploaded images no
+              other portfolio uses. Deleting your last portfolio also removes the
+              shared workspace data.
             </p>
-          </article>
-          <article className={styles.callout}>
             <h3>Account deletion</h3>
             <p>
-              The account danger zone permanently removes every portfolio, shared
-              workspace data, published pages, uploaded Cloudinary assets, analytics
-              admin membership, and the sign-in account.
+              The danger zone in your account permanently removes every portfolio,
+              workspace data, published pages, uploaded Cloudinary images, analytics
+              admin membership, and the sign-in account itself.
             </p>
-          </article>
-        </div>
-      </section>
+          </section>
 
-      <section className={styles.section} id="architecture">
-        <div className={styles.sectionHeading}>
-          <p>Implementation notes</p>
-          <h2>How publishing is separated from editing.</h2>
-        </div>
-        <div className={styles.architecture}>
-          <div>
-            <strong>Editor state</strong>
-            <span>Local draft + authenticated Supabase workspace</span>
-          </div>
-          <b>→</b>
-          <div>
-            <strong>Publish</strong>
-            <span>Create an immutable public snapshot</span>
-          </div>
-          <b>→</b>
-          <div>
-            <strong>Public route</strong>
-            <span>/&lt;username&gt;/&lt;portfolio&gt;</span>
-          </div>
-        </div>
-        <p className={styles.note}>
-          Raw draft profile, experience, project, and skill rows remain owner-only
-          under Supabase Row Level Security. Workspace saves run inside one
-          security-invoker Postgres transaction, while public pages read the
-          published snapshot.
-        </p>
-      </section>
+          <section id="architecture" className={styles.section}>
+            <h2>How publishing works</h2>
+            <p>
+              Editing and publishing are separate. Drafts live in your browser and your
+              signed-in workspace; publishing copies a snapshot to the public route.
+            </p>
+            <ol className={styles.flow}>
+              <li><strong>Draft</strong><span>Local draft and signed-in Supabase workspace</span></li>
+              <li><strong>Publish</strong><span>Creates an immutable public snapshot</span></li>
+              <li><strong>Public URL</strong><span><code>/&lt;username&gt;/&lt;portfolio&gt;</code></span></li>
+            </ol>
+            <p>
+              Draft profile, experience, project, and skill rows are readable only by
+              their owner under Supabase Row Level Security. Workspace saves run in a
+              single Postgres transaction, and public pages read only the published
+              snapshot.
+            </p>
+          </section>
 
-      <section className={styles.cta}>
-        <p className={styles.kicker}>Build a version for the role you want</p>
-        <h2>Start blank, import your resume, or explore the demo.</h2>
-        <div>
-          <Link className={styles.primaryButton} href="/builder?fresh=1">
-            Start fresh →
-          </Link>
-          <Link className={styles.secondaryButton} href="/builder">
-            Explore demo
-          </Link>
-        </div>
-      </section>
-
-      <footer className={styles.footer}>
-        <Link className={styles.brand} href="/">
-          DevFolio<span>X</span>
-        </Link>
-        <p>Public product documentation for the current DevFolioX feature set.</p>
-      </footer>
+          <footer className={styles.footer}>
+            <p>Ready? The first step takes a few minutes.</p>
+            <Link className={styles.primaryButton} href="/builder?fresh=1">
+              Build my portfolio
+            </Link>
+          </footer>
+        </article>
+      </div>
     </main>
   );
 }

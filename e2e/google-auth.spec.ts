@@ -23,9 +23,10 @@ test("Google sign-in starts OAuth and returns through the app callback", async (
   const url = new URL(request.url());
 
   expect(url.searchParams.get("provider")).toBe("google");
-  expect(decodeURIComponent(url.searchParams.get("redirect_to") || "")).toContain(
-    "/auth/callback?next=/builder"
-  );
+  const callback = new URL(url.searchParams.get("redirect_to") || "", "http://x");
+  expect(callback.pathname).toBe("/auth/callback");
+  // The builder confirms the sign-in when it sees signed_in=1.
+  expect(callback.searchParams.get("next")).toBe("/builder?signed_in=1");
 });
 
 test("Google sign-in is available for account creation but not password reset", async ({

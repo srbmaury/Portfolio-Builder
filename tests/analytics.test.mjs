@@ -175,3 +175,35 @@ test("analytics summary exposes per-portfolio performance", () => {
     ]
   );
 });
+
+test("tagged share links are accepted, normalized, and labelled", async () => {
+  const { normalizeAnalyticsEventInput } = await import("../lib/analytics.ts");
+  const { normalizeShareTag, sourceLabel, taggedShareUrl } = await import(
+    "../lib/share-links.ts"
+  );
+  const base = {
+    portfolioId: "6f1c1c1e-1d2b-4c1a-9a3e-1b2c3d4e5f60",
+    visitorId: "6f1c1c1e-1d2b-4c1a-9a3e-1b2c3d4e5f61",
+    sessionId: "6f1c1c1e-1d2b-4c1a-9a3e-1b2c3d4e5f62",
+    eventType: "portfolio_view",
+    deviceType: "desktop",
+  };
+
+  assert.equal(
+    normalizeAnalyticsEventInput({ ...base, referrerHost: "via:linkedin" }).ok,
+    true
+  );
+  assert.equal(
+    normalizeAnalyticsEventInput({ ...base, referrerHost: "via:<script>" }).ok,
+    false
+  );
+  assert.equal(normalizeShareTag("  Acme Corp — Application! "), "acme-corp-application");
+  assert.equal(normalizeShareTag("***"), "");
+  assert.equal(sourceLabel("via:linkedin"), "LinkedIn (your link)");
+  assert.equal(sourceLabel("via:acme-application"), "Acme Application (your link)");
+  assert.equal(sourceLabel("github.com"), "github.com");
+  assert.equal(
+    taggedShareUrl("https://devfoliox.srbmaury.com/a/b", "Résumé"),
+    "https://devfoliox.srbmaury.com/a/b?via=resume"
+  );
+});

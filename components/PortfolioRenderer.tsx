@@ -118,7 +118,7 @@ function Hero({
           <div className="terminal-dots"><span /><span /><span /></div>
           <p>
             <span className="terminal-prompt">$</span>{" "}
-            {title?.trim() ? `${title.trim().toLowerCase()} --whoami` : "whoami"}
+            whoami
           </p>
           <h1>{display(profile.name, "Your name")}</h1>
           <p className="terminal-role">{display(profile.role, "Your role")}</p>
@@ -133,7 +133,7 @@ function Hero({
   if (variant === "cover" || variant === "glass") {
     return (
       <section className={`p-section hero-media hero-${variant} ${hasImage ? "has-image" : ""}`}>
-        <HeroImage url={profile.heroImageUrl} priority />
+        <HeroImage url={profile.heroImageUrl} name={profile.name} priority />
         <div className="hero-media-overlay" />
         <div className="hero-media-content">
           <p className="eyebrow">{heroLabel(title, profile.role)}</p>
@@ -163,7 +163,7 @@ function Hero({
           </div>
         </div>
         <div className="hero-photo-frame">
-          <HeroImage url={profile.heroImageUrl} priority />
+          <HeroImage url={profile.heroImageUrl} name={profile.name} priority />
         </div>
       </section>
     );
@@ -179,7 +179,7 @@ function Hero({
         <h1>{display(profile.name, "Your name")}</h1>
         {hasImage && (
           <div className="poster-media">
-            <HeroImage url={profile.heroImageUrl} priority />
+            <HeroImage url={profile.heroImageUrl} name={profile.name} priority />
           </div>
         )}
         <div className="poster-bottom">
@@ -196,7 +196,6 @@ function Hero({
   if (variant === "spotlight") {
     return (
       <section className="p-section hero-spotlight">
-        <div className="spotlight-orb" aria-hidden="true" />
         <div className="spotlight-content">
           <p className="eyebrow">{heroLabel(title, profile.role)}</p>
           <h1>{display(profile.name, "Your name")}</h1>
@@ -225,9 +224,7 @@ function Hero({
   return (
     <section className="p-section hero-split">
       <div>
-        <p className="eyebrow">
-          {title?.trim() ? `${title.trim()} / ` : ""}{display(profile.role, "Your role")}
-        </p>
+        <p className="eyebrow">{heroLabel(title, profile.role)}</p>
         <h1>{display(profile.name, "Your name")}</h1>
         <p className="hero-copy">{display(profile.tagline, "A concise statement about your work.")}</p>
         <HeroActions snapshot={snapshot} publicResumeUrl={publicResumeUrl} />
@@ -279,13 +276,23 @@ function HeroActions({
   );
 }
 
-function HeroImage({ url, priority = false }: { url?: string; priority?: boolean }) {
+function HeroImage({
+  url,
+  name,
+  priority = false,
+}: {
+  url?: string;
+  name?: string;
+  priority?: boolean;
+}) {
   const src = safeCloudinaryUrl(url);
 
+  // No photo yet: show the person's initials rather than an "upload" prompt,
+  // which would otherwise appear on the published page.
   if (!src) {
     return (
-      <div className="media-placeholder">
-        <span>Upload a hero image</span>
+      <div className="media-placeholder media-monogram" aria-hidden="true">
+        <span>{initials(name)}</span>
       </div>
     );
   }
@@ -1126,19 +1133,21 @@ function EmptySection({ message }: { message: string }) {
   );
 }
 
-function SectionHeading({ index, title }: { index: string; title: string }) {
+// The "01 / 02" counters were decoration that read as a template; the index
+// prop stays so callers do not change.
+function SectionHeading({ title }: { index: string; title: string }) {
   return (
     <div className="section-heading">
-      <span>{index}</span>
       <h2>{title}</h2>
     </div>
   );
 }
 
+// Visitors need the role, not the portfolio's internal name ("Backend &
+// Platform / Backend & Platform Engineer" said the same thing twice). The hero
+// title only fills in when no role is set.
 function heroLabel(title: string | undefined, role: string) {
-  const cleanTitle = sectionDisplayTitle("hero", title);
-  const cleanRole = display(role, "Your role");
-  return `${cleanTitle} / ${cleanRole}`;
+  return display(role, sectionDisplayTitle("hero", title));
 }
 
 function safeResumeUrl(value?: string) {
@@ -1172,6 +1181,17 @@ function safeExternalUrl(value?: string) {
   } catch {
     return null;
   }
+}
+
+function initials(name?: string) {
+  const letters = (name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
+  return letters || "·";
 }
 
 function display(value: string | undefined, fallback: string) {

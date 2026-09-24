@@ -3,6 +3,7 @@ import {
   cloudinaryPortfolioTag,
   cloudinaryUserTag,
   collectCloudinaryUrls,
+  selectOwnedAssetUrls,
   selectUnreferencedAssetUrls,
 } from "@/lib/cloudinary-assets";
 import {
@@ -186,9 +187,16 @@ export async function DELETE(
       ];
     }
 
-    const deletable = isLastPortfolio
-      ? Array.from(new Set(candidates))
-      : selectUnreferencedAssetUrls(candidates, remainingReferences);
+    // Only this user's own uploads may be destroyed, whatever their content
+    // happens to reference.
+    const ownedAssets = await listCloudinaryUrlsByTag(cloudinaryUserTag(user.id));
+    const deletable = selectOwnedAssetUrls(
+      isLastPortfolio
+        ? Array.from(new Set(candidates))
+        : selectUnreferencedAssetUrls(candidates, remainingReferences),
+      ownedAssets,
+      cloudName
+    );
 
     // All database mutations happen inside one Postgres function invocation.
     // If any delete fails, Postgres rolls the entire RPC statement back.

@@ -3,6 +3,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import {
   cloudinaryUserTag,
   collectCloudinaryUrls,
+  selectOwnedAssetUrls,
 } from "@/lib/cloudinary-assets";
 import {
   configureCloudinaryServer,
@@ -89,8 +90,12 @@ export async function DELETE(request: Request) {
       cloudName
     );
 
-    const allAssets = Array.from(
-      new Set([...persistedAssets, ...taggedAssets])
+    // Content can reference other users' uploads (they share one folder), so
+    // only assets tagged as this user's uploads are destroyed.
+    const allAssets = selectOwnedAssetUrls(
+      Array.from(new Set([...persistedAssets, ...taggedAssets])),
+      taggedAssets,
+      cloudName
     );
 
     await destroyCloudinaryUrls(allAssets);

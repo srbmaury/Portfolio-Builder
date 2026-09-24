@@ -1,6 +1,6 @@
-# DevFolioX — Modular Portfolio Builder
+# DevFolioX — Instant live portfolios, no code, with analytics
 
-DevFolioX is a portfolio builder for developers and other professionals who need different portfolios for different roles.
+DevFolioX gets you a live portfolio URL without writing code: fill in your details, publish, and share the link. Every published portfolio comes with built-in first-party analytics, so you can see how many people viewed it, which sites sent them, and how many opened your résumé.
 
 **One shared profile → multiple role-specific portfolios.** Content is stored separately from presentation, so the same experience, projects, skills, links, and custom content can be reused across variants while each portfolio keeps its own targeting, section order, layouts, theme, branding, resume, and public URL.
 
