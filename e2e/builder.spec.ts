@@ -45,6 +45,21 @@ test("fresh builder supports keyboard-first editing without inaccessible control
   await expect(resizer).toBeFocused();
 });
 
+test("landing quick start leads with resume import and keeps manual editing one click away", async ({
+  page,
+}) => {
+  await page.goto("/builder?fresh=1&quick=1");
+
+  const quickStart = page.getByRole("dialog", { name: "How do you want to start?" });
+  await expect(quickStart).toBeVisible();
+  await expect(quickStart.getByRole("button", { name: /Upload résumé/i })).toBeVisible();
+  await expect(quickStart.getByRole("button", { name: /Import GitHub/i })).toBeVisible();
+
+  await quickStart.getByRole("button", { name: /Start manually/i }).click();
+  await expect(quickStart).toBeHidden();
+  await expect(page.getByRole("button", { name: "Content" })).toBeVisible();
+});
+
 test("tablet and mobile preview use real isolated viewport widths", async ({
   page,
 }) => {
