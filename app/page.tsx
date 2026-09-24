@@ -148,10 +148,10 @@ export default async function Home() {
               <label>Role<span>Backend engineer</span></label>
               <div className="lp-form-import">Import from résumé (PDF, DOCX) or GitHub</div>
             </div>
-            <h3>Fill in your details</h3>
+            <h3>Start with what you already have</h3>
             <p>
-              Type them in, or import your résumé and GitHub repos to prefill experience,
-              projects, and skills. Pick section layouts and a theme. Nothing to code.
+              Upload your résumé to prefill the portfolio, import GitHub projects if you
+              want them, then review the live preview before publishing.
             </p>
           </li>
           <li>
@@ -172,8 +172,8 @@ export default async function Home() {
             </div>
             <h3>Share the URL</h3>
             <p>
-              Paste it wherever recruiters will see it. Make separate versions for
-              different roles, each with its own link.
+              Paste it wherever recruiters will see it. Use an optional tracked link when
+              you want to know whether a visit came from LinkedIn, your résumé, or a specific application.
             </p>
           </li>
         </ol>
@@ -235,13 +235,14 @@ export default async function Home() {
       </section>
 
       <section className="lp-section lp-nocode">
-        <h2>What you get without writing code</h2>
+        <h2>From résumé to a portfolio you can measure.</h2>
         <dl>
-          <div><dt>75 section layouts</dt><dd>Ten designs each for hero, about, experience, projects, skills, and contact.</dd></div>
-          <div><dt>10 themes</dt><dd>Change the whole look in one click. Your content stays put.</dd></div>
-          <div><dt>Versions per role</dt><dd>A frontend version and a backend version, each with its own link and stats.</dd></div>
-          <div><dt>Hosting included</dt><dd>Nothing to deploy, renew, or keep running.</dd></div>
+          <div><dt>Import your résumé</dt><dd>Prefill your profile, experience, projects, and skills instead of rebuilding them from scratch.</dd></div>
+          <div><dt>Publish instantly</dt><dd>No hosting setup, deploy pipeline, DNS work, or maintenance before you can share the link.</dd></div>
+          <div><dt>Track engagement</dt><dd>See visits, résumé opens, project clicks, contact clicks, and which sources drive them.</dd></div>
+          <div><dt>Share anywhere</dt><dd>Use the normal URL or create an optional tracked link for LinkedIn, your résumé, email, or an application.</dd></div>
         </dl>
+        <p className="lp-feature-note">10 themes · 75 section layouts · responsive previews included when you want to customize the design.</p>
       </section>
 
       <section className="lp-cta">
