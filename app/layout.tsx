@@ -30,7 +30,7 @@ const plexMono = IBM_Plex_Mono({
   preload: false,
 });
 
-const TITLE = "DevFolioX — A live portfolio link, no code, with analytics";
+const TITLE = "DevFolioX — A live portfolio link. No code. See how many opened it.";
 const DESCRIPTION =
   "Fill in your details, publish, and share one URL. DevFolioX hosts your portfolio and counts how many people viewed it, which sites sent them, and how many opened your résumé.";
 
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "DevFolioX — a live portfolio link, no code, with analytics",
+        alt: "DevFolioX — A live portfolio link. No code. See how many opened it.",
       },
     ],
   },

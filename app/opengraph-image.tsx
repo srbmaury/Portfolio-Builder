@@ -1,41 +1,67 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { siteOrigin } from "@/lib/site-url";
 
 export const alt =
-  "DevFolioX — a live portfolio link, no code, with analytics";
+  "DevFolioX — A live portfolio link. No code. See how many opened it.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-// next/og ships Geist Regular and nothing else, so weight cannot carry the
-// hierarchy here the way font-weight 760 does on the site. Scale, colour and
-// the brand's tight letter-spacing do it instead.
-const INK = "#0e1116";
-const PAPER = "#f5f4ef";
+// next/og only bundles Geist Regular; the site's type is Inter, so the card
+// loads the two weights it needs from assets/fonts (SIL OFL 1.1).
+const [interMedium, interBold] = await Promise.all([
+  readFile(join(process.cwd(), "assets/fonts/Inter-500.ttf")),
+  readFile(join(process.cwd(), "assets/fonts/Inter-700.ttf")),
+]);
+
+const INK = "#111827";
+const MUTED = "#5f6571";
+const FAINT = "#8a8d93";
+const RULE = "#e5e7eb";
 const ACCENT = "#2563eb";
-const MUTED = "#a6aeba";
-const STROKE = "rgba(255,255,255,0.14)";
+const ACCENT_SOFT = "#bfd3fb";
+const LIVE = "#16a34a";
+const LIVE_TINT = "#e8f6ee";
 
-const SECTIONS = ["Fill details", "Publish", "Share URL", "Count the views"];
+// Illustrative numbers, as on the landing page's example card.
+const BARS = [4, 7, 5, 12, 9, 18, 14, 22, 16, 27, 21, 31, 24, 29];
+const STEPS = ["Fill details", "Publish", "Share URL", "Count the views"];
 
-function Bar({ rotate }: { rotate: number }) {
+function Mark() {
   return (
     <div
       style={{
-        position: "absolute",
-        left: 19,
-        top: 38,
-        width: 48,
-        height: 9,
-        borderRadius: 5,
-        background: rotate > 0 ? ACCENT : PAPER,
-        transform: `rotate(${rotate}deg)`,
+        position: "relative",
+        width: 44,
+        height: 44,
+        borderRadius: 11,
+        background: INK,
+        display: "flex",
       }}
-    />
+    >
+      {[45, -45].map((rotate) => (
+        <div
+          key={rotate}
+          style={{
+            position: "absolute",
+            left: 10,
+            top: 19,
+            width: 24,
+            height: 6,
+            borderRadius: 3,
+            background: rotate > 0 ? ACCENT : "#ffffff",
+            transform: `rotate(${rotate}deg)`,
+          }}
+        />
+      ))}
+    </div>
   );
 }
 
 export default function Image() {
-  const domain = siteOrigin().replace(/^https?:\/\//, "");
+  const host = siteOrigin().replace(/^https?:\/\//, "");
+  const maxBar = Math.max(...BARS);
 
   return new ImageResponse(
     (
@@ -46,85 +72,115 @@ export default function Image() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          padding: 76,
-          background: INK,
-          backgroundImage:
-            "radial-gradient(900px 520px at 8% -14%, rgba(37,99,235,0.22), transparent 62%), radial-gradient(760px 460px at 104% 112%, rgba(37,99,235,0.12), transparent 60%)",
-          color: PAPER,
-          fontFamily: "Geist",
+          padding: "60px 72px",
+          background: "#ffffff",
+          color: INK,
+          fontFamily: "Inter",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div
-            style={{
-              position: "relative",
-              width: 86,
-              height: 86,
-              borderRadius: 21,
-              background: "#151a22",
-              border: `1px solid ${STROKE}`,
-              display: "flex",
-            }}
-          >
-            <Bar rotate={45} />
-            <Bar rotate={-45} />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <Mark />
+            <div style={{ display: "flex", fontSize: 34, fontWeight: 700, letterSpacing: "-0.04em" }}>
+              <span>DevFolio</span>
+              <span style={{ color: ACCENT }}>X</span>
+            </div>
           </div>
-          <div style={{ display: "flex", fontSize: 24, color: MUTED }}>
-            {domain}
-          </div>
+          <div style={{ display: "flex", fontSize: 22, fontWeight: 500, color: FAINT }}>{host}</div>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 48 }}>
           <div
             style={{
               display: "flex",
-              fontSize: 104,
-              letterSpacing: "-0.05em",
-              lineHeight: 1,
+              flexDirection: "column",
+              fontSize: 58,
+              fontWeight: 700,
+              lineHeight: 1.06,
+              letterSpacing: "-0.035em",
             }}
           >
-            <span>DevFolio</span>
-            <span style={{ color: ACCENT }}>X</span>
+            <span>A live portfolio link.</span>
+            <span>No code.</span>
+            <span style={{ color: MUTED }}>See how many opened it.</span>
           </div>
+
           <div
             style={{
-              marginTop: 26,
-              fontSize: 38,
-              color: MUTED,
+              width: 320,
+              flexShrink: 0,
+              display: "flex",
+              flexDirection: "column",
+              gap: 16,
+              padding: 22,
+              border: `1px solid ${RULE}`,
+              borderRadius: 16,
+              background: "#ffffff",
+              boxShadow: "0 18px 40px rgba(17,24,39,0.10)",
             }}
           >
-            Live portfolio link. No code. Built-in analytics.
-          </div>
-        </div>
-
-        <div style={{ display: "flex" }}>
-          <div style={{ display: "flex" }}>
-            {SECTIONS.map((section) => (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 17, fontWeight: 500, color: MUTED }}>
+                <div style={{ width: 10, height: 10, borderRadius: 5, background: LIVE, display: "flex" }} />
+                <span>your-name/portfolio</span>
+              </div>
               <div
-                key={section}
                 style={{
                   display: "flex",
-                  marginRight: 14,
-                  padding: "12px 26px",
-                  border: `1px solid ${STROKE}`,
+                  padding: "4px 10px",
                   borderRadius: 999,
-                  fontSize: 24,
-                  color: "#c6ccd8",
+                  background: LIVE_TINT,
+                  color: LIVE,
+                  fontSize: 15,
+                  fontWeight: 700,
                 }}
               >
-                {section}
+                Live
               </div>
-            ))}
+            </div>
+            <div style={{ display: "flex", gap: 28 }}>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <span style={{ fontSize: 44, fontWeight: 700, letterSpacing: "-0.03em" }}>238</span>
+                <span style={{ fontSize: 16, fontWeight: 500, color: MUTED }}>views</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <span style={{ fontSize: 44, fontWeight: 700, letterSpacing: "-0.03em" }}>37</span>
+                <span style={{ fontSize: 16, fontWeight: 500, color: MUTED }}>résumé opens</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "flex-end", gap: 5, height: 64 }}>
+              {BARS.map((value, index) => (
+                <div
+                  key={index}
+                  style={{
+                    flex: 1,
+                    height: Math.round((value / maxBar) * 64),
+                    borderRadius: "3px 3px 0 0",
+                    background: index === BARS.length - 1 ? ACCENT : ACCENT_SOFT,
+                    display: "flex",
+                  }}
+                />
+              ))}
+            </div>
           </div>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 24, fontWeight: 500, color: MUTED }}>
+          {STEPS.map((step, index) => (
+            <div key={step} style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              {index > 0 ? <span style={{ color: FAINT }}>→</span> : null}
+              <span style={{ color: index === STEPS.length - 1 ? ACCENT : MUTED }}>{step}</span>
+            </div>
+          ))}
         </div>
       </div>
     ),
-    size
+    {
+      ...size,
+      fonts: [
+        { name: "Inter", data: interMedium, style: "normal", weight: 500 },
+        { name: "Inter", data: interBold, style: "normal", weight: 700 },
+      ],
+    }
   );
 }
