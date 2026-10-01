@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { formatExperienceBullets } from "@/lib/portfolio-prose";
 import {
   uploadImageToCloudinary,
   uploadResumeToCloudinary,
@@ -203,7 +204,8 @@ export function CreateItemDialog({
               <DialogField label="Company" value={values.company} onChange={(value) => update("company", value)} autoFocus required />
               <DialogField label="Role" value={values.role} onChange={(value) => update("role", value)} required />
               <DialogField label="Period" placeholder="e.g. 2024 — Present" value={values.period} onChange={(value) => update("period", value)} required />
-              <DialogField label="Summary" multiline value={values.summary} onChange={(value) => update("summary", value)} required />
+              <DialogField label="Summary / achievements" placeholder="Write a paragraph, or one achievement per line." multiline value={values.summary} onChange={(value) => update("summary", value)} required />
+              <button type="button" disabled={!values.summary.trim()} onClick={() => update("summary", formatExperienceBullets(values.summary))}>Format as bullets</button>
             </>
           )}
 
@@ -670,4 +672,3 @@ export function Field({
     </label>
   );
 }
-

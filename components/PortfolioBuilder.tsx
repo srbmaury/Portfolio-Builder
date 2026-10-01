@@ -1,6 +1,6 @@
 "use client";
 
-import { splitProjectDescription, joinProjectDescription } from "@/lib/portfolio-prose";
+import { splitProjectDescription, joinProjectDescription, formatExperienceBullets } from "@/lib/portfolio-prose";
 import { designPresets, matchesDesignPreset } from "@/lib/design-presets";
 import { errorMessage } from "@/lib/error-message";
 import { AppNav } from "@/components/AppNav";
@@ -782,12 +782,17 @@ export function PortfolioBuilder({
                       onChange={(value) => updateExperience(index, "period", value)}
                     />
                     <Field
-                      label="Summary"
-                      hint="Use one achievement per line, starting with - for bullets."
+                      label="Summary / achievements"
+                      hint="Write a paragraph, or put one achievement per line and choose Format as bullets. You can also start bullet lines with -."
                       multiline
                       value={item.summary}
                       onChange={(value) => updateExperience(index, "summary", value)}
                     />
+                    <button
+                      type="button"
+                      disabled={!item.summary.trim()}
+                      onClick={() => updateExperience(index, "summary", formatExperienceBullets(item.summary))}
+                    >Format as bullets</button>
                   </EditorCard>
                 ))}
               </EditorSection>
@@ -1545,4 +1550,3 @@ export function PortfolioBuilder({
     </div>
   );
 }
-

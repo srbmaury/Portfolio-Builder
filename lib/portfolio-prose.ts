@@ -3,6 +3,12 @@ export type ProseBlock =
   | { type: "heading"; text: string }
   | { type: "list"; items: string[] };
 
+/** Explicit editor action: turn each nonempty line into one achievement. */
+export function formatExperienceBullets(text: string): string {
+  return text.split(/\r?\n/).map(line => line.trim()).filter(Boolean)
+    .map(line => `- ${line.replace(/^[-*•]\s+/, "")}`).join("\n");
+}
+
 /** A small, plain-text format; no HTML or arbitrary Markdown is interpreted. */
 export function parsePortfolioProse(text: string): ProseBlock[] {
   const blocks: ProseBlock[] = [];
