@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { MobilePortfolioNavigation } from "@/components/MobilePortfolioNavigation";
+import { parsePortfolioProse, splitProjectDescription } from "@/lib/portfolio-prose";
 import { ResumeModalLauncher } from "@/components/ResumeModalLauncher";
 import { SkillLogo } from "@/components/SkillLogo";
 import { analyticsSocialTarget } from "@/lib/analytics";
@@ -92,6 +94,7 @@ function PortfolioNavigation({
           {name}
         </a>
 
+        <MobilePortfolioNavigation items={items} />
         <div className="portfolio-nav-links">
           {items.map((item) => (
             <a key={item.id} href={`#${item.id}`}>
@@ -338,9 +341,18 @@ function HeroActions({
   const resume = snapshot.meta?.resume;
   const resumeUrl = safeResumeUrl(publicResumeUrl || resume?.url);
   const showResume = Boolean(resume?.showInHero && resume?.url && resumeUrl);
+  const projectsSection = snapshot.config.sections.find(
+    (section) => section.visible && sectionType(section) === "projects" &&
+      sectionHasContent(section, snapshot.data, resume)
+  );
 
   return (
     <div className="hero-actions">
+      {projectsSection ? (
+        <a className="hero-work-link" href={`#${portfolioSectionAnchor(projectsSection)}`}>
+          Explore my work <span aria-hidden="true">↗</span>
+        </a>
+      ) : null}
       <Socials snapshot={snapshot} />
       {showResume && resumeUrl ? (
         <ResumeModalLauncher
@@ -408,6 +420,29 @@ function Socials({ snapshot }: { snapshot: PortfolioSnapshot }) {
   );
 }
 
+function PortfolioText({ text, className = "" }: { text: string; className?: string }) {
+  return <div className={`portfolio-prose ${className}`}>
+    {parsePortfolioProse(text).map((block, index) => {
+      if (block.type === "list") return <ul key={index}>{block.items.map((item, i) => <li key={i}>{item}</li>)}</ul>;
+      if (block.type === "heading") return <h4 key={index}>{block.text}</h4>;
+      return <p key={index}>{block.text}</p>;
+    })}
+  </div>;
+}
+
+function ProjectDescription({ project }: { project: Project }) {
+  const { overview, details } = splitProjectDescription(project.description);
+  return <div className="project-description">
+    <PortfolioText text={overview} />
+    {details.trim() && <details className="project-details">
+      <summary aria-label={`Read case study for ${project.title}`}>
+        <span>Read case study</span><span className="case-study-toggle" aria-hidden="true">+</span>
+      </summary>
+      <PortfolioText text={details} />
+    </details>}
+  </div>;
+}
+
 function About({
   snapshot,
   variant,
@@ -426,7 +461,7 @@ function About({
       <div className="about-layout-grid">
         <div className="about-story">
           {variant === "quote" && <span className="about-quote-mark">“</span>}
-          <p>{story}</p>
+          <PortfolioText text={story} />
         </div>
         <div className="about-side">
           {(variant === "stats" || variant === "facts") && (
@@ -473,7 +508,7 @@ function Experience({
                 <h3>{item.role}</h3>
                 <h4>{item.company}</h4>
               </div>
-              <p>{item.summary}</p>
+              <PortfolioText text={item.summary} className="experience-summary" />
             </article>
           ))}
         </div>
@@ -514,7 +549,7 @@ function Projects({
               <span className="project-number">{String(index + 1).padStart(2, "0")}</span>
               <div>
                 <h3>{project.title}</h3>
-                <p>{project.description}</p>
+                <ProjectDescription project={project} />
               </div>
               <ProjectActions project={project} compact />
             </article>
@@ -536,7 +571,7 @@ function Projects({
                 <span>repository</span>
               </div>
               <h3>{project.title}</h3>
-              <p>{project.description}</p>
+              <ProjectDescription project={project} />
               <div className="tag-row">{project.stack.map((item) => <span key={item}>{item}</span>)}</div>
               <ProjectActions project={project} />
             </article>
@@ -558,7 +593,7 @@ function Projects({
               <div className="browser-project-copy">
                 <div>
                   <h3>{project.title}</h3>
-                  <p>{project.description}</p>
+                  <ProjectDescription project={project} />
                 </div>
                 <ProjectActions project={project} />
               </div>
@@ -576,12 +611,15 @@ function Projects({
         <div className="project-gallery">
           {projects.map((project, index) => (
             <article key={project.id} className="project-gallery-item">
+              <div className="project-gallery-stage">
               <ProjectMedia project={project} />
               <div className="project-gallery-overlay">
                 <span>{String(index + 1).padStart(2, "0")}</span>
                 <h3>{project.title}</h3>
                 <ProjectActions project={project} compact />
               </div>
+              </div>
+              <div className="project-gallery-story"><ProjectDescription project={project} /></div>
             </article>
           ))}
         </div>
@@ -599,7 +637,7 @@ function Projects({
               <div className="showcase-number">{String(index + 1).padStart(2, "0")}</div>
               <div className="showcase-copy">
                 <h3>{project.title}</h3>
-                <p>{project.description}</p>
+                <ProjectDescription project={project} />
                 <div className="tag-row">{project.stack.map((item) => <span key={item}>{item}</span>)}</div>
               </div>
               <ProjectActions project={project} />
@@ -632,7 +670,7 @@ function Projects({
             <div className="project-card-copy">
               <p className="muted">Project / {String(index + 1).padStart(2, "0")}</p>
               <h3>{project.title}</h3>
-              <p>{project.description}</p>
+              <ProjectDescription project={project} />
             </div>
             <div className="project-footer">
               <div className="tag-row">{project.stack.map((item) => <span key={item}>{item}</span>)}</div>

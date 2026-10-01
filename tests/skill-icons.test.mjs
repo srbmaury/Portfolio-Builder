@@ -7,10 +7,10 @@ test("maps known skills to simple-icons slugs", () => {
   assert.equal(skillIconUrl("  postgres "), "https://cdn.simpleicons.org/postgresql");
 });
 
-test("does not map AWS, which has no simple-icons slug", () => {
-  // Mapping these to `amazonwebservices` produced a permanent 404.
-  assert.equal(skillIconUrl("AWS"), null);
-  assert.equal(skillIconUrl("Amazon Web Services"), null);
+test("uses bundled AWS and FastAPI logos", () => {
+  assert.equal(skillIconUrl("FastAPI"), "/skill-icons/fastapi.svg");
+  assert.equal(skillIconUrl("AWS"), "/skill-icons/aws.svg");
+  assert.equal(skillIconUrl("Amazon Web Services"), "/skill-icons/aws.svg");
 });
 
 test("unknown skills have no icon url", () => {

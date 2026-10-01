@@ -1,0 +1,665 @@
+{
+  "data": {
+    "profile": {
+      "name": "Maya Chen",
+      "role": "Software Engineer",
+      "tagline": "I build dependable systems, fast internal tools, and product experiences that stay simple as they scale.",
+      "about": "I am a product-minded software engineer who enjoys the seams between backend architecture, developer experience, and thoughtful interfaces. I like turning ambiguous operational problems into systems that are observable, maintainable, and easy for other teams to build on.",
+      "email": "maya@example.com",
+      "location": "Bengaluru, India",
+      "availability": "Open to backend, platform, and product engineering opportunities",
+      "heroImageUrl": "https://res.cloudinary.com/dnimsxcmh/image/upload/v1790211857/devfoliox-demo/hero-workspace.jpg",
+      "socials": [
+        {
+          "label": "GitHub",
+          "url": "https://github.com"
+        },
+        {
+          "label": "LinkedIn",
+          "url": "https://linkedin.com"
+        }
+      ]
+    },
+    "experience": [
+      {
+        "id": "exp-meridian-e22c3e9e",
+        "company": "Meridian Cloud",
+        "role": "Software Engineer",
+        "period": "2024 — Present",
+        "summary": "Built shared platform services for deployment metadata, caching, and observability. Cut repetitive release work by automating dependency discovery and gave product teams clearer operational signals during incidents."
+      },
+      {
+        "id": "exp-relay-e22c3e9e",
+        "company": "Relay Systems",
+        "role": "Associate Software Engineer",
+        "period": "2023 — 2024",
+        "summary": "Shipped workflow APIs and internal tooling used by operations teams, with a focus on predictable failure handling, faster debugging, and safer incremental releases."
+      },
+      {
+        "id": "exp-orbit-e22c3e9e",
+        "company": "Orbit Labs",
+        "role": "Software Engineering Intern",
+        "period": "2022 — 2023",
+        "summary": "Created service dashboards, alerts, and automation around a growing payments platform, helping engineers move from reactive debugging to measurable service health."
+      }
+    ],
+    "projects": [
+      {
+        "id": "project-traceflow-e22c3e9e",
+        "title": "TraceFlow",
+        "description": "A developer investigation workspace that brings logs, traces, source context, and deployment history into one searchable timeline for faster incident triage.",
+        "stack": [
+          "Java",
+          "PostgreSQL",
+          "Redis",
+          "OpenTelemetry"
+        ],
+        "imageUrl": "https://res.cloudinary.com/dnimsxcmh/image/upload/v1790211858/devfoliox-demo/project-traceflow.jpg",
+        "githubUrl": "https://github.com",
+        "liveUrl": ""
+      },
+      {
+        "id": "project-vector-gateway-e22c3e9e",
+        "title": "Vector Search Gateway",
+        "description": "A multi-tenant retrieval service with hybrid search, request-level caching, ingestion jobs, and observable ranking experiments behind a simple API.",
+        "stack": [
+          "Go",
+          "PostgreSQL",
+          "Redis",
+          "Kafka"
+        ],
+        "imageUrl": "https://res.cloudinary.com/dnimsxcmh/image/upload/v1790211861/devfoliox-demo/project-vector-gateway.jpg",
+        "githubUrl": "https://github.com",
+        "liveUrl": ""
+      },
+      {
+        "id": "project-schema-studio-e22c3e9e",
+        "title": "Schema Studio",
+        "description": "A collaborative schema editor that turns structured configuration into explorable diagrams, reviewable changes, and shareable developer documentation.",
+        "stack": [
+          "TypeScript",
+          "React",
+          "WebSockets",
+          "D3"
+        ],
+        "imageUrl": "https://res.cloudinary.com/dnimsxcmh/image/upload/v1790211862/devfoliox-demo/project-schema-studio.jpg",
+        "githubUrl": "https://github.com",
+        "liveUrl": ""
+      },
+      {
+        "id": "project-queuescope-e22c3e9e",
+        "title": "QueueScope",
+        "description": "An operations console for delayed jobs and event pipelines with replay controls, failure grouping, throughput trends, and guardrails for production recovery.",
+        "stack": [
+          "Java",
+          "Kafka",
+          "React",
+          "Observability"
+        ],
+        "imageUrl": "https://res.cloudinary.com/dnimsxcmh/image/upload/v1790211864/devfoliox-demo/project-queuescope.jpg",
+        "githubUrl": "https://github.com",
+        "liveUrl": ""
+      }
+    ],
+    "skills": [
+      "Java",
+      "Go",
+      "TypeScript",
+      "React",
+      "Distributed Systems",
+      "PostgreSQL",
+      "Redis",
+      "Kafka",
+      "Kubernetes",
+      "AWS",
+      "Observability",
+      "System Design"
+    ],
+    "customSections": [
+      {
+        "id": "impact",
+        "title": "Selected impact",
+        "items": [
+          {
+            "id": "impact-release",
+            "heading": "10×",
+            "subheading": "Faster release preparation",
+            "meta": "Platform automation",
+            "description": "Automated dependency discovery and validation that replaced a manual release checklist across multiple component types.",
+            "linkLabel": "",
+            "linkUrl": ""
+          },
+          {
+            "id": "impact-debugging",
+            "heading": "< 10 min",
+            "subheading": "From alert to useful context",
+            "meta": "Observability",
+            "description": "Connected service metrics, dashboards, and actionable alerts so engineers could narrow down production issues without reconstructing context by hand.",
+            "linkLabel": "",
+            "linkUrl": ""
+          },
+          {
+            "id": "impact-scale",
+            "heading": "4 teams",
+            "subheading": "Building on shared platform primitives",
+            "meta": "Developer experience",
+            "description": "Designed reusable platform capabilities and documentation that product teams could adopt without owning the underlying infrastructure.",
+            "linkLabel": "",
+            "linkUrl": ""
+          }
+        ]
+      }
+    ]
+  },
+  "variants": [
+    {
+      "id": "backend-platform",
+      "name": "Backend & Platform",
+      "targetRole": "Backend & Platform Engineer",
+      "data": {
+        "profile": {
+          "name": "Maya Chen",
+          "role": "Software Engineer",
+          "tagline": "I build dependable systems, fast internal tools, and product experiences that stay simple as they scale.",
+          "about": "I am a product-minded software engineer who enjoys the seams between backend architecture, developer experience, and thoughtful interfaces. I like turning ambiguous operational problems into systems that are observable, maintainable, and easy for other teams to build on.",
+          "email": "maya@example.com",
+          "location": "Bengaluru, India",
+          "availability": "Open to backend, platform, and product engineering opportunities",
+          "heroImageUrl": "https://res.cloudinary.com/dnimsxcmh/image/upload/v1790211857/devfoliox-demo/hero-workspace.jpg",
+          "socials": [
+            {
+              "label": "GitHub",
+              "url": "https://github.com"
+            },
+            {
+              "label": "LinkedIn",
+              "url": "https://linkedin.com"
+            }
+          ]
+        },
+        "experience": [
+          {
+            "id": "exp-meridian-e22c3e9e",
+            "company": "Meridian Cloud",
+            "role": "Software Engineer",
+            "period": "2024 — Present",
+            "summary": "Built shared platform services for deployment metadata, caching, and observability. Cut repetitive release work by automating dependency discovery and gave product teams clearer operational signals during incidents."
+          },
+          {
+            "id": "exp-relay-e22c3e9e",
+            "company": "Relay Systems",
+            "role": "Associate Software Engineer",
+            "period": "2023 — 2024",
+            "summary": "Shipped workflow APIs and internal tooling used by operations teams, with a focus on predictable failure handling, faster debugging, and safer incremental releases."
+          },
+          {
+            "id": "exp-orbit-e22c3e9e",
+            "company": "Orbit Labs",
+            "role": "Software Engineering Intern",
+            "period": "2022 — 2023",
+            "summary": "Created service dashboards, alerts, and automation around a growing payments platform, helping engineers move from reactive debugging to measurable service health."
+          }
+        ],
+        "projects": [
+          {
+            "id": "project-traceflow-e22c3e9e",
+            "title": "TraceFlow",
+            "description": "A developer investigation workspace that brings logs, traces, source context, and deployment history into one searchable timeline for faster incident triage.",
+            "stack": [
+              "Java",
+              "PostgreSQL",
+              "Redis",
+              "OpenTelemetry"
+            ],
+            "imageUrl": "https://res.cloudinary.com/dnimsxcmh/image/upload/v1790211858/devfoliox-demo/project-traceflow.jpg",
+            "githubUrl": "https://github.com",
+            "liveUrl": ""
+          },
+          {
+            "id": "project-vector-gateway-e22c3e9e",
+            "title": "Vector Search Gateway",
+            "description": "A multi-tenant retrieval service with hybrid search, request-level caching, ingestion jobs, and observable ranking experiments behind a simple API.",
+            "stack": [
+              "Go",
+              "PostgreSQL",
+              "Redis",
+              "Kafka"
+            ],
+            "imageUrl": "https://res.cloudinary.com/dnimsxcmh/image/upload/v1790211861/devfoliox-demo/project-vector-gateway.jpg",
+            "githubUrl": "https://github.com",
+            "liveUrl": ""
+          },
+          {
+            "id": "project-schema-studio-e22c3e9e",
+            "title": "Schema Studio",
+            "description": "A collaborative schema editor that turns structured configuration into explorable diagrams, reviewable changes, and shareable developer documentation.",
+            "stack": [
+              "TypeScript",
+              "React",
+              "WebSockets",
+              "D3"
+            ],
+            "imageUrl": "https://res.cloudinary.com/dnimsxcmh/image/upload/v1790211862/devfoliox-demo/project-schema-studio.jpg",
+            "githubUrl": "https://github.com",
+            "liveUrl": ""
+          },
+          {
+            "id": "project-queuescope-e22c3e9e",
+            "title": "QueueScope",
+            "description": "An operations console for delayed jobs and event pipelines with replay controls, failure grouping, throughput trends, and guardrails for production recovery.",
+            "stack": [
+              "Java",
+              "Kafka",
+              "React",
+              "Observability"
+            ],
+            "imageUrl": "https://res.cloudinary.com/dnimsxcmh/image/upload/v1790211864/devfoliox-demo/project-queuescope.jpg",
+            "githubUrl": "https://github.com",
+            "liveUrl": ""
+          }
+        ],
+        "skills": [
+          "Java",
+          "Go",
+          "TypeScript",
+          "React",
+          "Distributed Systems",
+          "PostgreSQL",
+          "Redis",
+          "Kafka",
+          "Kubernetes",
+          "AWS",
+          "Observability",
+          "System Design"
+        ],
+        "customSections": [
+          {
+            "id": "impact",
+            "title": "Selected impact",
+            "items": [
+              {
+                "id": "impact-release",
+                "heading": "10×",
+                "subheading": "Faster release preparation",
+                "meta": "Platform automation",
+                "description": "Automated dependency discovery and validation that replaced a manual release checklist across multiple component types.",
+                "linkLabel": "",
+                "linkUrl": ""
+              },
+              {
+                "id": "impact-debugging",
+                "heading": "< 10 min",
+                "subheading": "From alert to useful context",
+                "meta": "Observability",
+                "description": "Connected service metrics, dashboards, and actionable alerts so engineers could narrow down production issues without reconstructing context by hand.",
+                "linkLabel": "",
+                "linkUrl": ""
+              },
+              {
+                "id": "impact-scale",
+                "heading": "4 teams",
+                "subheading": "Building on shared platform primitives",
+                "meta": "Developer experience",
+                "description": "Designed reusable platform capabilities and documentation that product teams could adopt without owning the underlying infrastructure.",
+                "linkLabel": "",
+                "linkUrl": ""
+              }
+            ]
+          }
+        ]
+      },
+      "config": {
+        "theme": "ice",
+        "sections": [
+          {
+            "id": "hero",
+            "type": "hero",
+            "variant": "cover",
+            "visible": true,
+            "title": "Backend & Platform"
+          },
+          {
+            "id": "about",
+            "type": "about",
+            "variant": "dossier",
+            "visible": true,
+            "title": "Profile"
+          },
+          {
+            "id": "experience",
+            "type": "experience",
+            "variant": "timeline",
+            "visible": true,
+            "title": "Experience"
+          },
+          {
+            "id": "projects",
+            "type": "projects",
+            "variant": "image-grid",
+            "visible": true,
+            "title": "Selected systems"
+          },
+          {
+            "id": "custom-impact",
+            "type": "custom",
+            "customSectionId": "impact",
+            "variant": "spotlight",
+            "visible": true,
+            "title": "Impact"
+          },
+          {
+            "id": "skills",
+            "type": "skills",
+            "variant": "logo-grid",
+            "visible": true,
+            "title": "Technical toolkit"
+          },
+          {
+            "id": "resume",
+            "type": "resume",
+            "variant": "compact",
+            "visible": false,
+            "title": "Résumé"
+          },
+          {
+            "id": "contact",
+            "type": "contact",
+            "variant": "split",
+            "visible": true,
+            "title": "Let’s build"
+          }
+        ]
+      },
+      "content": {
+        "experienceIds": [
+          "exp-meridian-e22c3e9e",
+          "exp-relay-e22c3e9e",
+          "exp-orbit-e22c3e9e"
+        ],
+        "projectIds": [
+          "project-traceflow-e22c3e9e",
+          "project-vector-gateway-e22c3e9e",
+          "project-queuescope-e22c3e9e"
+        ],
+        "skills": [
+          "Java",
+          "Go",
+          "Distributed Systems",
+          "PostgreSQL",
+          "Redis",
+          "Kafka",
+          "Kubernetes",
+          "AWS",
+          "Observability",
+          "System Design"
+        ]
+      },
+      "branding": {
+        "faviconUrl": "",
+        "shareTitle": "Maya Chen — Backend & Platform Engineer",
+        "shareDescription": "Distributed systems, platform engineering, observability, and developer tooling.",
+        "shareImageUrl": ""
+      },
+      "resume": {
+        "url": "",
+        "publicId": "",
+        "fileName": "",
+        "showInHero": false,
+        "hideSectionWhenHeroLink": false
+      }
+    },
+    {
+      "id": "product-engineer",
+      "name": "Product Engineer",
+      "targetRole": "Product Engineer",
+      "data": {
+        "profile": {
+          "name": "Maya Chen",
+          "role": "Software Engineer",
+          "tagline": "I build dependable systems, fast internal tools, and product experiences that stay simple as they scale.",
+          "about": "I am a product-minded software engineer who enjoys the seams between backend architecture, developer experience, and thoughtful interfaces. I like turning ambiguous operational problems into systems that are observable, maintainable, and easy for other teams to build on.",
+          "email": "maya@example.com",
+          "location": "Bengaluru, India",
+          "availability": "Open to backend, platform, and product engineering opportunities",
+          "heroImageUrl": "https://res.cloudinary.com/dnimsxcmh/image/upload/v1790211857/devfoliox-demo/hero-workspace.jpg",
+          "socials": [
+            {
+              "label": "GitHub",
+              "url": "https://github.com"
+            },
+            {
+              "label": "LinkedIn",
+              "url": "https://linkedin.com"
+            }
+          ]
+        },
+        "experience": [
+          {
+            "id": "exp-meridian-e22c3e9e",
+            "company": "Meridian Cloud",
+            "role": "Software Engineer",
+            "period": "2024 — Present",
+            "summary": "Built shared platform services for deployment metadata, caching, and observability. Cut repetitive release work by automating dependency discovery and gave product teams clearer operational signals during incidents."
+          },
+          {
+            "id": "exp-relay-e22c3e9e",
+            "company": "Relay Systems",
+            "role": "Associate Software Engineer",
+            "period": "2023 — 2024",
+            "summary": "Shipped workflow APIs and internal tooling used by operations teams, with a focus on predictable failure handling, faster debugging, and safer incremental releases."
+          },
+          {
+            "id": "exp-orbit-e22c3e9e",
+            "company": "Orbit Labs",
+            "role": "Software Engineering Intern",
+            "period": "2022 — 2023",
+            "summary": "Created service dashboards, alerts, and automation around a growing payments platform, helping engineers move from reactive debugging to measurable service health."
+          }
+        ],
+        "projects": [
+          {
+            "id": "project-traceflow-e22c3e9e",
+            "title": "TraceFlow",
+            "description": "A developer investigation workspace that brings logs, traces, source context, and deployment history into one searchable timeline for faster incident triage.",
+            "stack": [
+              "Java",
+              "PostgreSQL",
+              "Redis",
+              "OpenTelemetry"
+            ],
+            "imageUrl": "https://res.cloudinary.com/dnimsxcmh/image/upload/v1790211858/devfoliox-demo/project-traceflow.jpg",
+            "githubUrl": "https://github.com",
+            "liveUrl": ""
+          },
+          {
+            "id": "project-vector-gateway-e22c3e9e",
+            "title": "Vector Search Gateway",
+            "description": "A multi-tenant retrieval service with hybrid search, request-level caching, ingestion jobs, and observable ranking experiments behind a simple API.",
+            "stack": [
+              "Go",
+              "PostgreSQL",
+              "Redis",
+              "Kafka"
+            ],
+            "imageUrl": "https://res.cloudinary.com/dnimsxcmh/image/upload/v1790211861/devfoliox-demo/project-vector-gateway.jpg",
+            "githubUrl": "https://github.com",
+            "liveUrl": ""
+          },
+          {
+            "id": "project-schema-studio-e22c3e9e",
+            "title": "Schema Studio",
+            "description": "A collaborative schema editor that turns structured configuration into explorable diagrams, reviewable changes, and shareable developer documentation.",
+            "stack": [
+              "TypeScript",
+              "React",
+              "WebSockets",
+              "D3"
+            ],
+            "imageUrl": "https://res.cloudinary.com/dnimsxcmh/image/upload/v1790211862/devfoliox-demo/project-schema-studio.jpg",
+            "githubUrl": "https://github.com",
+            "liveUrl": ""
+          },
+          {
+            "id": "project-queuescope-e22c3e9e",
+            "title": "QueueScope",
+            "description": "An operations console for delayed jobs and event pipelines with replay controls, failure grouping, throughput trends, and guardrails for production recovery.",
+            "stack": [
+              "Java",
+              "Kafka",
+              "React",
+              "Observability"
+            ],
+            "imageUrl": "https://res.cloudinary.com/dnimsxcmh/image/upload/v1790211864/devfoliox-demo/project-queuescope.jpg",
+            "githubUrl": "https://github.com",
+            "liveUrl": ""
+          }
+        ],
+        "skills": [
+          "Java",
+          "Go",
+          "TypeScript",
+          "React",
+          "Distributed Systems",
+          "PostgreSQL",
+          "Redis",
+          "Kafka",
+          "Kubernetes",
+          "AWS",
+          "Observability",
+          "System Design"
+        ],
+        "customSections": [
+          {
+            "id": "impact",
+            "title": "Selected impact",
+            "items": [
+              {
+                "id": "impact-release",
+                "heading": "10×",
+                "subheading": "Faster release preparation",
+                "meta": "Platform automation",
+                "description": "Automated dependency discovery and validation that replaced a manual release checklist across multiple component types.",
+                "linkLabel": "",
+                "linkUrl": ""
+              },
+              {
+                "id": "impact-debugging",
+                "heading": "< 10 min",
+                "subheading": "From alert to useful context",
+                "meta": "Observability",
+                "description": "Connected service metrics, dashboards, and actionable alerts so engineers could narrow down production issues without reconstructing context by hand.",
+                "linkLabel": "",
+                "linkUrl": ""
+              },
+              {
+                "id": "impact-scale",
+                "heading": "4 teams",
+                "subheading": "Building on shared platform primitives",
+                "meta": "Developer experience",
+                "description": "Designed reusable platform capabilities and documentation that product teams could adopt without owning the underlying infrastructure.",
+                "linkLabel": "",
+                "linkUrl": ""
+              }
+            ]
+          }
+        ]
+      },
+      "config": {
+        "theme": "sunset",
+        "sections": [
+          {
+            "id": "hero",
+            "type": "hero",
+            "variant": "poster",
+            "visible": true,
+            "title": "Product Engineering"
+          },
+          {
+            "id": "projects",
+            "type": "projects",
+            "variant": "showcase",
+            "visible": true,
+            "title": "Things I shipped"
+          },
+          {
+            "id": "about",
+            "type": "about",
+            "variant": "statement",
+            "visible": true,
+            "title": "How I work"
+          },
+          {
+            "id": "experience",
+            "type": "experience",
+            "variant": "stacked",
+            "visible": true,
+            "title": "Experience"
+          },
+          {
+            "id": "custom-impact",
+            "type": "custom",
+            "customSectionId": "impact",
+            "variant": "badges",
+            "visible": true,
+            "title": "Proof points"
+          },
+          {
+            "id": "skills",
+            "type": "skills",
+            "variant": "ticker",
+            "visible": true,
+            "title": "Stack"
+          },
+          {
+            "id": "resume",
+            "type": "resume",
+            "variant": "minimal",
+            "visible": false,
+            "title": "Résumé"
+          },
+          {
+            "id": "contact",
+            "type": "contact",
+            "variant": "banner",
+            "visible": true,
+            "title": "Start a conversation"
+          }
+        ]
+      },
+      "content": {
+        "experienceIds": [
+          "exp-meridian-e22c3e9e",
+          "exp-relay-e22c3e9e"
+        ],
+        "projectIds": [
+          "project-schema-studio-e22c3e9e",
+          "project-traceflow-e22c3e9e",
+          "project-queuescope-e22c3e9e"
+        ],
+        "skills": [
+          "TypeScript",
+          "React",
+          "Java",
+          "PostgreSQL",
+          "Redis",
+          "Observability",
+          "System Design"
+        ]
+      },
+      "branding": {
+        "faviconUrl": "",
+        "shareTitle": "Maya Chen — Product Engineer",
+        "shareDescription": "Product-minded engineering across thoughtful interfaces, developer tools, and reliable systems.",
+        "shareImageUrl": ""
+      },
+      "resume": {
+        "url": "",
+        "publicId": "",
+        "fileName": "",
+        "showInHero": false,
+        "hideSectionWhenHeroLink": false
+      }
+    }
+  ],
+  "activeVariantId": "backend-platform"
+}

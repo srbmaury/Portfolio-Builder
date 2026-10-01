@@ -1,5 +1,6 @@
 "use client";
 
+import { applyDesignPreset, type DesignPreset } from "@/lib/design-presets";
 import { useMemo, type Dispatch, type SetStateAction } from "react";
 import {
   addCustomSection as addCustomSectionToState,
@@ -179,6 +180,10 @@ export function usePortfolioEditorActions({
       ...data,
       profile: { ...data.profile, [field]: value },
     }));
+  }
+
+  function chooseDesignPreset(preset: DesignPreset) {
+    updateActiveConfig((config) => applyDesignPreset(config, preset));
   }
 
   function updateTheme(theme: ThemeName) {
@@ -640,6 +645,7 @@ export function usePortfolioEditorActions({
     clearTargets,
     updateProfile,
     updateTheme,
+    chooseDesignPreset,
     updateBranding,
     updateResume,
     setVariant,

@@ -1,0 +1,1 @@
+AWS and FastAPI logos from https://github.com/devicons/devicon (MIT), fetched 2026-10-01. Brand marks belong to their owners. Source: icons/amazonwebservices/amazonwebservices-original-wordmark.svg and icons/fastapi/fastapi-original.svg.

@@ -1,5 +1,7 @@
 "use client";
 
+import { splitProjectDescription, joinProjectDescription } from "@/lib/portfolio-prose";
+import { designPresets, matchesDesignPreset } from "@/lib/design-presets";
 import { errorMessage } from "@/lib/error-message";
 import { AppNav } from "@/components/AppNav";
 import { PublishedDialog } from "@/components/PublishedDialog";
@@ -220,6 +222,7 @@ export function PortfolioBuilder({
     toggleSection,
     moveSection,
     shuffleDesign,
+    chooseDesignPreset,
     updateExperience,
     addExperience,
     removeExperience,
@@ -660,6 +663,7 @@ export function PortfolioBuilder({
                 />
                 <Field
                   label="About"
+                  hint="Separate paragraphs with a blank line."
                   multiline
                   value={state.data.profile.about}
                   onChange={(value) => updateProfile("about", value)}
@@ -779,6 +783,7 @@ export function PortfolioBuilder({
                     />
                     <Field
                       label="Summary"
+                      hint="Use one achievement per line, starting with - for bullets."
                       multiline
                       value={item.summary}
                       onChange={(value) => updateExperience(index, "summary", value)}
@@ -805,10 +810,18 @@ export function PortfolioBuilder({
                       onChange={(value) => updateProject(index, "title", value)}
                     />
                     <Field
-                      label="Description"
+                      label="Project overview"
+                      hint="Explain the problem and what you built in one or two sentences."
                       multiline
-                      value={project.description}
-                      onChange={(value) => updateProject(index, "description", value)}
+                      value={splitProjectDescription(project.description).overview}
+                      onChange={(value) => updateProject(index, "description", joinProjectDescription(value, splitProjectDescription(project.description).details))}
+                    />
+                    <Field
+                      label="Case study"
+                      hint="Optional. Use # headings for Problem, Approach, and Outcome; start achievement lines with -. Readers can expand this from the project card."
+                      multiline
+                      value={splitProjectDescription(project.description).details}
+                      onChange={(value) => updateProject(index, "description", joinProjectDescription(splitProjectDescription(project.description).overview, value))}
                     />
                     <Field
                       label="Stack"
@@ -1139,6 +1152,21 @@ export function PortfolioBuilder({
                 </button>
               </div>
 
+              <section className="design-presets" aria-labelledby="design-presets-title">
+                <h3 id="design-presets-title">Start with a complete design</h3>
+                <p>Choose a coordinated layout, then adjust any section below.</p>
+                <div className="design-preset-list">
+                  {designPresets.map((preset) => (
+                    <button key={preset.id} type="button" className={`design-preset preset-${preset.id}`}
+                      aria-pressed={Boolean(activeVariant && matchesDesignPreset(activeVariant.config, preset))}
+                      onClick={() => chooseDesignPreset(preset)}>
+                      <span className="design-preset-preview" aria-hidden="true"><i /><i /><i /></span>
+                      <strong>{preset.name}</strong><span>{preset.description}</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
               <EditorSection
                 title="Brand & sharing"
                 subtitle="Favicon and link preview"
@@ -1385,6 +1413,7 @@ export function PortfolioBuilder({
             </span>
           </div>
 
+          <div className="preview-canvas">
           <div className={`preview-window preview-${previewMode}`}>
             <iframe
               ref={previewFrameRef}
@@ -1412,6 +1441,7 @@ export function PortfolioBuilder({
                 </button>
               </div>
             )}
+          </div>
           </div>
         </section>
       </div>

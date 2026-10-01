@@ -425,6 +425,7 @@ export function ResumeUploadField({
         url: result.secure_url,
         publicId: result.public_id,
         fileName: file.name,
+        showInHero: value.url ? value.showInHero : true,
       });
       setStatus("Resume uploaded");
     } catch (error) {

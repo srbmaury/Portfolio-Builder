@@ -35,6 +35,10 @@ DevFolioX gets you a live portfolio URL without writing code: fill in your detai
 
 ### Design system
 
+The Design tab includes three coordinated presets: **Studio** (portrait and visual projects), **Editorial** (warm typography and browser previews), and **Technical** (résumé and repository cards). Presets change themes and section layouts while preserving content, section order, visibility, titles, and custom sections. Each section remains independently editable.
+
+Project authoring separates the overview from an optional expandable case study. Case studies support plain-text `#` headings and `-` achievement bullets. Existing multiline descriptions remain compatible. Experience summaries use the same bullet and paragraph formatting. Mobile portfolios include a section menu with Escape handling and automatic closing after navigation.
+
 DevFolioX currently provides **75 section layouts**:
 
 - Hero: 10

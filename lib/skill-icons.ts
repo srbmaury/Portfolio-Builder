@@ -24,8 +24,6 @@ const ICON_SLUGS: Record<string, string> = {
   "sqlite": "sqlite",
   "docker": "docker",
   "kubernetes": "kubernetes",
-  // No AWS slug exists on simple-icons (removed for trademark reasons), so AWS
-  // intentionally has no mapping and falls back to its initials.
   "graphql": "graphql",
   "github": "github",
   "github actions": "githubactions",
@@ -46,7 +44,10 @@ const ICON_SLUGS: Record<string, string> = {
 };
 
 export function skillIconUrl(skill: string) {
-  const slug = ICON_SLUGS[skill.trim().toLowerCase()];
+  const key = skill.trim().toLowerCase();
+  if (["aws", "amazon web services"].includes(key)) return "/skill-icons/aws.svg";
+  if (["fastapi", "fast api"].includes(key)) return "/skill-icons/fastapi.svg";
+  const slug = ICON_SLUGS[key];
   return slug ? `https://cdn.simpleicons.org/${slug}` : null;
 }
 
