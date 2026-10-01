@@ -1,11 +1,26 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 export function MobilePortfolioNavigation({ items }: {
   items: { id: string; label: string }[];
 }) {
   const menuRef = useRef<HTMLDetailsElement>(null);
+
+  useEffect(() => {
+    const dismissOutside = (event: Event) => {
+      const menu = menuRef.current;
+      if (menu?.open && event.target instanceof Node && !menu.contains(event.target)) {
+        menu.open = false;
+      }
+    };
+    document.addEventListener("pointerdown", dismissOutside, true);
+    document.addEventListener("focusin", dismissOutside);
+    return () => {
+      document.removeEventListener("pointerdown", dismissOutside, true);
+      document.removeEventListener("focusin", dismissOutside);
+    };
+  }, []);
 
   return (
     <details
