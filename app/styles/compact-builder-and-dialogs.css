@@ -1,0 +1,170 @@
+/* ---------------------------------------------------------------------------
+   Builder internals and dialogs, aligned with the utility style:
+   one type scale (12/13/14px), 8px corners, outlined secondary buttons.
+   --------------------------------------------------------------------------- */
+.primary-button,
+.ghost-button { border-radius: 8px; }
+.primary-button { background: var(--ink); }
+.primary-button:hover { background: #1f2937; transform: none; }
+
+.field > span,
+.theme-picker > label { font-size: 13px; font-weight: 600; color: #374151; }
+.field input,
+.field textarea {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 9px 11px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 14px;
+}
+.field input:focus,
+.field textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-tint);
+}
+.variant-meta-grid .field input { padding: 8px 10px; font-size: 13px; }
+
+.variant-switcher { backdrop-filter: none; background: #fff; }
+.variant-switcher-head span { font-size: 13px; font-weight: 600; color: var(--ink); }
+.variant-switcher-head small { font-size: 12px; color: #6b7280; }
+.variant-pills button {
+  border-color: #d1d5db;
+  border-radius: 7px;
+  background: #fff;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 600;
+}
+.variant-pills button.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+.variant-switcher-head > button,
+.variant-meta-actions button,
+.shuffle-button,
+.editor-group-title button,
+.editor-section-summary-actions button,
+.editor-section-action {
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  padding: 6px 10px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+}
+.variant-switcher-head > button:hover,
+.variant-meta-actions button:hover:not(:disabled),
+.shuffle-button:hover,
+.editor-group-title button:hover,
+.editor-section-summary-actions button:hover,
+.editor-section-action:hover { background: #f3f4f6; }
+.variant-meta-actions .danger-link { color: #b91c1c; border-color: #fecaca; background: #fff; }
+
+.panel-intro-actions .primary-button,
+.panel-intro-actions .ghost-button {
+  min-height: 34px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.panel-intro-actions .ghost-button { border: 1px solid #d1d5db; background: #fff; color: var(--ink); }
+.panel-intro-actions .ghost-button:hover { background: #f3f4f6; }
+
+.editor-section { border-color: #e5e7eb; border-radius: 10px; }
+.editor-section > summary strong,
+.editor-section-toggle strong { font-size: 14px; font-weight: 600; }
+.editor-section > summary span,
+.editor-section-toggle span:not(.editor-chevron) { font-size: 12px; color: #6b7280; }
+.editor-card { border-color: #e5e7eb; border-radius: 8px; background: #fff; }
+.editor-card > summary strong,
+.editor-card-toggle strong { font-size: 13px; font-weight: 600; }
+.targeting-section { border-color: #e5e7eb; border-radius: 10px; }
+
+/* Dialogs */
+.create-dialog-backdrop { background: rgba(17, 24, 39, .45); backdrop-filter: none; }
+.create-dialog {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(17, 24, 39, .22);
+}
+.create-dialog-head { backdrop-filter: none; background: #fff; border-bottom-color: #eceef1; }
+.create-dialog-head h2 { margin-top: 2px; font-size: 20px; letter-spacing: -0.02em; }
+.create-dialog-actions { backdrop-filter: none; background: #fff; }
+.dialog-close { border-color: #e5e7eb; border-radius: 8px; background: #fff; color: #4b5563; }
+.dialog-close:hover { background: #f3f4f6; color: var(--ink); }
+.dialog-hint { background: #f7f7f8; color: #374151; font-size: 13px; }
+
+.published-dialog { padding-bottom: 22px; }
+.published-dialog > :not(.create-dialog-head) { margin-inline: 24px; }
+.create-dialog-actions .primary-button,
+.create-dialog-actions .ghost-button,
+.create-dialog-actions button {
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.create-dialog-actions .ghost-button { border: 1px solid #d1d5db; background: #fff; color: var(--ink); }
+.create-dialog-actions .ghost-button:hover { background: #f3f4f6; }
+
+/* Portfolio switcher: name and actions on one row now that role lives in Content */
+.variant-meta-grid { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+.variant-meta-grid .variant-meta-actions { margin: 0; padding-bottom: 1px; }
+
+/* Targeting lists: plain rows with dividers instead of a stack of tinted cards */
+.targeting-section-head strong { font-size: 14px; font-weight: 600; }
+.targeting-section-head span { color: #6b7280; font-size: 12px; }
+.targeting-section-head button {
+  border-color: #d1d5db;
+  background: #fff;
+  color: var(--ink);
+  padding: 4px 9px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.targeting-section-head button:hover { background: #f3f4f6; }
+.targeting-list { padding: 0; gap: 0; }
+.target-row {
+  min-height: 48px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+}
+.target-row + .target-row { border-top: 1px solid #eceef1; }
+.target-row.selected { border-color: #eceef1; background: #fff; }
+.target-row:not(.selected) label strong { color: #6b7280; font-weight: 500; }
+.target-row label strong { font-size: 14px; font-weight: 600; }
+.target-row label small { color: #6b7280; font-size: 12px; }
+.target-row input { width: 16px; height: 16px; }
+
+/* Phone: jump between the editor and the preview below it */
+.mobile-preview-jump { display: none; }
+@media (max-width: 760px) {
+  .mobile-preview-jump {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 30;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--ink);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 10px 28px rgba(17, 24, 39, .28);
+    cursor: pointer;
+  }
+  .preview-stage { scroll-margin-top: 68px; }
+}
+
+/* Hero example links to the real live portfolio */
+.lp-browser-body { position: relative; }
+.lp-browser-link { position: absolute; inset: 0; z-index: 1; pointer-events: auto; }
+.lp-browser-link:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+a.lp-live-pill:hover { background: #d3f0de; }

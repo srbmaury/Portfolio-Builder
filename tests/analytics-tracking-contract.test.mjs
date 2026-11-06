@@ -6,10 +6,12 @@ const page = await readFile(
   new URL("../app/[username]/[portfolio]/page.tsx", import.meta.url),
   "utf8"
 );
-const renderer = await readFile(
-  new URL("../components/PortfolioRenderer.tsx", import.meta.url),
-  "utf8"
-);
+const trackedSections = {
+  resume_opened: "Resume",
+  contact_clicked: "Contact",
+  project_clicked: "Projects",
+  social_clicked: "SectionElements",
+};
 const tracker = await readFile(
   new URL("../components/PortfolioAnalyticsTracker.tsx", import.meta.url),
   "utf8"
@@ -24,14 +26,13 @@ test("public portfolio mounts first-party analytics tracker using portfolio id",
   assert.match(page, /portfolioId=/);
 });
 
-test("renderer marks high-signal visitor actions instead of every button", () => {
-  for (const event of [
-    "resume_opened",
-    "contact_clicked",
-    "project_clicked",
-    "social_clicked",
-  ]) {
-    assert.ok(renderer.includes(event), `missing ${event} instrumentation`);
+test("renderer marks high-signal visitor actions instead of every button", async () => {
+  for (const [event, section] of Object.entries(trackedSections)) {
+    const source = await readFile(
+      new URL(`../components/portfolio/${section}.tsx`, import.meta.url),
+      "utf8"
+    );
+    assert.ok(source.includes(event), `missing ${event} instrumentation`);
   }
 });
 

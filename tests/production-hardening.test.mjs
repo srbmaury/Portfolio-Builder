@@ -17,7 +17,7 @@ const deleteMigration = await readFile(
   "utf8"
 );
 const store = await readFile(
-  new URL("../lib/supabase/portfolio-store.ts", import.meta.url),
+  new URL("../lib/supabase/workspace-store.ts", import.meta.url),
   "utf8"
 );
 const productRoute = await readFile(

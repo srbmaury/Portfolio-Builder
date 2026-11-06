@@ -10,11 +10,8 @@ import {
   type BuilderState,
 } from "@/lib/portfolio";
 import { createClient } from "@/lib/supabase/client";
-import {
-  loadBuilderState,
-  publishVariant,
-  saveBuilderState,
-} from "@/lib/supabase/portfolio-store";
+import { publishVariant } from "@/lib/supabase/portfolio-publication";
+import { loadBuilderState, saveBuilderState } from "@/lib/supabase/workspace-store";
 
 export const WORKSPACE_STORAGE_KEY = "folioblocks:workspace";
 const LOCAL_DRAFT_DELAY_MS = 200;

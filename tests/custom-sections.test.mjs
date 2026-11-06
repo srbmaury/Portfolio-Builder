@@ -15,8 +15,8 @@ import {
   removeCustomSection,
 } from "../lib/custom-sections.ts";
 
-const rendererSource = await readFile(
-  new URL("../components/PortfolioRenderer.tsx", import.meta.url),
+const customSectionSource = await readFile(
+  new URL("../components/portfolio/CustomSectionBlock.tsx", import.meta.url),
   "utf8"
 );
 
@@ -149,7 +149,7 @@ test("normalization preserves every supported custom-section template", () => {
 test("renderer implements every expanded custom-section template", () => {
   for (const variant of ["grid", "compact", "split", "spotlight", "badges"]) {
     assert.match(
-      rendererSource,
+      customSectionSource,
       new RegExp(`section\\.variant === ["']${variant}["']`)
     );
   }

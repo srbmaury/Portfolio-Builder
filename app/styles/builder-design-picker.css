@@ -1,0 +1,175 @@
+/* Richer design picker thumbnails */
+.variant-poster {
+  align-items: stretch;
+  flex-direction: column;
+}
+.variant-poster i {
+  height: 6px !important;
+}
+.variant-poster i:nth-child(2) {
+  height: 22px !important;
+  background: #4f9d72;
+}
+.variant-spotlight {
+  align-items: center;
+  justify-content: center;
+}
+.variant-spotlight i {
+  flex: 0 0 14px;
+  height: 14px !important;
+  border-radius: 50%;
+}
+.variant-spotlight i:first-child {
+  flex-basis: 28px;
+  height: 28px !important;
+}
+.variant-manifesto i:first-child {
+  flex: 2;
+  height: 92% !important;
+}
+.variant-stacked,
+.variant-showcase {
+  flex-direction: column;
+  align-items: stretch;
+}
+.variant-stacked i,
+.variant-showcase i {
+  height: 8px !important;
+}
+.variant-mosaic {
+  display: grid;
+  grid-template-columns: 1.4fr .6fr;
+  grid-template-rows: 1fr 1fr;
+}
+.variant-mosaic i {
+  height: 100% !important;
+}
+.variant-mosaic i:first-child {
+  grid-row: span 2;
+}
+.variant-matrix {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: stretch;
+}
+.variant-matrix i {
+  height: 100% !important;
+}
+.variant-banner {
+  flex-direction: column;
+  align-items: stretch;
+}
+.variant-banner i:nth-child(2) {
+  height: 20px !important;
+  background: #4f9d72;
+}
+
+@media (max-width: 760px) {
+  .builder-panel {
+    display: block;
+    overflow: visible;
+  }
+  .builder-panel .panel-tabs {
+    position: sticky;
+    top: 68px;
+  }
+  .builder-panel-scroll {
+    overflow: visible;
+  }
+  .manifesto-grid,
+  .poster-bottom,
+  .project-showcase-card,
+  .project-mosaic {
+    grid-template-columns: 1fr;
+  }
+  .poster-bottom > div {
+    justify-items: start;
+  }
+  .poster-bottom .social-row {
+    justify-content: flex-start;
+  }
+  .experience-v-stacked article {
+    grid-template-columns: 36px 1fr;
+  }
+  .experience-v-stacked article > .experience-summary,
+  .stacked-role {
+    grid-column: 2;
+  }
+  .project-showcase-card {
+    min-height: 0;
+  }
+  .project-mosaic .project-1,
+  .project-mosaic .project-4,
+  .project-mosaic .project-7 {
+    grid-column: auto;
+    grid-row: auto;
+    min-height: 260px;
+  }
+  .skill-matrix {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .contact-v-banner {
+    min-height: 460px;
+  }
+}
+
+
+/* Media fields */
+.image-upload-field {
+  padding: 12px;
+  border: 1px dashed #d8dce3;
+  border-radius: 12px;
+  background: #fafbfc;
+}
+.image-upload-preview {
+  position: relative;
+  min-height: 150px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #eef0f3;
+}
+.image-upload-preview img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  display: block;
+}
+.image-upload-preview .danger-link {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  background: rgba(255,255,255,.92);
+}
+.image-url-input {
+  width: 100%;
+  border: 1px solid #dfe2e7;
+  border-radius: 9px;
+  padding: 9px 10px;
+  background: white;
+  color: #151922;
+  outline: none;
+}
+.image-upload-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 38px;
+  padding: 8px 12px;
+  border-radius: 9px;
+  background: #171b23;
+  color: white;
+  font-size: 11px;
+  font-weight: 760;
+  cursor: pointer;
+}
+.image-upload-button input { display: none; }
+.image-upload-button.disabled { opacity: .55; cursor: wait; }
+.field-help,
+.upload-status {
+  color: #8e96a2;
+  font-size: 10px;
+  line-height: 1.45;
+}
+.upload-status { color: #6953d6; }

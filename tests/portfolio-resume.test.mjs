@@ -19,6 +19,18 @@ const rendererSource = await readFile(
   new URL("../components/PortfolioRenderer.tsx", import.meta.url),
   "utf8"
 );
+const heroSource = await readFile(
+  new URL("../components/portfolio/Hero.tsx", import.meta.url),
+  "utf8"
+);
+const resumeSource = await readFile(
+  new URL("../components/portfolio/Resume.tsx", import.meta.url),
+  "utf8"
+);
+const safeUrlsSource = await readFile(
+  new URL("../components/portfolio/safeUrls.ts", import.meta.url),
+  "utf8"
+);
 const launcherSource = await readFile(
   new URL("../components/ResumeModalLauncher.tsx", import.meta.url),
   "utf8"
@@ -37,6 +49,10 @@ const ownerRouteSource = await readFile(
 ).catch(() => "");
 const builderSource = await readFile(
   new URL("../components/PortfolioBuilder.tsx", import.meta.url),
+  "utf8"
+);
+const contentSource = await readFile(
+  new URL("../components/builder/content/ResumeEditor.tsx", import.meta.url),
   "utf8"
 );
 const deliverySource = await readFile(
@@ -122,8 +138,8 @@ test("public portfolio routes resume rendering through a published-only proxy", 
 });
 
 test("hero resume modal is opt-in and keyboard accessible", () => {
-  assert.match(rendererSource, /showInHero/);
-  assert.match(rendererSource, /ResumeModalLauncher/);
+  assert.match(heroSource, /showInHero/);
+  assert.match(heroSource, /ResumeModalLauncher/);
   assert.match(launcherSource, /role="dialog"/);
   assert.match(launcherSource, /aria-modal="true"/);
   assert.match(launcherSource, /Escape/);
@@ -137,8 +153,8 @@ test("builder preview proxies legacy saved resumes for the authenticated owner",
   assert.match(ownerRouteSource, /variant_key/);
   assert.match(builderSource, /builderResumeUrl/);
   assert.match(builderSource, /\/api\/resume\//);
-  assert.match(rendererSource, /value\.startsWith\("\/api\/resume\/"\)/);
-  assert.match(builderSource, /openUrl=\{builderResumeUrl\}/);
+  assert.match(safeUrlsSource, /value\.startsWith\("\/api\/resume\/"\)/);
+  assert.match(contentSource, /openUrl=\{builderResumeUrl\}/);
 });
 
 test("resume delivery rejects non-PDF upstream payloads", () => {
@@ -156,7 +172,7 @@ test("resume section offers seven presentation styles", () => {
 
   for (const variant of ["compact", "split", "spotlight", "minimal", "terminal"]) {
     assert.match(
-      rendererSource,
+      resumeSource,
       new RegExp(`variant === ["']${variant}["']`)
     );
   }
@@ -189,6 +205,6 @@ test("resume section can hide itself when the hero resume link is enabled", () =
 });
 
 test("builder exposes the hero-link-only resume presentation option", () => {
-  assert.match(builderSource, /hideSectionWhenHeroLink/);
-  assert.match(builderSource, /Hide standalone Resume section when hero link is shown/);
+  assert.match(contentSource, /hideSectionWhenHeroLink/);
+  assert.match(contentSource, /Hide standalone Resume section when hero link is shown/);
 });

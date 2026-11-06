@@ -12,12 +12,14 @@ import {
   deletePortfolio,
   duplicatePortfolio,
   listPortfolios,
-  publishPortfolioByKey,
   renamePortfolio,
-  unpublishPortfolio,
   type PortfolioSummary,
-  restorePublishedSnapshot,
 } from "@/lib/supabase/portfolio-store";
+import {
+  publishPortfolioByKey,
+  restorePublishedSnapshot,
+  unpublishPortfolio,
+} from "@/lib/supabase/portfolio-publication";
 
 type ViewCounts = Record<string, { views: number; uniqueVisitors: number }>;
 

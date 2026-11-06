@@ -1,0 +1,204 @@
+/* Portfolio management workspace */
+.portfolio-manager-shell {
+  min-height: 100vh;
+  background:
+    var(--paper);
+}
+.portfolio-manager-topbar {
+  min-height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 0 24px;
+  border-bottom: 1px solid #dfe2e7;
+  background: rgba(255,255,255,.94);
+  backdrop-filter: blur(16px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.portfolio-manager-topbar nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.portfolio-manager-content {
+  width: min(1120px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 72px 0 100px;
+}
+.portfolio-manager-heading {
+  max-width: 720px;
+  margin-bottom: 32px;
+}
+.portfolio-manager-heading h1 {
+  margin: 8px 0 12px;
+  font-size: clamp(48px, 7vw, 82px);
+  line-height: .92;
+  letter-spacing: -.065em;
+}
+.portfolio-manager-heading > p:last-child {
+  margin: 0;
+  color: #747c89;
+  font-size: 16px;
+  line-height: 1.65;
+}
+.portfolio-manager-message {
+  margin: 0 0 18px;
+  padding: 11px 14px;
+  border: 1px solid #ddd7ff;
+  border-radius: 11px;
+  background: var(--accent-wash);
+  color: var(--accent-strong);
+  font-size: 12px;
+}
+.portfolio-manager-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 14px;
+}
+.portfolio-manager-card {
+  min-width: 0;
+  display: grid;
+  gap: 22px;
+  padding: 24px;
+  border: 1px solid #dfe2e7;
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 14px 40px rgba(36,40,48,.06);
+}
+.portfolio-manager-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+.portfolio-manager-card-head > div:first-child {
+  min-width: 0;
+}
+.portfolio-manager-card h2 {
+  margin: 8px 0 5px;
+  overflow-wrap: anywhere;
+  font-size: 27px;
+  letter-spacing: -.045em;
+}
+.portfolio-manager-card-head p {
+  margin: 0;
+  color: #747c89;
+  font-size: 13px;
+}
+.portfolio-status {
+  display: inline-flex;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #f0f1f3;
+  color: #707783;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.portfolio-status.published {
+  background: #e8f7ef;
+  color: #188052;
+}
+.portfolio-theme-label {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  border: 1px solid #e3e5e9;
+  border-radius: 8px;
+  color: #7a818c;
+  font-size: 10px;
+  text-transform: capitalize;
+}
+.portfolio-manager-meta {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+  color: #8a919c;
+  font-size: 10px;
+}
+.portfolio-manager-meta code {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--accent-strong);
+}
+.portfolio-manager-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+.portfolio-manager-actions .primary-button,
+.portfolio-manager-actions .ghost-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+}
+/* Secondary styling for the plain actions only. Without the exclusion this
+   beat .primary-button on specificity and left a primary action with grey
+   text, which then sat on a dark hover background and became unreadable.
+   "Edit" escaped it only by being an anchor rather than a button. */
+.portfolio-manager-actions button:not(.primary-button) {
+  border: 0;
+  border-radius: 8px;
+  padding: 7px 10px;
+  background: #f1f2f4;
+  color: #5f6672;
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.portfolio-manager-actions button:not(.primary-button):disabled {
+  opacity: .5;
+  cursor: wait;
+}
+.portfolio-manager-actions.secondary-actions {
+  padding-top: 14px;
+  border-top: 1px solid #eceef1;
+}
+.portfolio-manager-actions.secondary-actions .danger-link {
+  margin-left: auto;
+  background: #fff1f1;
+  color: #bb4747;
+}
+.portfolio-rename-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 9px;
+}
+.portfolio-rename-row input {
+  min-width: 0;
+  width: 100%;
+  border: 1px solid #cfc8ff;
+  border-radius: 9px;
+  padding: 9px 10px;
+  outline: none;
+}
+.portfolio-rename-row button {
+  border: 0;
+  border-radius: 8px;
+  padding: 0 11px;
+  background: #171b23;
+  color: white;
+  font-weight: 750;
+  cursor: pointer;
+}
+.portfolio-manager-empty {
+  padding: 42px;
+  border: 1px dashed #cfd3da;
+  border-radius: 18px;
+  background: rgba(255,255,255,.7);
+}
+.portfolio-manager-empty h2 {
+  margin: 0 0 8px;
+  font-size: 28px;
+}
+.portfolio-manager-empty p {
+  margin: 0 0 20px;
+  color: #747c89;
+}
